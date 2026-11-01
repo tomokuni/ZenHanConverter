@@ -23,15 +23,15 @@
       },
       "EsUtil.Feature.ColumnPacking.Core": {
         "type": "Direct",
-        "requested": "[0.2.0, )",
-        "resolved": "0.2.0",
-        "contentHash": "+dWxHqXWnE7/CdfNSyRwVILM1H9UXHwXefkVPuM/iSku8ij2zz4AVRbu5G2hRCMJhgEmnKgK/Yn7leVGH5puBg=="
+        "requested": "[0.3.0, )",
+        "resolved": "0.3.0",
+        "contentHash": "/a/qnMFx2Fpf0TF4CzIBcXLTCWlsPlkUnU9GHrGxcSC+CHL5hO5lPNwkH9eZhJdEk5kxEmNwkKaNGeMdrQCEHw=="
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[3.0.317, )",
-        "resolved": "3.0.317",
-        "contentHash": "IC9fCjxniZol2dcdj+hiXjK01a8gBWQproGL/qWjBI7CgB5GeEOD5oGV0PwpQaSr7Aa/RPaM8Ddho3Y1OAZe1Q=="
+        "requested": "[3.0.320, )",
+        "resolved": "3.0.320",
+        "contentHash": "yKkD+uA684so6/ct3dcGm8H2esrLn/gAS9qYbAcis216gBx+o5LWm5ou/BZDIDg6TTzr5ayojv9cgpoHSasxOw=="
       },
       "Microsoft.CodeAnalysis.BannedApiAnalyzers": {
         "type": "Direct",
@@ -389,8 +389,8 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "EsUtil.Feature.ZenHan.Core": "[0.2.0, )",
-          "EsUtil.Platform.Core": "[0.2.0, )"
+          "EsUtil.Feature.ZenHan.Core": "[0.3.0, )",
+          "EsUtil.Platform.Core": "[0.3.0, )"
         }
       },
       "ZenHanConverter.App.Core.Presentation": {
@@ -402,15 +402,15 @@
       },
       "EsUtil.Feature.ZenHan.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.2.0, )",
-        "resolved": "0.2.0",
-        "contentHash": "F8kVoEOKapui1E+sX+9iraFQkO/IPekNaY7cKlUyd/fupWxdlJQKv8eGz7rCE24dPa774dnY/qkD6JfYpMu1NQ=="
+        "requested": "[0.3.0, )",
+        "resolved": "0.3.0",
+        "contentHash": "uSh4n9SOL0HDFB3m6Who3BhEg/EhhlDIXu2555MDvpFIZgbBSwue1MXXolKCsB0L39vp56g8Ki3k2jz21v5IXg=="
       },
       "EsUtil.Platform.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.2.0, )",
-        "resolved": "0.2.0",
-        "contentHash": "3iTyDtWPcO/0lBuEZ6CMVbYw1+XDlrzgrJIfgCBf/ux4OdwLVC99QVEx8n2Y74IwzB6N/WyM3eL650IQeOyhCA=="
+        "requested": "[0.3.0, )",
+        "resolved": "0.3.0",
+        "contentHash": "b5iM5uwEE2EWcawwK1hH9o6Q/zAuMTogP7/uviwOkm4N9Psf81TqXKfmew0FnaHwLsVT2xkTP6W/L6NG39xeoQ=="
       }
     }
   }

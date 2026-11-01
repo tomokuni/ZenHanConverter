@@ -17,7 +17,7 @@
          （Directory.Packages.props は本ファイルより後に読み込まれるため、値はここで定義する）。 -->
     <!-- アプリの版から「使った EsUtil の版」を辿れるようにする（`+esutil.0.1.0`）。
          SourceLink のコミット（`+<sha>`）は SDK が後ろへ足す。 -->
-    <EsUtilVersion>0.2.0</EsUtilVersion>
+    <EsUtilVersion>0.3.0</EsUtilVersion>
     <InformationalVersion Condition="'$(EsUtilVersion)' != ''">$(Version)+esutil.$(EsUtilVersion)</InformationalVersion>
   </PropertyGroup>
 
