@@ -23,13 +23,6 @@
       publish（buildScript/WinUI3_publish_single.bat）も同じ設定を指定しているため挙動が一致する。
     -->
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <!--
-      NU1608: 参照する EsUtil.Ui.WinUI3.ColumnPacking は Microsoft.WindowsAppSDK を [1.*,2.0.0) で宣言する。
-      本アプリは 2.x の TitleBar（AutoRefreshDragRegions 等）を使うため 2.* のままであり、
-      EsUtil 側の宣言より新しい版を解決する。 パネルが使うのは Panel の基本 API だけであり、
-      2.x でも動作する（実測 2026-10-25: ビルド・起動とも警告以外の問題なし）。
-    -->
-    <NoWarn>$(NoWarn);NU1608</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>

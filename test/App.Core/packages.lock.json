@@ -152,8 +152,8 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "EsUtil.Feature.ZenHan.Core": "[0.2.0, )",
-          "EsUtil.Platform.Core": "[0.2.0, )"
+          "EsUtil.Feature.ZenHan.Core": "[0.5.0, )",
+          "EsUtil.Platform.Core": "[0.5.0, )"
         }
       },
       "CommunityToolkit.Mvvm": {
@@ -164,15 +164,15 @@
       },
       "EsUtil.Feature.ZenHan.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.2.0, )",
-        "resolved": "0.2.0",
-        "contentHash": "F8kVoEOKapui1E+sX+9iraFQkO/IPekNaY7cKlUyd/fupWxdlJQKv8eGz7rCE24dPa774dnY/qkD6JfYpMu1NQ=="
+        "requested": "[0.5.0, )",
+        "resolved": "0.5.0",
+        "contentHash": "gSgV9T9bV+lfP3lQ+1e5vNaa5gPKedIU+jiQ072k02086YqXZQ7SaIf3IrMDHGAbfqEiVvi+3jUrp6tUyiTkmw=="
       },
       "EsUtil.Platform.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.2.0, )",
-        "resolved": "0.2.0",
-        "contentHash": "3iTyDtWPcO/0lBuEZ6CMVbYw1+XDlrzgrJIfgCBf/ux4OdwLVC99QVEx8n2Y74IwzB6N/WyM3eL650IQeOyhCA=="
+        "requested": "[0.5.0, )",
+        "resolved": "0.5.0",
+        "contentHash": "fY2re1e5USePay2H3nF1+1gl/VS0vMw0tJ6CtM/XMEuK7Ahs7lFJl6mrqcVZ7GtrttxIhVexw4uWLYt1p2bKmg=="
       }
     }
   }
