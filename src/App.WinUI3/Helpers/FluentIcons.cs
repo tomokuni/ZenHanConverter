@@ -10,27 +10,23 @@ namespace EsUtil.ZenHanConverter.App.WinUI3.Helpers;
 /// 特徴: <br/>
 /// - パスデータは Core が単一所有し、WinUI の形状への変換のみを担う<br/>
 /// - MewUI 版（`ZenHanConverter.App.MewUI.Helpers.FluentIcons`）と同じ SVG を共有するため、両 UI のアイコンが一致する<br/>
-/// - 生成は初回アクセスの一度だけ行い、以降は生成済みの形状を返却</remarks>
+/// - 形状は取得のたびに生成する（1 つの Geometry を複数の PathIcon へ設定できないため）</remarks>
 public static class FluentIcons
 {
-    /// <summary>Convert Range アイコンの形状（初回アクセス時に生成）。</summary>
-    private static Geometry? s_convertRange;
-
-    /// <summary>Settings アイコンの形状（初回アクセス時に生成）。</summary>
-    private static Geometry? s_settings;
-
     /// <summary>Fluent Icons の「Convert Range」アイコン形状を取得します。</summary>
     /// <value>24px グリッドで描かれた Convert Range のベクター形状。</value>
-    public static Geometry ConvertRange => s_convertRange ??= ParseGeometry(FluentIconData.ConvertRange);
+    public static Geometry ConvertRange => ParseGeometry(FluentIconData.ConvertRange);
 
     /// <summary>Fluent Icons の「Settings」アイコン形状を取得します。</summary>
     /// <value>24px グリッドで描かれた Settings のベクター形状。</value>
-    public static Geometry Settings => s_settings ??= ParseGeometry(FluentIconData.Settings);
+    public static Geometry Settings => ParseGeometry(FluentIconData.Settings);
 
     /// <summary>SVG のパスデータを WinUI の形状へ変換します。</summary>
     /// <param name="pathData">SVG のパスデータ（d 属性の値）。</param>
     /// <returns>変換したベクター形状。</returns>
-    /// <remarks>WinUI の Geometry には静的 Parse がないため、XAML の型変換（XamlBindingHelper）を利用します。</remarks>
+    /// <remarks>WinUI の Geometry には静的 Parse がないため、XAML の型変換（XamlBindingHelper）を利用します。<br/>
+    /// 変換した形状は PathIcon が占有するため、使い回さず要素ごとに生成します
+    /// （同じインスタンスを別の PathIcon へ設定すると E_INVALIDARG「Value does not fall within the expected range」で失敗します）。</remarks>
     private static Geometry ParseGeometry(string pathData)
         => (Geometry)XamlBindingHelper.ConvertValue(typeof(Geometry), pathData);
 }
