@@ -161,9 +161,13 @@ function Remove-FencedCode([string]$Text) {
     $kept = [System.Collections.Generic.List[string]]::new()
     $fenceChar = [char]0
     $fenceLength = 0
+    # 開始フェンスは情報文字列（```` ```powershell ```` など）を持てる
+    $rxOpen = [regex]'^[ \t]*(?<run>`{3,}|~{3,})'
+    # 終了フェンスは**列の後ろが空白だけ**の行に限る（情報文字列を持つ行は本文である）
+    $rxClose = [regex]'^[ \t]*(?<run>`{3,}|~{3,})[ \t]*$'
     foreach ($line in $lines) {
-        $m = [regex]::Match($line, '^[ \t]*(?<run>`{3,}|~{3,})')
         if ($fenceChar -eq [char]0) {
+            $m = $rxOpen.Match($line)
             if ($m.Success) {
                 $fenceChar = $m.Groups['run'].Value[0]
                 $fenceLength = $m.Groups['run'].Value.Length
@@ -175,6 +179,7 @@ function Remove-FencedCode([string]$Text) {
         }
         # フェンスの中（リンク検査の対象外）
         $kept.Add('')
+        $m = $rxClose.Match($line)
         if ($m.Success -and $m.Groups['run'].Value[0] -eq $fenceChar -and $m.Groups['run'].Value.Length -ge $fenceLength) {
             $fenceChar = [char]0
             $fenceLength = 0
