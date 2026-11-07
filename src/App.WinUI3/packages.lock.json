@@ -49,11 +49,11 @@
       },
       "EsUtil.Ui.WinUI3.ColumnPacking": {
         "type": "Direct",
-        "requested": "[0.5.0, )",
-        "resolved": "0.5.0",
-        "contentHash": "R73RJ3Nyvt2Kzov2hfLy9xodhKPgK2UCh71bJaQ0916W7K+1/jTEHsAtZOyjEZuGlM29MF355Lsx+aEs1v8yEQ==",
+        "requested": "[0.5.3, )",
+        "resolved": "0.5.3",
+        "contentHash": "LPPYxx/hYJLafZNMTDAzk/WFsI9kWd/r0diNOMjGiBYO+g5t4UswabvdY/rlU76ipMTXTHS9jFeJ4BOF98c5JA==",
         "dependencies": {
-          "EsUtil.Feature.ColumnPacking.Core": "0.5.0",
+          "EsUtil.Feature.ColumnPacking.Core": "0.5.3",
           "Microsoft.Extensions.Logging.Abstractions": "10.0.14",
           "Microsoft.Windows.SDK.BuildTools": "10.0.28000.2957",
           "Microsoft.WindowsAppSDK": "2.6.4"
@@ -70,6 +70,12 @@
         "requested": "[5.6.0, )",
         "resolved": "5.6.0",
         "contentHash": "Kcobt3pnOdO0A+6CKiMHZdTEluJpsfxiV20axtZdmfBQnDmiWTKPJADlgAfdTuKNAnVarrkJa0UEGwuOo91muw=="
+      },
+      "Microsoft.DotNet.ILCompiler": {
+        "type": "Direct",
+        "requested": "[10.0.14, )",
+        "resolved": "10.0.14",
+        "contentHash": "CDQ/+XRT1JT/0u87j9exR1AociehKUzxae4KCOWxCQ1PIKbYS0F8ovxaCrqRlkylGmbhywKxV/zbbrEhWa5NXg=="
       },
       "Microsoft.Extensions.Hosting": {
         "type": "Direct",
@@ -100,6 +106,12 @@
           "Microsoft.Extensions.Logging.EventSource": "10.0.14",
           "Microsoft.Extensions.Options": "10.0.14"
         }
+      },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[10.0.14, )",
+        "resolved": "10.0.14",
+        "contentHash": "YlTamXppEQls6DYWt7RdUuwWDb0lyw/vXCaGeQpLCpsLmfwGuCkOz/vIGgMTV7ECsJcavkCOkxZXv9s8rdAHkQ=="
       },
       "Microsoft.VisualStudio.Threading.Analyzers": {
         "type": "Direct",
@@ -544,8 +556,8 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "EsUtil.Feature.ZenHan.Core": "[0.5.0, )",
-          "EsUtil.Platform.Core": "[0.5.0, )"
+          "EsUtil.Feature.ZenHan.Core": "[0.5.3, )",
+          "EsUtil.Platform.Core": "[0.5.3, )"
         }
       },
       "ZenHanConverter.App.Core.Presentation": {
@@ -557,24 +569,33 @@
       },
       "EsUtil.Feature.ColumnPacking.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.5.0, )",
-        "resolved": "0.5.0",
-        "contentHash": "tBeIaWNvGqH8JCh/0tsRPuAeKGjUArWaohPQ4GL8ljxxRINtaU0FrdhTvChuYu8nOEHalEcMPSITNipWelr8bQ=="
+        "requested": "[0.5.3, )",
+        "resolved": "0.5.3",
+        "contentHash": "AcXPBrP6NT8wVwtiZlzdkLh9/an28JKDvMZdtMykFxfLhSaMF3Q8l7GjhPlEvulvZ58cZAqaSXnSRfZoXTZgkw=="
       },
       "EsUtil.Feature.ZenHan.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.5.0, )",
-        "resolved": "0.5.0",
-        "contentHash": "gSgV9T9bV+lfP3lQ+1e5vNaa5gPKedIU+jiQ072k02086YqXZQ7SaIf3IrMDHGAbfqEiVvi+3jUrp6tUyiTkmw=="
+        "requested": "[0.5.3, )",
+        "resolved": "0.5.3",
+        "contentHash": "90ocI4RsZqtXRZFttF22uTeqaSENGrMHdxCUQcxbtl9GixdlcYixaaLQH3e0qm2wAKAF37VX6v2F1s/Pe7R/sw=="
       },
       "EsUtil.Platform.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.5.0, )",
-        "resolved": "0.5.0",
-        "contentHash": "fY2re1e5USePay2H3nF1+1gl/VS0vMw0tJ6CtM/XMEuK7Ahs7lFJl6mrqcVZ7GtrttxIhVexw4uWLYt1p2bKmg=="
+        "requested": "[0.5.3, )",
+        "resolved": "0.5.3",
+        "contentHash": "J+yZNvNdB9ByjmfPxG7iXKvDwqxkEqUIuHLcbiwH7UkOtGxipivkgMyAwpsCATLBWs/WLhCDTDIuxwpP+3r2Bw=="
       }
     },
     "net10.0-windows10.0.26100/win-x64": {
+      "Microsoft.DotNet.ILCompiler": {
+        "type": "Direct",
+        "requested": "[10.0.14, )",
+        "resolved": "10.0.14",
+        "contentHash": "CDQ/+XRT1JT/0u87j9exR1AociehKUzxae4KCOWxCQ1PIKbYS0F8ovxaCrqRlkylGmbhywKxV/zbbrEhWa5NXg==",
+        "dependencies": {
+          "runtime.win-x64.Microsoft.DotNet.ILCompiler": "10.0.14"
+        }
+      },
       "Microsoft.Web.WebView2": {
         "type": "Transitive",
         "resolved": "1.0.3719.77",
@@ -596,6 +617,11 @@
           "Microsoft.WindowsAppSDK.Base": "[2.6.4, 3.0.0)",
           "Microsoft.WindowsAppSDK.InteractiveExperiences": "[2.6.4, 3.0.0)"
         }
+      },
+      "runtime.win-x64.Microsoft.DotNet.ILCompiler": {
+        "type": "Transitive",
+        "resolved": "10.0.14",
+        "contentHash": "B28xsyrO3PRFGL9yd1lLWdX3/wATFkaxPFM3VmGOFG8pfx7jDeb1Yz09v6n+z0jNEPAlQLqOx2noOXw8aytYNw=="
       },
       "System.Diagnostics.EventLog": {
         "type": "Transitive",

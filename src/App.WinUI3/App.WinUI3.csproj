@@ -14,6 +14,12 @@
     <!-- Windows App SDK のビルド要件（リポジトリ共通の Directory.Build.props には置かない） -->
     <Platforms>x64</Platforms>
     <SelfContained>true</SelfContained>
+    <!-- AOT コンパイル対応。ジェネリック型の高速化と起動時間短縮を実現。unsafe は CsWinRT が生成したコードに必要 -->
+    <PublishAot>true</PublishAot>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>link</TrimMode>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!--
       Windows App SDK も自己完結にする（実行環境に Windows App Runtime を要求しない）。
       未設定の場合はアセンブリにブートストラップの自動初期化（既定は OnNoMatch_ShowUI）が埋め込まれ、
@@ -32,6 +38,8 @@
     <!-- exe （アセンブリ）名はプロジェクト名に合せる。名前空間は既存の App.WinUI のまま（変更すると全ソース・XAML へ波及するため） -->
     <AssemblyName>ZenHanConverter.WinUI3</AssemblyName>
     <PackageTags>clipboard; zen; han; convert</PackageTags>
+    <!-- AOT / Trim のための XAML バインディング警告を抑止。規約 .github/ビルド設定規約.md の付録 A に記載 -->
+    <NoWarn>$(NoWarn);WMC1510</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
