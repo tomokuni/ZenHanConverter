@@ -146,19 +146,46 @@ $brokenLinks = [System.Collections.Generic.List[string]]::new()
 $externalLinks = 0
 $repoParent = Split-Path $repoRoot -Parent
 $rxLink = [regex]'\]\((?<t>[^)\s]+)\)'
+# **インライン コードは「同じ長さのバックティックで囲まれた区間」**とする（Markdown の仕様）。
+# コード スパンは行をまたげるため、行単位に区切らずに対応させる。 **終端はバックティック列の長さが
+# 開始と一致する場合だけ**認識する（囲みより長い列を内部に含む正当なコード スパンを除去できるようにするため）。
+$rxCode = [regex]'(?s)(?<!`)(`+)(?!`)(?:(?!(?<!`)\1(?!`)).)*?(?<!`)\1(?!`)'
+
 # **フェンス付きコード ブロック（``` / ~~~）はリンク検査の対象外**にする（中身は例示である）。
 # 先に除去しないと、フェンスのバックティックが本文のバックティックと対になり、対応がずれる。
-# 作業ツリーの改行は CRLF のため、終了行の末尾に `\r?` を許す（複数行モードの `$` は `\r` を消費しない）。
-$rxFence = [regex]'(?ms)^[ \t]*(?<fence>`{3,}|~{3,})[^\r\n]*\r?\n.*?^[ \t]*\k<fence>[ \t]*\r?$'
-# **インライン コードは「同じ長さのバックティックで囲まれた区間」**とする（Markdown の仕様）。
-# コード スパンは行をまたげるため、行単位に区切らずに対応させる（フェンスを先に除いてあるので、
-# 単独のバックティックが本文のバックティックと対になることはない）。
-# **終端はバックティック列の長さが開始と一致する場合だけ**認識する（囲みより長い列を内部に含める
-# 正当なコード スパンを除去できるようにするため）。
-$rxCode = [regex]'(?s)(?<!`)(`+)(?!`)(?:(?!(?<!`)\1(?!`)).)*?(?<!`)\1(?!`)'
+# 終了フェンスは**開始と同じ文字で、開始以上の長さ**の列だけを認識する（Markdown の仕様）。
+# 状態遷移で 1 行ずつ見る（正規表現では列の長さの比較ができないため）。
+# 改行は CRLF / LF のどちらでも扱えるよう、行の分割と結合で吸収する。
+function Remove-FencedCode([string]$Text) {
+    $lines = $Text -split "`r?`n"
+    $kept = [System.Collections.Generic.List[string]]::new()
+    $fenceChar = [char]0
+    $fenceLength = 0
+    foreach ($line in $lines) {
+        $m = [regex]::Match($line, '^[ \t]*(?<run>`{3,}|~{3,})')
+        if ($fenceChar -eq [char]0) {
+            if ($m.Success) {
+                $fenceChar = $m.Groups['run'].Value[0]
+                $fenceLength = $m.Groups['run'].Value.Length
+                $kept.Add('')
+                continue
+            }
+            $kept.Add($line)
+            continue
+        }
+        # フェンスの中（リンク検査の対象外）
+        $kept.Add('')
+        if ($m.Success -and $m.Groups['run'].Value[0] -eq $fenceChar -and $m.Groups['run'].Value.Length -ge $fenceLength) {
+            $fenceChar = [char]0
+            $fenceLength = 0
+        }
+    }
+    return ($kept -join "`n")
+}
+
 foreach ($f in $docs) {
     # コード片の中のリンク風表記は文書の例示なので対象外にする（置換先にバックティックを使わない）
-    $text = $rxFence.Replace((Get-Text $f.FullName), ' ')
+    $text = Remove-FencedCode (Get-Text $f.FullName)
     $text = $rxCode.Replace($text, ' ')
     foreach ($m in $rxLink.Matches($text)) {
         $target = $m.Groups['t'].Value
