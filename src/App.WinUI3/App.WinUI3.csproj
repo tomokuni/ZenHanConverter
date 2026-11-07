@@ -14,11 +14,11 @@
     <!-- Windows App SDK のビルド要件（リポジトリ共通の Directory.Build.props には置かない） -->
     <Platforms>x64</Platforms>
     <SelfContained>true</SelfContained>
-    <!-- AOT コンパイル対応。ジェネリック型の高速化と起動時間短縮を実現。unsafe は CsWinRT が生成したコードに必要 -->
-    <PublishAot>true</PublishAot>
+    <!-- Trim 対応: ビルド時にトリミングの問題を検出。パブリッシュ時に -p:PublishTrimmed=true を明示的に指定する -->
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>link</TrimMode>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <!-- unsafe は CsWinRT が生成したコードに必要（AOT / Trim 対応） -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!--
       Windows App SDK も自己完結にする（実行環境に Windows App Runtime を要求しない）。
