@@ -231,7 +231,7 @@ dotnet test --solution <ソリューション>.slnx -c Release --no-build
 | `build.yml` の実行契機 | **`main` 向け Pull Request と手動実行だけ**（push では実行しない） |
 | 検証の中身 | `buildScript/verify.ps1`（ビルド・テスト・リポジトリ全体の検査）と `buildScript/verifyDocs.ps1`（文書とコードの走査） |
 | `locks.yml` | `main` 向け PR で `buildScript/updateLocks.ps1` を実行し、`packages.lock.json` の差分を自動コミットする（`GITHUB_TOKEN` の push では `pull_request` が起動しないため、`build.yml` を `workflow_dispatch` で起動し直す） |
-| 走査（`docs` ジョブ） | `buildScript/verifyDocs.ps1`。 **ubuntu で実行する**（`verifyDocs.ps1` が npx を Linux では直接起動し、改行コードは index を見る）。 **文書の型参照検査のため復元だけ行う**（参照先パッケージの XML ドキュメントを読む） |
+| 走査（`docs` ジョブ） | `buildScript/verifyDocs.ps1`。 **アプリ リポジトリは Windows で実行する**（本リポジトリは WinForms 版が `Microsoft.Extensions.Hosting` を参照し、Linux では復元が `NU1102` で失敗する。 ライブラリ リポジトリは ubuntu で実行している）。 走査スクリプト自体は OS 非依存（npx の起動方法と改行コードの見方を OS で切り替える） |
 | `release.yml` | Pull Request では**前提検証だけ**（版・タグ・CHANGELOG・ブランチ）。 手動実行の `mode` で `dry-run` / `release` を選ぶ |
 | rulesets | [`rulesets/protect-main.json`](rulesets/protect-main.json)（`ci` を必須。 strict）と [`rulesets/tag-version.json`](rulesets/tag-version.json) |
 | 設定の単一所有 | `.github/release-config.json`（製品名・ソリューション・ブランチ・UI の定義）と [`.github/actions/read-config`](actions/read-config/action.yml) |

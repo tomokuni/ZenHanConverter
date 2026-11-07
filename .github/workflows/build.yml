@@ -12,7 +12,7 @@
 #
 # **ジョブは同時に走らせる**（直列だと 1 ジョブでビルドと走査を順に待つ）。
 #   verify … ビルドとテスト（走査を除く。 合否基準は .github/検証手順.md）
-#   docs   … 文書とコードの走査（ビルドはしない。 文書の型参照検査のため復元だけ行う。 ubuntu で走らせる）
+#   docs   … 文書とコードの走査（ビルドはしない。 文書の型参照検査のため復元だけ行う。 Windows で走らせる）
 # 検証の中身は buildScript/verify.ps1 が単一所有し、合否基準は .github/検証手順.md が定める。
 #
 # **文書（.md）だけの変更ではビルドもテストも要らない**（走査だけを実行する）。
@@ -145,9 +145,10 @@ jobs:
   # 3. 文書とコードの走査（ビルドはしない。 verify と同時に走らせる）
   # ────────────────────────────────────────────────────────────
   docs:
-    # OS に依存しない走査だけを ubuntu で実行する（`verifyDocs.ps1` は npx を Windows では cmd.exe 経由、
-    # Linux では直接起動し、改行コードの検査も OS ごとに見る場所を変える）
-    runs-on: ubuntu-latest
+    # **走査も Windows で実行する**: 本リポジトリは WinForms 版が `Microsoft.Extensions.Hosting` を参照するため、
+    # Linux では `EnableWindowsTargeting` を付けても復元が `NU1102`（`System.Diagnostics.EventLog`）で失敗する
+    # （実測 2026-11-08）。 走査スクリプト自体は OS 非依存にしてあるため、復元できるようになったら ubuntu へ移す。
+    runs-on: windows-latest
     timeout-minutes: 20
     steps:
       - name: チェックアウト
@@ -162,8 +163,8 @@ jobs:
       - name: npm をキャッシュ
         uses: actions/cache@v6
         with:
-          # キャッシュの場所は OS で変わる（ubuntu は `~/.npm`）
-          path: ~/.npm
+          # キャッシュの場所は OS で変わる（Windows は `%LOCALAPPDATA%\npm-cache`）
+          path: ~\AppData\Local\npm-cache
           # 版は buildScript/verifyDocs.ps1 が単一所有する（版を上げるとキーが変わる）
           key: npm-${{ runner.os }}-${{ hashFiles('buildScript/verifyDocs.ps1', 'buildScript/markdownlint.json') }}
           restore-keys: |

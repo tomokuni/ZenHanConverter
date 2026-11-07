@@ -67,7 +67,8 @@ UI の追加・変更は **`release-config.json` の `uis[]` を編集します*
 - 同じ設定を複数箇所に置かないでください（例: UI の定義をワークフローへ直接書く、ソリューション名をワークフローへ書く、バージョンを `.csproj` にも書く、SDK のバージョンをワークフローにも書く）。
   変更時の注意事項は [`REUSING.md`](REUSING.md) にも記載しています。
 - **ビルドとテスト、リポジトリ全体の検査は `windows-latest`**（Win32 API の P/Invoke と Windows 向けの復元を含む）、
-  **文書とコードの走査（`docs` ジョブ）は `ubuntu-latest`**（OS に依存しない）で実行します（`release.yml` の検証も `ubuntu-latest`）。
+  **文書とコードの走査（`docs` ジョブ）も `windows-latest`**（本リポジトリは WinForms 版が `Microsoft.Extensions.Hosting` を参照し、
+  Linux では復元が `NU1102` で失敗するため。 実測 2026-11-08）で実行します（`release.yml` の検証は `ubuntu-latest`）。
 
 ## 依存関係の更新（Dependabot）
 
