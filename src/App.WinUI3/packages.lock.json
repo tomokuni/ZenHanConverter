@@ -49,11 +49,11 @@
       },
       "EsUtil.Ui.WinUI3.ColumnPacking": {
         "type": "Direct",
-        "requested": "[0.5.3, )",
-        "resolved": "0.5.3",
-        "contentHash": "LPPYxx/hYJLafZNMTDAzk/WFsI9kWd/r0diNOMjGiBYO+g5t4UswabvdY/rlU76ipMTXTHS9jFeJ4BOF98c5JA==",
+        "requested": "[0.6.0, )",
+        "resolved": "0.6.0",
+        "contentHash": "VFsb6UxdMw4z5OH5Ns/12pcf/AVdaUzsgYYCQG6ss+Z7suzbNCWCANDQKbQuFQ+TKtErDN8sOr2hRO6uBr/jIw==",
         "dependencies": {
-          "EsUtil.Feature.ColumnPacking.Core": "0.5.3",
+          "EsUtil.Feature.ColumnPacking.Core": "0.6.0",
           "Microsoft.Extensions.Logging.Abstractions": "10.0.14",
           "Microsoft.Windows.SDK.BuildTools": "10.0.28000.2957",
           "Microsoft.WindowsAppSDK": "2.6.4"
@@ -61,11 +61,11 @@
       },
       "EsUtil.Ui.WinUI3.Interop": {
         "type": "Direct",
-        "requested": "[0.5.3, )",
-        "resolved": "0.5.3",
-        "contentHash": "awceTNPnvOLEIi6xMIgz/xEzx4Nz5O00iZuqEj/xBBQhylw3wUqnZObFGrc6Rhuj0w85v99/hHQg/ECQVOJd4A==",
+        "requested": "[0.6.0, )",
+        "resolved": "0.6.0",
+        "contentHash": "RAOYw0RUsApC4m8OuNpPaElxMv4cK2bvWX6CBMPWblNBNHEvayNbjkqBBOVYGvuFTBFG9ShCdyMHH4AikAMOzA==",
         "dependencies": {
-          "EsUtil.Platform.Core": "0.5.3",
+          "EsUtil.Platform.Core": "0.6.0",
           "Microsoft.Windows.SDK.BuildTools": "10.0.28000.2957",
           "Microsoft.WindowsAppSDK": "2.6.4"
         }
@@ -561,34 +561,34 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "EsUtil.Feature.ZenHan.Core": "[0.5.3, )",
-          "EsUtil.Platform.Core": "[0.5.3, )"
+          "EsUtil.Feature.ZenHan.Core": "[0.6.0, )",
+          "EsUtil.Platform.Core": "[0.6.0, )"
         }
       },
       "ZenHanConverter.App.Core.Presentation": {
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "ZenHanConverter.App.Core": "[0.2.0, )"
+          "ZenHanConverter.App.Core": "[0.3.0, )"
         }
       },
       "EsUtil.Feature.ColumnPacking.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.5.3, )",
-        "resolved": "0.5.3",
-        "contentHash": "AcXPBrP6NT8wVwtiZlzdkLh9/an28JKDvMZdtMykFxfLhSaMF3Q8l7GjhPlEvulvZ58cZAqaSXnSRfZoXTZgkw=="
+        "requested": "[0.6.0, )",
+        "resolved": "0.6.0",
+        "contentHash": "ovu5ZR1V5yCELcCFFX7I+SFeVowcLZZZ7VvJmJFXuJcgmHTYYv8btL0coWHM4VTyjzODCN4tZ+PeJjXpAPtxzA=="
       },
       "EsUtil.Feature.ZenHan.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.5.3, )",
-        "resolved": "0.5.3",
-        "contentHash": "90ocI4RsZqtXRZFttF22uTeqaSENGrMHdxCUQcxbtl9GixdlcYixaaLQH3e0qm2wAKAF37VX6v2F1s/Pe7R/sw=="
+        "requested": "[0.6.0, )",
+        "resolved": "0.6.0",
+        "contentHash": "RFB+VJJaU05zMP8nvIIjZglKZBdNZ0bzWHkFTGTObJcP/mjb7ViGl3mJuf0MbUfCRBlKwYjUT5UXhMKKaGPDIw=="
       },
       "EsUtil.Platform.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.5.3, )",
-        "resolved": "0.5.3",
-        "contentHash": "J+yZNvNdB9ByjmfPxG7iXKvDwqxkEqUIuHLcbiwH7UkOtGxipivkgMyAwpsCATLBWs/WLhCDTDIuxwpP+3r2Bw=="
+        "requested": "[0.6.0, )",
+        "resolved": "0.6.0",
+        "contentHash": "eshFW7EYXw06luqWHwhgCVrsmgF5n/muMMMdjy1X2WrjZ2WjpE6pa0UGVoWjTY/UjariArBPzGARqPiqqkWHuw=="
       }
     },
     "net10.0-windows10.0.26100/win-x64": {

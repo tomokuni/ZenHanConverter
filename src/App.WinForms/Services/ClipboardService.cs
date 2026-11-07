@@ -28,8 +28,13 @@ public sealed class ClipboardService : IClipboardService
     /// <summary>クリップボード内容変更イベント。</summary>
     public event EventHandler<EventArgs>? ContentChanged;
 
+    /// <summary>クリップボードの読み書き（EsUtil.Platform.Core の実装。 状態を持たないため 1 つを使い回す）。</summary>
+
+    private readonly WinClipboard _clipboard = new();
+
+
     /// <summary>クリップボード内容の変更検出器。</summary>
-    private readonly ClipboardChangeDetector _changeDetector = new(SafeGetSequence);
+    private readonly ClipboardChangeDetector _changeDetector;
 
     /// <summary>クリップボード変更監視のタイマー。</summary>
     private readonly System.Windows.Forms.Timer _timer = new()
@@ -43,6 +48,7 @@ public sealed class ClipboardService : IClipboardService
     /// <summary>ClipboardService の新しいインスタンスを初期化し、クリップボード監視を開始します。</summary>
     public ClipboardService()
     {
+        _changeDetector = new(SafeGetSequence);
         _timer.Tick += (_, _) => OnTimerTick();
         _timer.Start();
     }
@@ -56,7 +62,7 @@ public sealed class ClipboardService : IClipboardService
 
     /// <summary>クリップボードシーケンス番号を取得します。</summary>
     /// <remarks>取得は例外を投げません（失敗時は 0 を返す）。</remarks>
-    private static uint SafeGetSequence() => WinClipboard.SequenceNumber;
+    private uint SafeGetSequence() => _clipboard.SequenceNumber;
 
     /// <summary>テスト用に ContentChanged イベントを発行します。</summary>
     public void RaiseContentChanged() => ContentChanged?.Invoke(this, EventArgs.Empty);
@@ -64,12 +70,12 @@ public sealed class ClipboardService : IClipboardService
     /// <summary>クリップボードからテキストを非同期に取得します。</summary>
     /// <returns>取得したテキスト。取得できない場合は null。</returns>
     public Task<string?> GetTextAsync()
-        => Task.FromResult(WinClipboard.TryReadText(out var text) ? text : null);
+        => Task.FromResult(_clipboard.TryReadText(out var text) ? text : null);
 
     /// <summary>指定されたテキストをクリップボードに設定します。</summary>
     /// <param name="text">設定するテキスト。</param>
     /// <remarks>バックグラウンド時などクリップボードへ書き込めない場合は何もしません（想定内の通常動作）。</remarks>
-    public void SetText(string text) => _ = WinClipboard.TryWriteText(text);
+    public void SetText(string text) => _ = _clipboard.TryWriteText(text);
 
     /// <summary>クリップボードの内容をフラッシュ（永続化）します。</summary>
     /// <remarks>CF_UNICODETEXT は SetClipboardData 時点で永続化されるため、明示的なフラッシュ操作は不要です。</remarks>
