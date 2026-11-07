@@ -146,13 +146,17 @@ $brokenLinks = [System.Collections.Generic.List[string]]::new()
 $externalLinks = 0
 $repoParent = Split-Path $repoRoot -Parent
 $rxLink = [regex]'\]\((?<t>[^)\s]+)\)'
-# **インライン コードは行をまたがない**（Markdown の仕様）。 行をまたいで対応させると、単独の
-# バックティックが後続の行と対になって対応がずれ、例示（`](...)`）をリンクとして拾う
-# （実測: ubuntu で `.github/検証手順.md` の例示を誤検出した）。
-$rxCode = [regex]'`[^`\r\n]*`'
+# **フェンス付きコード ブロック（``` / ~~~）はリンク検査の対象外**にする（中身は例示である）。
+# 先に除去しないと、フェンスのバックティックが本文のバックティックと対になり、対応がずれる。
+$rxFence = [regex]'(?ms)^[ \t]*(?<fence>`{3,}|~{3,})[^\r\n]*\r?\n.*?^[ \t]*\k<fence>[ \t]*$'
+# **インライン コードは「同じ長さのバックティックで囲まれた区間」**とする（Markdown の仕様）。
+# コード スパンは行をまたげるため、行単位に区切らずに対応させる（フェンスを先に除いてあるので、
+# 単独のバックティックが本文のバックティックと対になることはない）。
+$rxCode = [regex]'(?s)(?<!`)(`+)(?!`)(?:(?!\1).)*?\1(?!`)'
 foreach ($f in $docs) {
-    # コード片（`...`）の中のリンク風表記は文書の例示なので対象外にする（置換先にバックティックを使わない）
-    $text = $rxCode.Replace((Get-Text $f.FullName), ' ')
+    # コード片の中のリンク風表記は文書の例示なので対象外にする（置換先にバックティックを使わない）
+    $text = $rxFence.Replace((Get-Text $f.FullName), ' ')
+    $text = $rxCode.Replace($text, ' ')
     foreach ($m in $rxLink.Matches($text)) {
         $target = $m.Groups['t'].Value
         if ($target -match '^(https?:|mailto:|\w+:|#)') { continue }
