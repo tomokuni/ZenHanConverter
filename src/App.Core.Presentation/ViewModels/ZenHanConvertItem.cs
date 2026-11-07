@@ -75,8 +75,26 @@ public partial class ZenHanConvertItem : ObservableObject, IDisposable
                 {
                     _def.Mode.Set(_config, match.Value);
                     OnPropertyChanged(nameof(SelectedLabel));
+                    OnPropertyChanged(nameof(SelectedOption));
                 }
             }
+        }
+    }
+
+    /// <summary>選択中の選択肢を取得または設定します。</summary>
+    /// <value>選択中の <see cref="SegmentOption"/>。該当なしの場合は null。</value>
+    /// <remarks>
+    /// 選択肢を 1 つのコントロールで表す UI（セグメントコントロール等）の <c>SelectedItem</c> へ
+    /// 双方向でバインドするための入口です。 プロパティ名の実行時解決（<c>SelectedValuePath</c>）を
+    /// 使わずに済むため、Native AOT でも選択状態を同期できます。
+    /// </remarks>
+    public SegmentOption? SelectedOption
+    {
+        get => Options.FirstOrDefault(x => x.IsSelected);
+        set
+        {
+            if (value is null) { return; }
+            SelectedLabel = value.Content;
         }
     }
 
@@ -143,6 +161,8 @@ public partial class ZenHanConvertItem : ObservableObject, IDisposable
         {
             _isSyncing = false;
         }
+
+        OnPropertyChanged(nameof(SelectedOption));
     }
 
     /// <summary>リソースを解放します。イベント購読を解除します。</summary>

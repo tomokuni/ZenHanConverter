@@ -15,8 +15,8 @@
 - [2. 機能一覧](#2-機能一覧)
 - [3. システム要件](#3-システム要件)
 - [4. ビルドと実行](#4-ビルドと実行)
-  - [4.1 配布ビルド（単一 exe）](#41-配布ビルド単一-exe)
-    - [4.1.1 Native AOT を使わない理由](#411-native-aot-を使わない理由)
+  - [4.1 配布ビルド（Native AOT）](#41-配布ビルドnative-aot)
+    - [4.1.1 Native AOT の条件](#411-native-aot-の条件)
     - [4.1.2 配布物の大きさ](#412-配布物の大きさ)
 - [5. クイックスタート](#5-クイックスタート)
 - [6. 画面構成](#6-画面構成)
@@ -74,7 +74,8 @@
 - .NET 10 SDK（ビルド時）
 - Windows 10（1809 / 17763）以降、Windows 11
 - x64
-- Windows App Runtime のインストールは不要です（Windows App SDK も自己完結。 同梱の DLL を reg-free WinRT で解決します）
+- Windows App Runtime は同梱しません。起動時に有無を確認し、無ければ `EsUtil.Ui.WinUI3.Interop` の
+  `WindowsAppRuntimeBootstrap` が導入します（.NET ランタイムは自己完結）
 
 クリップボードの監視に Win32 API を使うため、本アプリは Windows 専用です。
 
@@ -91,30 +92,36 @@ dotnet run --project src/App.WinUI3/App.WinUI3.csproj
 dotnet test --project test/App.WinUI3/App.WinUI3.Tests.csproj
 ```
 
-- 通常ビルドも **.NET と Windows App SDK の両方が自己完結**です（実行環境に Windows App Runtime のインストールは不要）。
+- .NET ランタイムは自己完結です。Windows App Runtime は同梱せず、起動時に有無を確認して無ければ
+  `EsUtil.Ui.WinUI3.Interop` の `WindowsAppRuntimeBootstrap` が導入します。
 
-### 4.1 配布ビルド（単一 exe）
+### 4.1 配布ビルド（Native AOT）
 
 ```powershell
 .\buildScript\publish_WinUI3.bat             # 既定は win-x64
 .\buildScript\publish_WinUI3.bat win-arm64   # RID を指定する場合
 ```
 
-- 出力: `publish/winui3-win-x64-single`（`ZenHanConverter.App.WinUI3.exe` の 1 ファイル。 約 175 MB）
+- 出力: `publish/winui3-win-x64-aot`（`ZenHanConverter.WinUI3.exe`（Native AOT）と `resources.pri`、ネイティブ DLL 3 個）。容量は publish の出力と `buildScript/verifyPublish.ps1` の表示で確認します。
+- **exe だけを取り出しても動作しません。** 出力フォルダーごと配布します（XAML リソースと、ランタイムを起動するための DLL が必要です）。
 - スクリプトはリポジトリ ルートを基準に動作するため、どこから実行しても同じ結果になります。
-
-- 初回起動時に依存ファイルを `%TEMP%\.net\ZenHanConverter.App.WinUI3\` へ展開するため、初回のみ起動に時間がかかります。
-- 単一 exe 化には `PublishSingleFile` / `SelfContained` / `WindowsAppSDKSelfContained` / `EnableMsixTooling` / `IncludeAllContentForSelfExtract` が必要です（`WindowsPackageType=None` はプロジェクトで設定済み）。
+- 単一ファイル化（`PublishSingleFile`）とは併用できません（AOT 自体が 1 個のネイティブ exe を作ります）。
+  スクリプトは AOT だけを実行し、失敗したときは終了コードを返します（別の出力先へ落とすフォールバックは持ちません）。
 - 発行はリポジトリ外の一時領域で行い、必要なファイルだけを出力先へ配置します（リポジトリ内へ直接発行すると、フレームワーク配置のファイルをアプリのコンテンツとして取り込んでしまいます）。
 
-#### 4.1.1 Native AOT を使わない理由
+#### 4.1.1 Native AOT の条件
 
-WinUI 3 は Native AOT に対応しません。 `PublishAot=true` は発行自体は成功しますが、起動時に `Microsoft.UI.Xaml.dll` でクラッシュします。 そのため単一ファイル方式を選びます。
+Windows App SDK 2.6 では Native AOT で発行できます。次の 3 点が条件です（実測 2026-11-07）。
+
+1. `WindowsAppSDKSelfContained=false`（Windows App Runtime を同梱しない）
+2. `EnableMsixTooling=true` で `resources.pri` を生成する（無いと起動時に `Microsoft.UI.Xaml.dll` で `0xc000027b`）
+3. `PublishSingleFile=false`
 
 #### 4.1.2 配布物の大きさ
 
-- プロジェクトは発行時に Windows App SDK の未使用ペイロード（AI / ML / Search / Widgets / WebView2）を自動除外します（`Microsoft.WindowsAppSDK.Runtime` の MSIX に含まれるためパッケージ参照では削れません。 約 55 MB の削減）。
-- 発行は警告をエラーとして扱います。 WinUI 3 だけは `IL2026` を例外として許可しています（理由は [`.github/RELEASE.md`](../../.github/RELEASE.md)）。
+- 配布物は Windows App Runtime を同梱しないため、AI / ML / Search / Widgets / WebView2 のペイロードを含みません。
+- 発行は警告をエラーとして扱います。 `CommunityToolkit.WinUI.UI.Controls.DataGrid`（第三者）の `IL2104` だけは
+  例外として許可しています（理由は [`.github/ビルド設定規約.md`](../../.github/ビルド設定規約.md) の付録 A）。
 
 ## 5. クイックスタート
 

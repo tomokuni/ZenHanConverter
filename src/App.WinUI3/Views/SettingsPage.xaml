@@ -31,8 +31,7 @@ mc:Ignorable="d">
                         <ctk:Segmented
                             IsEnabled="{x:Bind IsEnabled, Mode=OneWay}"
                             ItemsSource="{x:Bind Options}"
-                            SelectedValue="{x:Bind SelectedLabel, Mode=TwoWay}"
-                            SelectedValuePath="Content"
+                            SelectedItem="{x:Bind SelectedOption, Mode=TwoWay}"
                             ItemContainerStyleSelector="{StaticResource SegmentStyleSelector}">
                             <ctk:Segmented.ItemTemplate>
                                 <DataTemplate x:DataType="vm:SegmentOption">
@@ -256,13 +255,13 @@ mc:Ignorable="d">
                             <!-- 検索文字列欄 -->
                             <dg:DataGridTemplateColumn Header="検索文字列" Width="*" MinWidth="80">
                                 <dg:DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Search}" 
+                                    <DataTemplate x:DataType="vm:ReplacePairItem">
+                                        <TextBlock Text="{x:Bind Search, Mode=OneWay}"
                                                    TextTrimming="CharacterEllipsis"
                                                    TextWrapping="NoWrap"
                                                    VerticalAlignment="Center"
                                                    Margin="8,0,8,0"
-                                                   ToolTipService.ToolTip="{Binding Search}"
+                                                   ToolTipService.ToolTip="{x:Bind Search, Mode=OneWay}"
                                                    IsTextSelectionEnabled="True"/>
                                     </DataTemplate>
                                 </dg:DataGridTemplateColumn.CellTemplate>
@@ -270,13 +269,13 @@ mc:Ignorable="d">
                             <!-- 置換文字列欄 -->
                             <dg:DataGridTemplateColumn Header="置換文字列" Width="*" MinWidth="80">
                                 <dg:DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Replace}"
+                                    <DataTemplate x:DataType="vm:ReplacePairItem">
+                                        <TextBlock Text="{x:Bind Replace, Mode=OneWay}"
                                                    TextTrimming="CharacterEllipsis"
                                                    TextWrapping="NoWrap"
                                                    VerticalAlignment="Center"
                                                    Margin="8,0,8,0"
-                                                   ToolTipService.ToolTip="{Binding Replace}"
+                                                   ToolTipService.ToolTip="{x:Bind Replace, Mode=OneWay}"
                                                    IsTextSelectionEnabled="True"/>
                                     </DataTemplate>
                                 </dg:DataGridTemplateColumn.CellTemplate>
@@ -284,8 +283,8 @@ mc:Ignorable="d">
                             <!-- 正規表現 -->
                             <dg:DataGridTemplateColumn Header="正規表現" Width="100" MinWidth="100" MaxWidth="100">
                                 <dg:DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding IsRegex, Converter={StaticResource BoolToCheckMarkConverter}}"
+                                    <DataTemplate x:DataType="vm:ReplacePairItem">
+                                        <TextBlock Text="{x:Bind IsRegex, Mode=OneWay, Converter={StaticResource BoolToCheckMarkConverter}}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontSize="16"/>
@@ -295,19 +294,19 @@ mc:Ignorable="d">
                             <!-- 編集・削除 -->
                             <dg:DataGridTemplateColumn Header="操作" Width="90" MinWidth="90" MaxWidth="90">
                                 <dg:DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
+                                    <DataTemplate x:DataType="vm:ReplacePairItem">
                                         <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
                                             <Button Content="✏"
                                                     ToolTipService.ToolTip="この行を編集します"
                                                     IsTabStop="True"
                                                     Click="OnEditReplaceRowClick"
-                                                    Tag="{Binding}"
+                                                    Tag="{x:Bind}"
                                                     MinWidth="32" Padding="4,2"/>
                                             <Button Content="🗑"
                                                     ToolTipService.ToolTip="この行を削除します"
                                                     IsTabStop="True"
                                                     Click="OnDeleteReplaceRowClick"
-                                                    Tag="{Binding}"
+                                                    Tag="{x:Bind}"
                                                     MinWidth="32" Padding="4,2"/>
                                         </StackPanel>
                                     </DataTemplate>

@@ -151,6 +151,53 @@ public sealed class ZenHanConvertItemTests : IDisposable
     }
 
     [Fact]
+    internal void SelectedOptionは現在の設定値に対応する選択肢を返す()
+    {
+        _config.ConvertModeNumber = ZenHanMode.ToHan;
+
+        Assert.Same(_item.Options[1], _item.SelectedOption);
+    }
+
+    [Fact]
+    internal void SelectedOptionの設定は設定へ反映される()
+    {
+        // XAML ではセグメント コントロールの SelectedItem が SelectedOption へ双方向バインドされる
+        _item.SelectedOption = _item.Options[2];
+
+        Assert.Equal(ZenHanMode.ToZen, _config.ConvertModeNumber);
+        Assert.Equal("全角", _item.SelectedLabel);
+    }
+
+    [Fact]
+    internal void SelectedOptionへnullを設定しても設定は変わらない()
+    {
+        var before = _config.ConvertModeNumber;
+
+        _item.SelectedOption = null;
+
+        Assert.Equal(before, _config.ConvertModeNumber);
+    }
+
+    [Fact]
+    internal void 外部から設定が変わるとSelectedOptionが追従する()
+    {
+        _config.ConvertModeNumber = ZenHanMode.ToZen;
+
+        Assert.Same(_item.Options[2], _item.SelectedOption);
+    }
+
+    [Fact]
+    internal void Config変更でSelectedOptionの変更通知が発行される()
+    {
+        var changed = new List<string?>();
+        _item.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        _config.ConvertModeNumber = ZenHanMode.ToZen;
+
+        Assert.Contains(nameof(ZenHanConvertItem.SelectedOption), changed, StringComparer.Ordinal);
+    }
+
+    [Fact]
     internal void 外部から設定が変わるとOptionsの選択状態が追従する()
     {
         _config.ConvertModeNumber = ZenHanMode.ToZen;
