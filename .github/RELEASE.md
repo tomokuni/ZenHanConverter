@@ -249,7 +249,7 @@ semver 形式で入力します。数値部分の**先頭 0 は使用できま�
 | UI | 添付ファイル | zip の中身 |
 | --- | --- | --- |
 | MewUI 版 | `ZenHanConverter.MewUI.zip` | exe 1 個（Native AOT） |
-| WinUI 3 版 | `ZenHanConverter.WinUI3.zip` | exe 1 個（自己完結） |
+| WinUI 3 版 | `ZenHanConverter.WinUI3.zip` | exe 1 個（Native AOT。 Windows App Runtime は同梱せず、起動時に確認・導入する） |
 | Avalonia UI 版 | `ZenHanConverter.AvaloniaUI.zip` | exe 1 個 + ネイティブ DLL 3 個 |
 | WinForms 版 | `ZenHanConverter.WinForms.zip` | exe 1 個（自己完結） |
 

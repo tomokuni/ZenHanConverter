@@ -10,25 +10,32 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <UseWinUI>true</UseWinUI>
     <WindowsPackageType>None</WindowsPackageType>
+    <!-- XAML リソース（resources.pri）を必ず生成する。無いと発行した exe が起動時に Microsoft.UI.Xaml.dll で 0xc000027b（E_FAIL）になる（実測 2026-11-07） -->
+    <EnableMsixTooling>true</EnableMsixTooling>
     <IncludeReferencedProjectsInXamlTypeResolution>false</IncludeReferencedProjectsInXamlTypeResolution>
     <!-- Windows App SDK のビルド要件（リポジトリ共通の Directory.Build.props には置かない） -->
     <Platforms>x64</Platforms>
     <SelfContained>true</SelfContained>
-    <!-- Trim 対応: ビルド時にトリミングの問題を検出。パブリッシュ時に -p:PublishTrimmed=true を明示的に指定する -->
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>link</TrimMode>
+    <!--
+      Trim は AOT 発行のときだけ有効にする。AOT 以外の単一ファイル発行へトリミングを掛けると、
+      WinUI と Windows SDK のアセンブリ（トリム未対応）が IL2104 で失敗する（実測 2026-11-07）。
+      AOT 発行は publish 時に -p:PublishAot=true で指定する。
+    -->
+    <PublishTrimmed Condition="'$(PublishAot)' == 'true'">true</PublishTrimmed>
+    <TrimMode Condition="'$(PublishAot)' == 'true'">link</TrimMode>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <!-- unsafe は CsWinRT が生成したコードに必要（AOT / Trim 対応） -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- エントリ ポイントを自前で持ち、Windows App Runtime の用意を EsUtil.Ui.WinUI3.Interop へ任せる -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <!--
-      Windows App SDK も自己完結にする（実行環境に Windows App Runtime を要求しない）。
-      未設定の場合はアセンブリにブートストラップの自動初期化（既定は OnNoMatch_ShowUI）が埋め込まれ、
-      起動時にインストール済みのランタイムを探す。無い環境では導入ダイアログを出して待ち続けるため、
-      このアセンブリを読み込むテスト（test/App.WinUI3・test/parity）が CI で停止する。
-      自己完結にするとブートストラップは使われず、同梱した DLL を reg-free WinRT で解決する。
-      publish（buildScript/WinUI3_publish_single.bat）も同じ設定を指定しているため挙動が一致する。
+      Windows App Runtime を同梱せず、導入済みのランタイムを使う（メモリ・配布サイズを抑える）。
+      ランタイムの有無の確認と導入は Program.Main が EsUtil.Ui.WinUI3.Interop の
+      WindowsAppRuntimeBootstrap で行うため、モジュール読み込み時の自動初期化は止める。
+      自動初期化はこの入口より先に走るため、ランタイムが無い PC では導入の判断へ到達しない。
     -->
-    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -38,8 +45,13 @@
     <!-- exe （アセンブリ）名はプロジェクト名に合せる。名前空間は既存の App.WinUI のまま（変更すると全ソース・XAML へ波及するため） -->
     <AssemblyName>ZenHanConverter.WinUI3</AssemblyName>
     <PackageTags>clipboard; zen; han; convert</PackageTags>
-    <!-- AOT / Trim のための XAML バインディング警告を抑止。規約 .github/ビルド設定規約.md の付録 A に記載 -->
-    <NoWarn>$(NoWarn);WMC1510</NoWarn>
+    <!--
+      CommunityToolkit.WinUI.UI.Controls.DataGrid（第三者）が AOT / トリム解析で IL2104（アセンブリが
+      トリム警告を出した）を報告する。このアセンブリは DataGrid のセル テンプレートだけで使い、
+      列はすべて DataGridTemplateColumn（プロパティ名の実行時解決を使わない）である。
+      理由は .github/ビルド設定規約.md の付録 A に記載する。
+    -->
+    <NoWarn>$(NoWarn);IL2104</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -59,6 +71,8 @@
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" />
     <!-- マルチカラム配置パネル。配置の計算は EsUtil.Feature.ColumnPacking.Core が単一所有する -->
     <PackageReference Include="EsUtil.Ui.WinUI3.ColumnPacking" />
+    <!-- Windows App Runtime の用意（確認と導入）を担う -->
+    <PackageReference Include="EsUtil.Ui.WinUI3.Interop" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
     <PackageReference Include="Microsoft.WindowsAppSDK" />

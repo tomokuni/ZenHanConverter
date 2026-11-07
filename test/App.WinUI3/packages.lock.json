@@ -572,6 +572,7 @@
           "CommunityToolkit.WinUI.Controls.SettingsControls": "[8.2.251219, )",
           "CommunityToolkit.WinUI.UI.Controls.DataGrid": "[7.1.2, )",
           "EsUtil.Ui.WinUI3.ColumnPacking": "[0.5.3, )",
+          "EsUtil.Ui.WinUI3.Interop": "[0.5.3, )",
           "Microsoft.Extensions.Hosting": "[10.0.14, )",
           "Microsoft.Windows.SDK.BuildTools": "[10.0.28000.2957, )",
           "Microsoft.WindowsAppSDK": "[2.6.4, )",
@@ -651,6 +652,17 @@
         "dependencies": {
           "EsUtil.Feature.ColumnPacking.Core": "0.5.3",
           "Microsoft.Extensions.Logging.Abstractions": "10.0.14",
+          "Microsoft.Windows.SDK.BuildTools": "10.0.28000.2957",
+          "Microsoft.WindowsAppSDK": "2.6.4"
+        }
+      },
+      "EsUtil.Ui.WinUI3.Interop": {
+        "type": "CentralTransitive",
+        "requested": "[0.5.3, )",
+        "resolved": "0.5.3",
+        "contentHash": "awceTNPnvOLEIi6xMIgz/xEzx4Nz5O00iZuqEj/xBBQhylw3wUqnZObFGrc6Rhuj0w85v99/hHQg/ECQVOJd4A==",
+        "dependencies": {
+          "EsUtil.Platform.Core": "0.5.3",
           "Microsoft.Windows.SDK.BuildTools": "10.0.28000.2957",
           "Microsoft.WindowsAppSDK": "2.6.4"
         }

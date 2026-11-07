@@ -26,7 +26,7 @@
     {
       "name": "WinUI3",
       "script": "buildScript/publish_WinUI3.bat",
-      "output": "publish/winui3-win-x64-single",
+      "output": "publish/winui3-win-x64-aot",
       "exe": "ZenHanConverter.WinUI3.exe",
       "asset": "ZenHanConverter.WinUI3.zip",
       "zip": true

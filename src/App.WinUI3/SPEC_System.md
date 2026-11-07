@@ -16,6 +16,7 @@ UI フレームワークとして WinUI 3（Windows App SDK）を使用します
 - CommunityToolkit.WinUI.Controls.*（Segmented / SettingsControls / Primitives）
 - CommunityToolkit.WinUI.UI.Controls.DataGrid 7.*
 - EsUtil.Ui.WinUI3.ColumnPacking（0.1.* のパッケージ参照。マルチカラム配置パネル `ColumnPackingPanel`）
+- EsUtil.Ui.WinUI3.Interop（Windows App Runtime の確認と導入 `WindowsAppRuntimeBootstrap`）
 - Microsoft.Extensions.Hosting 10.*（DI）
 
 マルチカラム配置パネルは `EsUtil.Ui.WinUI3.ColumnPacking` の `ColumnPackingPanel` を使います（同梱ソースは持ちません）。
@@ -44,56 +45,72 @@ dotnet build src/App.WinUI3/App.WinUI3.csproj
 dotnet run --project src/App.WinUI3/App.WinUI3.csproj
 ```
 
-プロジェクトは **Windows App SDK も自己完結**（`WindowsAppSDKSelfContained=true`）です。実行環境に
-Windows App Runtime のインストールは不要で、同梱した DLL を reg-free WinRT で解決します。
-これは、ブートストラップの自動初期化（既定は `OnNoMatch_ShowUI`）がアセンブリへ埋め込まれ、
-このアセンブリを読み込むテスト（`test/App.WinUI3` / `test/parity`）が Windows App Runtime の無い
-環境（CI など）で導入ダイアログを出して停止するのを防ぐためです。
+プロジェクトは **Windows App Runtime を同梱しません**（`WindowsAppSDKSelfContained=false`）。実行環境に
+導入済みの Windows App Runtime を使います。ランタイムの有無の確認と導入は
+`src/App.WinUI3/Program.cs` が `EsUtil.Ui.WinUI3.Interop` の `WindowsAppRuntimeBootstrap` に任せます
+（`WindowsAppSdkBootstrapInitialize=false` にして、モジュール読み込み時の自動初期化は止めています）。
 
-### 単一 exe
+`test/App.WinUI3` と `test/parity` は `WindowsAppSdkAutoInitialize=false` のため、ランタイムの無い環境でも
+導入ダイアログを出さずに終了します。
 
-`buildScript/` の `publish_WinUI3.bat`（ビルド）と `publish_WinUI3.bat`（ビルドして起動）で、自己完結の単一 exe を
-`publish\winui3-<RID>-single\ZenHanConverter.App.WinUI3.exe` に出力します（既定 RID は `win-x64`）。
-スクリプトはリポジトリルートを基準に動作します。
+### Native AOT の exe
 
-単一 exe 化に必要なプロパティは次のとおりです。
+`buildScript/publish_WinUI3.bat` が `publish\winui3-<RID>-aot\ZenHanConverter.WinUI3.exe` を出力します
+（既定 RID は `win-x64`）。スクリプトはリポジトリルートを基準に動作します。
+
+AOT 発行に必要なプロパティは次のとおりです。
 
 1. `WindowsPackageType=None`（非パッケージ。プロジェクトで設定済み）
-2. `PublishSingleFile=true`
+2. `PublishAot=true`（スクリプトが指定）と `PublishSingleFile=false`（AOT は単一のネイティブ exe を作るため、単一ファイル化との併用は失敗する）
 3. `SelfContained=true`（.NET ランタイム。プロジェクトで設定済み）
-4. `WindowsAppSDKSelfContained=true`（Windows App SDK。プロジェクトで設定済み）
-5. `EnableMsixTooling=true`（埋め込み `resources.pri` の生成に必須）
-6. `IncludeAllContentForSelfExtract=true`（DLL の SxS リダイレクトに必須）
+4. `WindowsAppSDKSelfContained=false`（Windows App Runtime は導入済みのものを使う）
+5. `EnableMsixTooling=true`（`resources.pri` の生成に必須。プロジェクトで設定済み。無いと起動時に `Microsoft.UI.Xaml.dll` で `0xc000027b` になる）
+6. `AllowUnsafeBlocks=true` と `CsWinRTAotOptimizerEnabled=true`（CsWinRT が生成するコードと AOT 最適化に必要。前者はプロジェクトで設定済み、後者は Windows App SDK 2.6 が要求する）
 
 ### Windows App SDK 未使用ペイロードの除外
 
-`Microsoft.WindowsAppSDK`（`2.*`）は AI / ML / Search / Widgets / WebView2 をサブパッケージとして参照し、その実体は
-`Microsoft.WindowsAppSDK.Runtime` の MSIX（`.msix` / `.msixvc` 内の `MSIX\win10-x64\` 以下）に格納されています。
-**MSIX はパッケージ参照ではないため `ExcludeAssets` では除外できません。**
+配布する AOT 版は Windows App Runtime を同梱しないため、AI / ML / Search / Widgets / WebView2 の
+ペイロードは出力へ複製されません。「自己完結の発行（`-p:WindowsAppSDKSelfContained=true`）へ切り替えた場合」に
+備えて、`App.WinUI3.csproj` の `RemoveUnusedWindowsAppSdkPayload` ターゲットが `ResolvedFileToPublish` から
+未使用ファイル（`onnxruntime.dll` / `DirectML.dll` / `Microsoft.Windows.AI*` / `Microsoft.Windows.ML*` /
+`Microsoft.Windows.Search*` / `Microsoft.Windows.Widgets*` / `Microsoft.Web.WebView2*` / `NPUDetect.dll` /
+`PerceptiveStreaming.dll` / `msquic.dll`）を除去します。
 
-そのため `App.WinUI3.csproj` の `RemoveUnusedWindowsAppSdkPayload` ターゲットで、`AfterTargets="ComputeResolvedFilesToPublishList"` の
-時点で `ResolvedFileToPublish` から未使用ファイル（`onnxruntime.dll` / `DirectML.dll` / `Microsoft.Windows.AI*` / `Microsoft.Windows.ML*` /
-`Microsoft.Windows.Search*` / `Microsoft.Windows.Widgets*` / `Microsoft.Web.WebView2*` / `NPUDetect.dll` / `PerceptiveStreaming.dll` / `msquic.dll`）を除去します。
+本アプリは AI / ML / Search / Widgets / WebView2 を使用しないため、除外による機能低下はありません。
 
-1. `ComputeResolvedFilesToPublishList` は単一ファイル／フォルダーの両発行で実行されるため、双方で削減が効く
-2. 単一ファイル発行では `PrepareForBundle`、フォルダー発行では `CopyFilesToPublishDirectory` の前に除去する
-
-本アプリは AI / ML / Search / Widgets / WebView2 を使用しないため、除外による機能低下はありません（動作確認済み）。
-単一 exe で 約 234 MB → 約 179 MB（約 55 MB 削減）。
-
-初回起動時に依存ファイルを `%TEMP%\.net\ZenHanConverter.App.WinUI3\` へ展開するため、初回のみ起動に時間がかかります。  
-また、展開先が破損・残留していると起動に失敗する場合があります。その場合は展開先フォルダを削除してから再起動します。  
-
-発行はリポジトリ外の一時領域（`%TEMP%\czhc-single-winui-<RID>`）で行い、単一 exe のみを出力先へ配置します。  
-リポジトリ内へ直接発行するとフレームワーク配置のファイルが出力先へ混在します。さらに、プロジェクトディレクトリ配下に
-`publish` が存在するとその内容がアプリのコンテンツ（`App.xaml` / `resources.pri` 等）として取り込まれ、単一 exe が肥大化します。
+発行はリポジトリ外の一時領域（`%TEMP%\publish-ui-winui3-<RID>`）で行い、必要なファイルだけを出力先へ配置します。
+リポジトリ内へ直接発行するとフレームワーク配置のファイルが出力先へ混在し、プロジェクト ディレクトリ配下の
+`publish` がアプリのコンテンツ（`App.xaml` / `resources.pri` 等）として取り込まれて肥大化します。
 
 ### Native AOT の可否
 
-WinUI 3 は Native AOT に対応しません。`PublishAot=true` での発行は成功しますが（`CommunityToolkit.WinUI.UI.Controls.DataGrid` の `IL2104` トリム警告のみ）、生成された exe は起動時に `Microsoft.UI.Xaml.dll` でクラッシュします（例外コード `0xc000027b`）。
-そのため `publish_WinUI3.bat` では AOT を使用しません（MewUI 版は AOT を使用しています）。
+Windows App SDK **2.6 では Native AOT で発行できます**（実測 2026-11-07）。成立する条件は
+「Windows App Runtime を同梱しない（`WindowsAppSDKSelfContained=false`）」「`EnableMsixTooling=true` で
+`resources.pri` を生成する」「`PublishSingleFile=false`」の 3 点です。旧版（Windows App SDK 1.x、自己完結の発行）
+では発行は成功しても起動時に `Microsoft.UI.Xaml.dll` で `0xc000027b` になっていましたが、この構成では
+起動と画面表示を確認しています。
+
+`CommunityToolkit.WinUI.UI.Controls.DataGrid`（第三者）は AOT / トリム解析で `IL2104` を報告するため、
+`App.WinUI3.csproj` の `NoWarn` で抑止しています（理由は
+[`.github/ビルド設定規約.md`](../../.github/ビルド設定規約.md) の付録 A）。
+
+置換一覧の `DataGrid` はセル テンプレートを `x:Bind`（`x:DataType` 付き）で書き、プロパティ名の実行時解決に
+頼りません。`ctk:Segmented` の `SelectedValuePath` だけはプロパティ名の実行時解決を行うため、
+`x:SuppressXamlTrimWarnings` で局所的に抑止しています（`Content` は同じ画面の `x:Bind` が参照するため
+トリミングで消えません）。
 
 ## src/App.WinUI3 プロジェクト
+
+### src/App.WinUI3/Program.cs
+
+#### `Program` static class
+
+アプリケーションのエントリ ポイント（XAML の自動生成 Main は `DISABLE_XAML_GENERATED_MAIN` で無効）。
+
+**メソッド**:
+
+- `Main()` — `WindowsAppRuntimeBootstrap.TryEnsureAvailable` でランタイムを用意し、`Application.Start` で
+  `App` を生成する。終了時に `WindowsAppRuntimeBootstrap.Shutdown` を呼ぶ
 
 ### src/App.WinUI3/App.xaml.cs
 

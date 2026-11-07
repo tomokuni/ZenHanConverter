@@ -59,6 +59,17 @@
           "Microsoft.WindowsAppSDK": "2.6.4"
         }
       },
+      "EsUtil.Ui.WinUI3.Interop": {
+        "type": "Direct",
+        "requested": "[0.5.3, )",
+        "resolved": "0.5.3",
+        "contentHash": "awceTNPnvOLEIi6xMIgz/xEzx4Nz5O00iZuqEj/xBBQhylw3wUqnZObFGrc6Rhuj0w85v99/hHQg/ECQVOJd4A==",
+        "dependencies": {
+          "EsUtil.Platform.Core": "0.5.3",
+          "Microsoft.Windows.SDK.BuildTools": "10.0.28000.2957",
+          "Microsoft.WindowsAppSDK": "2.6.4"
+        }
+      },
       "Meziantou.Analyzer": {
         "type": "Direct",
         "requested": "[3.0.317, )",

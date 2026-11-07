@@ -30,8 +30,9 @@ rem  Which modes work is decided by the UI and its framework (measured facts: .g
 rem
 rem  Warnings are errors (-warnaserror), so trimming and AOT analysis warnings
 rem  (IL2026 / IL2070 / IL3050 ...) fail the publish as well, except for an explicitly
-rem  documented per-UI warning ID exception (currently WinUI 3 IL2026; see .github/RELEASE.md).
-rem  Measured: adding it revealed latent defects that the build had not reported.
+rem  documented per-UI warning ID exception (currently WinUI 3 IL2104; see appendix A of
+rem  the build settings rules in .github).  Measured: adding it revealed latent defects
+rem  that the build had not reported.
 rem
 rem  Not shipped:
 rem    - *.pdb        debug symbols
