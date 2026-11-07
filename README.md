@@ -143,16 +143,17 @@ ZenHanConverter は、クリップボードにコピーされたテキストを�
 
 方式ごとの可否は UI とフレームワークが決めます（実測は各スクリプトのコメントを参照）。
 
-| UI | 方式 | 配布物 | 大きさの目安 |
-| --- | --- | --- | --- |
-| MewUI 版 | Single AOT | exe 1 個 | 約 13 MB |
-| Avalonia UI 版 | Single AOT | exe + ネイティブ DLL 3 個 | 約 42 MB |
-| WinUI 3 版 | Single（AOT 不可） | exe 1 個（Windows App SDK も自己完結） | 約 175 MB |
-| WinForms 版 | Single（AOT 不可） | exe 1 個（自己完結） | 約 137 MB |
+| UI | 方式 | 配布物 |
+| --- | --- | --- |
+| MewUI 版 | Single AOT | exe 1 個 |
+| Avalonia UI 版 | Single AOT | exe + ネイティブ DLL 3 個 |
+| WinUI 3 版 | Single AOT | exe + ネイティブ DLL 3 個 + XAML リソース（Windows App Runtime は同梱せず、起動時に確認・導入） |
+| WinForms 版 | Single（AOT 不可） | exe 1 個（自己完結） |
 
 - 出力先は `publish/<UI>-<RID>-<方式>` で、**方式がフォルダー名に現れます**（期待する出力先は [`.github/release-config.json`](.github/release-config.json) の `uis[].output` が単一所有します）。
+- **配布物の大きさは文書へ書きません**（コードを変えるたびに変わるため）。 実測は `buildScript/verifyPublish.ps1` の出力で確認します（[`.github/ドキュメント規約.md`](.github/ドキュメント規約.md)）。
 - **Avalonia UI 版は exe 単体では起動しません**（Avalonia の描画が SkiaSharp のネイティブ ライブラリに依存し、Native AOT でも exe へ同梱できないため）。 展開したフォルダーの DLL と同じ場所に置いて使用します。
-- WinUI 3 版は Native AOT に対応しません（発行は成功しますが起動時にクラッシュします）。 WinForms 版もこのアプリでは Native AOT を使用しません。
+- **WinUI 3 版も exe 単体では起動しません**（XAML リソースと、ランタイムを起動するための DLL が必要です）。 zip を展開したフォルダーごと配置してください。 WinForms 版はこのアプリでは Native AOT を使用しません。
 
 ## 4. インストール方法
 
@@ -384,7 +385,8 @@ UI 非依存のコアと提示層（Presentation）を 4 つの UI が共有す�
 | **特定の文字だけ変換されない** | 設定画面でそのカテゴリの変換方向が「なし」になっていないか確認してください。 置換ルールが後から適用されて元に戻している場合もあります（置換ルールは登録順に適用されます）。 |
 | **設定ファイルが壊れた** | `%LOCALAPPDATA%\ZenHanConverter\AppSetting.json` と `Settings.json` を削除してアプリを再起動すると、既定値で再作成されます。 |
 | **配布物の exe が起動しない（Avalonia UI 版）** | exe と同じフォルダーにネイティブ DLL（`libSkiaSharp.dll` など）が必要です。 zip を展開したフォルダーごと配置してください。 |
-| **初回起動が遅い（WinUI 3 版 / WinForms 版）** | 単一 exe は初回起動時に依存ファイルを `%TEMP%\.net\` へ展開するため、初回だけ時間がかかります。 |
+| **初回起動が遅い（WinForms 版）** | 単一 exe は初回起動時に依存ファイルを `%TEMP%\.net\` へ展開するため、初回だけ時間がかかります。 |
+| **配布物の exe が起動しない（WinUI 3 版）** | exe と同じフォルダーに `resources.pri` とネイティブ DLL が必要です。 zip を展開したフォルダーごと配置してください。 Windows App Runtime が無い PC では、起動時の確認で導入されます（初回のみ時間がかかります）。 |
 | **旧フォルダーが残っている** | `%LOCALAPPDATA%\ClipboardZenHanConverter` は移行元として残します。 内容を確認してから削除してください。 |
 
 ## 9. ドキュメント

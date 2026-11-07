@@ -27,10 +27,10 @@
 ├── buildScript/             # ビルド・実行スクリプト（リポジトリルートを基準に動作する）
 │   ├── publish_ui.bat              # 発行の共通手順（UI ごとのスクリプトから呼ぶ）
 │   ├── publish_MewUI.bat           # MewUI 版（Native AOT）
-│   ├── publish_WinUI3.bat          # WinUI 3 版（自己完結・単一 exe）
+│   ├── publish_WinUI3.bat          # WinUI 3 版（Native AOT + ネイティブ DLL + XAML リソース）
 │   ├── publish_AvaloniaUI.bat      # Avalonia UI 版（Native AOT + ネイティブ DLL）
 │   ├── publish_WinForms.bat        # WinForms 版（自己完結・単一 exe）
-│   ├── verify.ps1                  # 検証の入口（合否 36 項目。 .github/検証手順.md が所有者）
+│   ├── verify.ps1                  # 検証の入口（合否項目は実行時に出力。 .github/検証手順.md が所有者）
 │   ├── verifyDocs.ps1 / VerifyCommon.ps1 / verifyPublish.ps1 / verifyInfoStyle.ps1
 ├── src/
 │   ├── App.MewUI/           # MewUI アプリ本体（MewUI 依存）
@@ -141,10 +141,11 @@ UI 型の実処理（`DispatcherQueue.GetForCurrentThread()` など）は Window
 インストール済みのローカルでは再現しません）。UI スレッドへの依存は UI 層（`DependencyInjectionExtensions` が生成する
 `IUiDispatcher`）からコンストラクターで受け取り、ViewModel 側で静的に取得しないでください。
 
-**`src/App.WinUI3` は Windows App SDK を自己完結にしています**（`WindowsAppSDKSelfContained=true`）。未設定にすると
-アプリのアセンブリにブートストラップの自動初期化（`OnNoMatch_ShowUI`）が埋め込まれ、これを読み込むテストが
-Windows App Runtime の無い CI で導入ダイアログ待ちのまま停止します。テスト用プロジェクト側は
-`WindowsAppSdkAutoInitialize=false` で自動初期化を無効にしています。
+**`src/App.WinUI3` は Windows App Runtime を同梱しません**（`WindowsAppSDKSelfContained=false`）。代わりに
+アセンブリの自動初期化を止め（`WindowsAppSdkBootstrapInitialize=false`）、`Program.Main` が
+`EsUtil.Ui.WinUI3.Interop` の `WindowsAppRuntimeBootstrap` で有無の確認と導入を行います。自動初期化を
+有効にすると、このアセンブリを読み込むテストが Windows App Runtime の無い CI で導入ダイアログ待ちのまま
+停止します。テスト用プロジェクト側は `WindowsAppSdkAutoInitialize=false` で自動初期化を無効にしています。
 
 `test/App.Core` は `src/App.Core` のみを参照し、UI フレームワークに依存しないことを保証します。  
 `test/App.Core.Presentation` は `src/App.Core.Presentation` のみを参照し、同じく UI フレームワークに依存しないことを保証します。  
@@ -174,14 +175,14 @@ dotnet run --project src/App.WinForms/App.WinForms.csproj
 | スクリプト（`buildScript/` 配下） | 対象 | 方式 | 出力先 | 出力物 |
 | --- | --- | --- | --- | --- |
 | `publish_MewUI.bat` | MewUI 版 | Native AOT（`aot`） | `publish\mewui-<RID>-aot\` | exe 1 個 |
-| `publish_WinUI3.bat` | WinUI 3 版 | 自己完結＋単一ファイル（`single`） | `publish\winui3-<RID>-single\` | exe 1 個 |
+| `publish_WinUI3.bat` | WinUI 3 版 | Native AOT（`aot`） | `publish\winui3-<RID>-aot\` | exe 1 個 + ネイティブ DLL 3 個 + XAML リソース |
 | `publish_AvaloniaUI.bat` | Avalonia UI 版 | Native AOT（`aot`） | `publish\avaloniaui-<RID>-aot\` | exe 1 個 + ネイティブ DLL |
 | `publish_WinForms.bat` | WinForms 版 | 自己完結＋単一ファイル（`single`） | `publish\winforms-<RID>-single\` | exe 1 個 |
 
 - 第 1 引数に RID を渡すと対象を変更できます（既定: `win-x64`）。
 - MewUI 版は Native AOT のため完全な単一バイナリです。
 - WinUI 3 版は発行時に Windows App SDK の未使用ペイロード（AI / ML / Search / Widgets / WebView2）を自動除外します（約 55 MB 削減。詳細は `src/App.WinUI3/SPEC_System.md`）。
-- WinUI 3 版は単一ファイル化できますが、初回起動時に依存ファイルを `%TEMP%\.net\<AppName>\` へ展開します。また WinUI 3 は Native AOT に対応しないため、AOT は使用しません（詳細は `src/App.WinUI3/SPEC_System.md`）。
+- WinUI 3 版は Native AOT で発行します（Windows App Runtime は同梱しないため、exe 単体ではなくフォルダー単位で配布します。詳細は `src/App.WinUI3/SPEC_System.md`）。
 - Avalonia UI 版は Native AOT ですが、描画に使う SkiaSharp のネイティブ DLL を exe へ同梱できないため、**exe 単体ではなくフォルダー単位で配布**します（`libSkiaSharp.dll` / `av_libglesv2.dll` / `libHarfBuzzSharp.dll` を同じフォルダーに置きます。詳細は `src/App.AvaloniaUI/SPEC_System.md`）。
 - WinForms 版は Native AOT に対応せず、トリミングもサポートされないため（`NETSDK1175`）、単一ファイル化のみを行います（詳細は `src/App.WinForms/SPEC_System.md`）。
 - WinUI 3 版の exe 名は `ZenHanConverter.WinUI3.exe`、WinForms 版は `ZenHanConverter.WinForms.exe` です（アセンブリ名は `<製品名>.<UI名>` で、プロジェクト名 `App.WinUI3` とは一致しません。 名前空間は `EsUtil.ZenHanConverter.App.WinUI3` のままです）。
@@ -198,9 +199,9 @@ dotnet run --project src/App.WinForms/App.WinForms.csproj
 | `publish_AvaloniaUI.bat` | Avalonia UI 版 | `src\App.AvaloniaUI\bin\Release\net10.0\` |
 | `publish_WinForms.bat` | WinForms 版 | `src\App.WinForms\bin\Release\net10.0-windows\` |
 
-- 生成物はフレームワーク依存のため、実行には .NET 10 ランタイム（WinUI 3 版は Windows App SDK を含む）が必要です。
-  - ただし **WinUI 3 版は .NET と Windows App SDK の両方が自己完結**（`SelfContained` / `WindowsAppSDKSelfContained`）のため、
-    Windows App Runtime のインストールは不要です（単一 exe 化は行わないため、実行には出力フォルダーごと必要です）。
+- 生成物はフレームワーク依存のため、実行には .NET 10 ランタイムが必要です。
+  - ただし **WinUI 3 版は .NET ランタイムが自己完結**（`SelfContained`）です。 Windows App Runtime は同梱せず、
+    起動時に有無を確認して無ければ導入します（実行には出力フォルダーごと必要です）。
 - 配布用の exe が必要な場合は `buildScript/publish_<UI>.bat` を使用してください（発行の手順は `buildScript/publish_ui.bat` が単一所有します）。
 
 ## CI（ビルドとテスト）
