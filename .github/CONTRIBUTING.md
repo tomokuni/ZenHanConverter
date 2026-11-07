@@ -194,10 +194,10 @@ dotnet run --project src/App.WinForms/App.WinForms.csproj
 
 | スクリプト（`buildScript/` 配下） | 対象 | 出力先 |
 | --- | --- | --- |
-| `publish_MewUI.bat` | MewUI 版 | `src\App.MewUI\bin\Release\net10.0\` |
+| `publish_MewUI.bat` | MewUI 版 | `src\App.MewUI\bin\Release\net10.0-windows10.0.17763.0\` |
 | `publish_WinUI3.bat` | WinUI 3 版 | `src\App.WinUI3\bin\Release\net10.0-windows10.0.26100.0\win-x64\` |
-| `publish_AvaloniaUI.bat` | Avalonia UI 版 | `src\App.AvaloniaUI\bin\Release\net10.0\` |
-| `publish_WinForms.bat` | WinForms 版 | `src\App.WinForms\bin\Release\net10.0-windows\` |
+| `publish_AvaloniaUI.bat` | Avalonia UI 版 | `src\App.AvaloniaUI\bin\Release\net10.0-windows10.0.17763.0\` |
+| `publish_WinForms.bat` | WinForms 版 | `src\App.WinForms\bin\Release\net10.0-windows10.0.17763.0\` |
 
 - 生成物はフレームワーク依存のため、実行には .NET 10 ランタイムが必要です。
   - ただし **WinUI 3 版は .NET ランタイムが自己完結**（`SelfContained`）です。 Windows App Runtime は同梱せず、

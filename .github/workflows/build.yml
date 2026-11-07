@@ -12,7 +12,7 @@
 #
 # **ジョブは同時に走らせる**（直列だと 1 ジョブでビルドと走査を順に待つ）。
 #   verify … ビルドとテスト（走査を除く。 合否基準は .github/検証手順.md）
-#   docs   … 文書とコードの走査（復元もビルドも要らない。 ubuntu で走らせる）
+#   docs   … 文書とコードの走査（ビルドはしない。 文書の型参照検査のため復元だけ行う。 ubuntu で走らせる）
 # 検証の中身は buildScript/verify.ps1 が単一所有し、合否基準は .github/検証手順.md が定める。
 #
 # **文書（.md）だけの変更ではビルドもテストも要らない**（走査だけを実行する）。
@@ -142,28 +142,47 @@ jobs:
         run: pwsh -NoProfile -File buildScript/verify.ps1 -Solution '${{ steps.config.outputs.solution_file }}' -Configuration Release -NoRestore -FullBuild -SkipDocs -SkipFormat
 
   # ────────────────────────────────────────────────────────────
-  # 3. 文書とコードの走査（ビルドも復元も要らない。 verify と同時に走らせる）
+  # 3. 文書とコードの走査（ビルドはしない。 verify と同時に走らせる）
   # ────────────────────────────────────────────────────────────
   docs:
-    # **走査は Windows で実行する**: buildScript/VerifyCommon.ps1 の Invoke-NativeText は cmd.exe
-    # （`$env:ComSpec`）で外部コマンドを起動するため、ubuntu では「file name has not been provided」で失敗する
-    # （実測 2026-11-07）。 OS に依存しない走査へ直せたら ubuntu へ移す（節約は 1 分程度）。
-    runs-on: windows-latest
+    # OS に依存しない走査だけを ubuntu で実行する（`verifyDocs.ps1` は npx を Windows では cmd.exe 経由、
+    # Linux では直接起動し、改行コードの検査も OS ごとに見る場所を変える）
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: チェックアウト
         uses: actions/checkout@v7
+
+      # 対象のソリューション ファイルは release-config.json が単一所有する
+      - name: リリース設定を読む
+        id: config
+        uses: ./.github/actions/read-config
 
       # markdownlint は npx で取る（毎回ダウンロードすると 2 分近くかかる）。
       - name: npm をキャッシュ
         uses: actions/cache@v6
         with:
           # キャッシュの場所は OS で変わる（ubuntu は `~/.npm`）
-          path: ~\AppData\Local\npm-cache
+          path: ~/.npm
           # 版は buildScript/verifyDocs.ps1 が単一所有する（版を上げるとキーが変わる）
           key: npm-${{ runner.os }}-${{ hashFiles('buildScript/verifyDocs.ps1', 'buildScript/markdownlint.json') }}
           restore-keys: |
             npm-${{ runner.os }}-
+
+      # **文書の型参照検査は、参照先（EsUtil）の型をパッケージに同封された XML ドキュメントから読む**
+      # （ソースはこのリポジトリに無い）。 復元していないと検査が「判定しない」に落ちて素通りするため、
+      # ビルドはせず復元だけ行う。 lock の一致は verify ジョブが確かめる（ここでは書き換えを許す）。
+      - name: NuGet をキャッシュ
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-docs-${{ hashFiles('**/packages.lock.json', 'Directory.Packages.props', 'global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-docs-
+
+      - name: 復元
+        # **Linux でも Windows 向け TFM を復元できるようにする**（既定では `NETSDK1100` で失敗する）
+        run: dotnet restore '${{ steps.config.outputs.solution_file }}' -p:EnableWindowsTargeting=true
 
       # 合否基準は .github/検証手順.md（実装は buildScript/verifyDocs.ps1 が単一所有する）
       - name: 走査

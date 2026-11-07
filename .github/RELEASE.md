@@ -66,8 +66,8 @@ UI の追加・変更は **`release-config.json` の `uis[]` を編集します*
   MTP モードではテスト対象を `--solution` / `--project` で指定してください（位置引数はテスト アプリへの引数として扱われます）。
 - 同じ設定を複数箇所に置かないでください（例: UI の定義をワークフローへ直接書く、ソリューション名をワークフローへ書く、バージョンを `.csproj` にも書く、SDK のバージョンをワークフローにも書く）。
   変更時の注意事項は [`REUSING.md`](REUSING.md) にも記載しています。
-- **`build.yml` / `publish.yml` / `release.yml` は Windows 固有のターゲットを含むため、ビルド系のジョブは
-  `windows-latest` で実行します**（`release.yml` の検証のみ `ubuntu-latest`）。
+- **ビルドとテスト、リポジトリ全体の検査は `windows-latest`**（Win32 API の P/Invoke と Windows 向けの復元を含む）、
+  **文書とコードの走査（`docs` ジョブ）は `ubuntu-latest`**（OS に依存しない）で実行します（`release.yml` の検証も `ubuntu-latest`）。
 
 ## 依存関係の更新（Dependabot）
 
