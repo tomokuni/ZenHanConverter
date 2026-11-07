@@ -95,9 +95,8 @@ Windows App SDK **2.6 では Native AOT で発行できます**（実測 2026-11
 [`.github/ビルド設定規約.md`](../../.github/ビルド設定規約.md) の付録 A）。
 
 置換一覧の `DataGrid` はセル テンプレートを `x:Bind`（`x:DataType` 付き）で書き、プロパティ名の実行時解決に
-頼りません。`ctk:Segmented` の `SelectedValuePath` だけはプロパティ名の実行時解決を行うため、
-`x:SuppressXamlTrimWarnings` で局所的に抑止しています（`Content` は同じ画面の `x:Bind` が参照するため
-トリミングで消えません）。
+頼りません。設定画面の `ctk:Segmented` も、`SelectedValue` + `SelectedValuePath`（プロパティ名の実行時解決）を
+使わず、`SelectedItem` を `ZenHanConvertItem.SelectedOption` へ双方向バインドします。
 
 ## src/App.WinUI3 プロジェクト
 

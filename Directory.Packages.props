@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup Label="アナライザー">
-    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.317" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.321" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1" />
   </ItemGroup>
@@ -36,7 +36,7 @@
     <PackageVersion Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2957" />
-    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.6.4" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.6.5" />
     <PackageVersion Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="3.0.1" />
     <PackageVersion Include="xunit.analyzers" Version="2.2.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.2" />

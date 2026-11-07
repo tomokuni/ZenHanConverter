@@ -28,16 +28,10 @@ mc:Ignorable="d">
 							HorizontalAlignment="Right"
 							Spacing="8">
                         <TextBlock Text="{x:Bind Label}" VerticalAlignment="Center"/>
-                        <!--
-                            WMC1510 の抑止: SelectedValuePath は実行時にプロパティ名で解決する（AOT では警告の対象）。
-                            Content は下の ItemTemplate の x:Bind が直接参照するためトリミングで消えない。
-                        -->
                         <ctk:Segmented
-                            x:SuppressXamlTrimWarnings="True"
                             IsEnabled="{x:Bind IsEnabled, Mode=OneWay}"
                             ItemsSource="{x:Bind Options}"
-                            SelectedValue="{x:Bind SelectedLabel, Mode=TwoWay}"
-                            SelectedValuePath="Content"
+                            SelectedItem="{x:Bind SelectedOption, Mode=TwoWay}"
                             ItemContainerStyleSelector="{StaticResource SegmentStyleSelector}">
                             <ctk:Segmented.ItemTemplate>
                                 <DataTemplate x:DataType="vm:SegmentOption">

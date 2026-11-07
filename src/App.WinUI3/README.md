@@ -105,7 +105,7 @@ dotnet test --project test/App.WinUI3/App.WinUI3.Tests.csproj
 - 出力: `publish/winui3-win-x64-aot`（`ZenHanConverter.WinUI3.exe`。 Native AOT。 実測 2026-11-07 で約 19 MB）
 - スクリプトはリポジトリ ルートを基準に動作するため、どこから実行しても同じ結果になります。
 - 単一ファイル化（`PublishSingleFile`）とは併用できません（AOT 自体が 1 個のネイティブ exe を作ります）。
-  単一ファイル方式が必要な場合は `publish_WinUI3.bat` の `single` モードが `PublishAot=false` で実行します。
+  スクリプトは AOT だけを実行し、失敗したときは終了コードを返します（別の出力先へ落とすフォールバックは持ちません）。
 - 発行はリポジトリ外の一時領域で行い、必要なファイルだけを出力先へ配置します（リポジトリ内へ直接発行すると、フレームワーク配置のファイルをアプリのコンテンツとして取り込んでしまいます）。
 
 #### 4.1.1 Native AOT の条件
