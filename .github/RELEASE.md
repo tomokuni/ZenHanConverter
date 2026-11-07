@@ -84,7 +84,7 @@ UI の追加・変更は **`release-config.json` の `uis[]` を編集します*
 - **NuGet のメジャー更新は作成されません**（テストの書き方が変わるため、手動で判断します）。
 - Dependabot は**指定したディレクトリ直下のみを走査します**（再帰しません）。プロジェクトを増やした場合は
   `dependabot.yml` の `directories` にも追加してください。
-- Pull Request の内容を確認して `main` へマージします（マージ方式は Squash merge を推奨）。マージ後の `main` への push で `build.yml`（ゲート）が実行されます。
+- Pull Request の内容を確認して `main` へマージします（マージ方式は Squash merge を推奨）。必須チェック `ci` は Pull Request で実行されるため、マージ後の再実行はありません。
 - **Dependabot は `packages.lock.json` を一部のプロジェクトしか更新しません**（Dependabot の制限）。 そのため NuGet の Pull Request は、**そのままでは CI が `NU1004`（lock が古い）で失敗します**。 ブランチを取得して `dotnet restore <ソリューション> --force-evaluate` を実行し、lock を追加コミットしてからマージします（版の更新自体は PR の内容のままです）。
 - 破壊的な変更（`actions/upload-artifact` のメジャー更新など）は、CI が失敗した内容を確認して修正します。
 
@@ -124,11 +124,11 @@ UI の追加・変更は **`release-config.json` の `uis[]` を編集します*
 
 | ワークフロー | 実行契機 | 内容 |
 | --- | --- | --- |
-| [`workflows/build.yml`](workflows/build.yml) | `main` への push（マージ後）、`main` 向け PR（**必ず実行**）、`dev` への push、手動実行（任意のブランチ） | 復元・ビルド・テスト（**配布物は作らない**） |
+| [`workflows/build.yml`](workflows/build.yml) | `main` 向け PR、手動実行（**push では実行しない**） | 復元・ビルド・テストと走査（**配布物は作らない**）。 PR の必須チェックは集約ジョブ `ci` |
 | [`workflows/publish.yml`](workflows/publish.yml) | `workflow_call` | 全 UI の publish と保管の単一実装（`version` を受け取るとそのバージョンでビルドする） |
 | [`workflows/release.yml`](workflows/release.yml) | **手動実行のみ。 実行ブランチは `mode` に従う**（`dry-run` は `dryRunBranches`、公開は `releaseBranches`）。 `mode` で 2 段階（`dry-run` / `release`） | 検証 → SBOM → 全 UI の publish →（release のみ）**承認** → タグ + GitHub Release 作成 |
 
-`build.yml` の成功実行はリリースの**前提（ゲート）**です。`release.yml` は、リリース対象コミットに対する `build.yml` の成功実行が存在することを確認してから Release を作成します。
+`ci`（`build.yml` の集約ジョブ）の成功はリリースの**前提（ゲート）**です。マージの前提は ruleset が保証するため、`release.yml` はリリース対象コミットに対する `build.yml` の実行を探しません（マージ後のコミットには実行が無いため）。
 
 **配布物を作る処理は重い（Native AOT を含む）ため、push では実行しません。** 配布物の作成はリリース時に 1 度だけ行います。
 
@@ -143,7 +143,7 @@ flowchart TD
     B --> D{"リリースする?"}
 
     subgraph rel ["release.yml（手動実行のみ / dry-run は dev も可、公開は main のみ）"]
-        F["verify<br/>ブランチ / ゲート / 版 / タグ未作成 / dry-run の成功"]
+        F["verify<br/>ブランチ / 版 / タグ未作成 / dry-run の成功"]
         S["sbom<br/>CycloneDX を作成"]
         G["publish<br/>publish.yml を呼ぶ<br/>全 UI を publish して保管"]
         H["release（environment: release）<br/>承認 → タグ + Release 作成（SBOM を添付）"]
@@ -164,7 +164,7 @@ flowchart TD
 リリースは **`dry-run` → `release` の 2 段階**で行います。**版はリリース前にコミットしておきます**（自動採番しません）。
 
 1. **版を上げてコミットする**（`Directory.Build.props` の `<Version>`）。`dev` で上げ、`main` へマージする
-2. `Actions` → **Build** が成功するまで待つ（`build.yml` の成功はリリースの**前提（ゲート）**です）
+2. Pull Request の `ci`（必須チェック）が成功していることを確認する（`main` へマージする）
 3. `Actions` → **Release** → `Run workflow` で、**モード `dry-run`** を選んで実行する
    - 配布物の作成（全 UI の publish）と **SBOM の作成**まで行います（**タグ作成も Release 作成もしません**）
    - `version` は省略できます（省略するとコミット済みの版を使います）
@@ -276,7 +276,7 @@ publish は `buildScript/` の `*_publish_*.bat` をそのまま実行するた�
 
 ## リリース後の検証
 
-**リリースはバージョンコミットを作りません**（版はリリース前に人がコミットするため）。そのため「リリース後にバージョンコミットの検証を起動する」処理は不要になりました。リリース対象のコミットは、リリース前の `build.yml`（ゲート）で検証済みです。
+**リリースはバージョンコミットを作りません**（版はリリース前に人がコミットするため）。そのため「リリース後にバージョンコミットの検証を起動する」処理は不要になりました。リリース対象のコミットは、リリース前の `ci`（必須チェック）で検証済みです。
 
 ## ローカルでの確認
 
@@ -308,10 +308,10 @@ Get-MaxVersion -Versions @('1.0.0', '1.2.0')      # -> 1.2.0
 ## 注意点
 
 - **ワークフローは `main` へ push しません**（版はリリース前に人がコミットするため、push 権限は不要です）。`contents: write` はタグと Release の作成だけに使います。
-- `release.yml` は `actions: read`（ゲートと dry-run の参照）と `contents: write`（タグと Release）を使用します。
+- `release.yml` は `actions: read`（同じコミットの dry-run の参照）と `contents: write`（タグと Release）を使用します。
 - **`build.yml` は配布物を作成しません。** ゲートはビルドとテストの成功であり、配布物が作成できることはリリース実行時に初めて検証されます
   （publish の失敗はタグとバージョンを消費しません。上の「失敗した場合の復旧」を参照）。
-- **`dev` への push でも `build.yml` を実行します**（作業ブランチの壊れを早く見つけるため）。 `main` 向け PR でも実行し、これが必須チェック `build` になります。
+- **push では `build.yml` を実行しません**（同じツリーを検証し直さないため）。 作業ブランチの壊れは手元の `buildScript/verify.ps1` か `workflow_dispatch` で見つけます。 PR の必須チェックは集約ジョブ `ci` です。
 - 配布物（アーティファクト）の保持期間は `release-config.json` の `artifactRetentionDays`（既定 30 日）です。
   保持期間を過ぎると `release.yml` の `release` ジョブが成果物を取得できなくなるため、リリースは publish の直後に完了させてください。
 - `release.yml` の `publish` と `release` は別ジョブのため、バージョンは 2 回適用されます（publish は作業ツリーのみ、release はコミット）。どちらも冪等で、同一の入力から同一の成果物になります。

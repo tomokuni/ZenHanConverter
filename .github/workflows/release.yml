@@ -1,13 +1,16 @@
 # リリースワークフロー
 #
-# 実行は手動のみ（Actions → Release → Run workflow）。 **`mode` で 2 段階に分ける**。
-#
-#   dry-run … 配布物の作成と検証だけを行う（**公開もタグ作成もしない**。 内容は Summary に出す）
-#   release … 同じコミットの dry-run が成功していることを前提に、承認 → 配布 → **タグと Release** の順で進む
+# 実行契機は次のとおり。
+#   main 向け Pull Request … **前提検証だけを自動で実行する**（配布物は作らない。 版・タグ・CHANGELOG の
+#                             不備をマージ前に見つける）。 実行名は `DryRun <ブランチ> <SHA>`。
+#   手動実行（Actions → Release → Run workflow） … **`mode` で 2 段階に分ける**。
+#     dry-run … 配布物の作成と検証だけを行う（**公開もタグ作成もしない**。 内容は Summary に出す）
+#     release … 同じコミットの dry-run が成功していることを前提に、承認 → 配布 → **タグと Release** の順で進む
 #
 # 設計の要点:
 #   - **版は人が `Directory.Build.props` へ書いてコミットしておく**（自動採番しない）。
 #     入力 `version` は確認用であり、ツリーの値と一致しなければ失敗する。
+#   - **`CHANGELOG.md` に「未リリース」の見出しを残さない**（公開した版の変更が未リリースのまま残らないようにする）。
 #   - **タグと GitHub Release は、配布物の作成と承認が終わった後にだけ作る**（`gh release create --target`）。
 #     失敗してもタグを消費しない。
 #   - **`release` ジョブは `environment: release`（Required reviewers）で承認を要求する**。
@@ -15,14 +18,19 @@
 #   - **配布物には由来の証明（build provenance）を付ける**（`actions/attest-build-provenance`。
 #     どのワークフロー・どのコミットが作ったかを後から検証できる）。
 #
-# 前提検証: ブランチ（`releaseBranches`）/ ゲート（`build.yml` の成功実行）/ semver / 系列 / タグ未作成。
+# 前提検証: ブランチ（`releaseBranches`）/ semver / 系列 / タグ未作成 / dry-run の成功。
+# **`build.yml` の成功実行は探さない**（build.yml は Pull Request でだけ走り、マージ後のコミットには
+# 実行が無い。 マージの前提は ruleset の必須チェック `ci` が保証する）。
 # 規則の所有者は .github/RELEASE.md。
 name: Release
 
 # 実行一覧で dry-run と release を区別する（release 側は dry-run の成功を確認するため、この名前を見る）
-run-name: ${{ inputs.mode == 'dry-run' && 'DryRun' || 'Release' }} ${{ github.ref_name }} ${{ github.sha }}
+run-name: ${{ (github.event_name == 'pull_request' || inputs.mode == 'dry-run') && 'DryRun' || 'Release' }} ${{ github.ref_name }} ${{ github.sha }}
 
 on:
+  # **main 向け Pull Request では前提検証を自動実行する**（マージ後に版やタグの不備へ気づくのを防ぐ）
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       mode:
@@ -36,10 +44,11 @@ on:
         required: false
         type: string
 
-# リリース処理は同時に 1 つだけ実行する
+# 公開は同時に 1 つだけ、Pull Request の検証は PR ごとに並行してよい
+# （`release` で直列にすると、PR の検証が公開の待ち行列へ入ってしまう）。
 concurrency:
-  group: release
-  cancel-in-progress: false
+  group: release-${{ github.event_name == 'pull_request' && github.ref || 'publish' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -77,6 +86,29 @@ jobs:
         id: config
         uses: ./.github/actions/read-config
 
+      # 公開した版の変更が「未リリース」のまま残らないようにする（規則は .github/RELEASE.md）
+      - name: CHANGELOG の見出しを検証する
+        shell: pwsh
+        env:
+          VERSION_FILE: ${{ steps.config.outputs.version_file }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $lines = [IO.File]::ReadAllLines('CHANGELOG.md', [Text.UTF8Encoding]::new($false))
+
+          $unreleased = @($lines | Where-Object { $_ -match '^##\s+未リリース' })
+          if ($unreleased.Count -gt 0) {
+            throw "CHANGELOG.md に「$($unreleased[0])」が残っています。 見出しを「## <版>（<公開日>）」へ確定してコミットしてください（手順は .github/RELEASE.md）。"
+          }
+
+          # 版との一致は警告に留める（見出しの書き方は 1 つに決まらない）
+          $first = @($lines | Where-Object { $_ -match '^## ' })[0]
+          $props = [IO.File]::ReadAllText($env:VERSION_FILE, [Text.UTF8Encoding]::new($false))
+          $version = [regex]::Match($props, '<Version>([^<]+)</Version>').Groups[1].Value.Trim()
+          if ($version -and -not $first.Contains($version)) {
+            Write-Host "::warning::CHANGELOG.md の先頭の見出し（$first）に版 $version が含まれていません。"
+          }
+          Write-Host "CHANGELOG の見出し: $first"
+
       # 現在どこまでリリースされているか（バージョン・タグ・GitHub Release・配布物）を Summary へ表示する
       - name: 現在のバージョン状況を表示
         continue-on-error: true
@@ -91,16 +123,21 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
           MODE: ${{ inputs.mode }}
           INPUT_VERSION: ${{ inputs.version }}
-          BRANCH: ${{ github.ref_name }}
+          # Pull Request では**マージ先**のブランチで判定する（`github.ref_name` は `<番号>/merge` になる）
+          BRANCH: ${{ github.base_ref || github.ref_name }}
           VERSION_FILE: ${{ steps.config.outputs.version_file }}
           GATE_WORKFLOW: ${{ steps.config.outputs.gate_workflow }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $dryRun = $env:MODE -eq 'dry-run'
+          # Pull Request は常に dry-run（`inputs.mode` は workflow_dispatch でしか入らない）
+          $dryRun = ($env:EVENT_NAME -eq 'pull_request') -or ($env:MODE -eq 'dry-run')
+          # 検証スクリプトへは必ず dry-run / release のどちらかを渡す（PR では inputs.mode が空になる）
+          $mode = if ($dryRun) { 'dry-run' } else { 'release' }
           "dry_run=$($dryRun.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
 
           # 版はコミット済みの値を使う（ワークフローで書き換えない）
@@ -117,13 +154,10 @@ jobs:
           Write-Host "対象の版: $version（コミット済み: $committed / モード: $($env:MODE)）"
 
           # semver・ブランチ・系列・タグ未作成の検証（規則は version.ps1 と verify-release-version.ps1 が持つ）
-          $info = & ./.github/scripts/verify-release-version.ps1 -Version $version -Branch $env:BRANCH -Mode $env:MODE | ConvertFrom-Json
+          $info = & ./.github/scripts/verify-release-version.ps1 -Version $version -Branch $env:BRANCH -Mode $mode | ConvertFrom-Json
 
-          # ゲート（build.yml）の成功実行が、このコミットに対して存在すること
-          $gateRuns = @(gh run list --repo $env:REPO --workflow $env:GATE_WORKFLOW --commit $env:SHA --limit 50 --json conclusion | ConvertFrom-Json)
-          if (@($gateRuns | Where-Object { $_.conclusion -eq 'success' }).Count -eq 0) {
-            throw "コミット $($env:SHA) に対する $($env:GATE_WORKFLOW) の成功実行がありません。先に push して Build を成功させてください。"
-          }
+          # **build.yml の成功実行は探さない**（build.yml は Pull Request でだけ走り、マージ後のコミットには
+          # 実行が無い。 マージの前提は ruleset の必須チェック `ci` が保証する）。
 
           # release は「同じコミットの dry-run が成功している」ことを前提にする
           # （表示名は run-name。 name はワークフロー名 `Release` のため判定に使えない）
@@ -178,6 +212,8 @@ jobs:
   # ────────────────────────────────────────────────────────────
   sbom:
     needs: verify
+    # Pull Request では前提検証だけを行う（配布物も SBOM も作らない）
+    if: github.event_name != 'pull_request'
     # Windows を対象にしたプロジェクト（`net10.0-windows…`）は Linux では復元できない
     # （`NETSDK1100`。 実測 2026-10-26）ため、ビルドと同じランナーで作る
     runs-on: windows-latest
@@ -219,6 +255,8 @@ jobs:
   # **sbom と並列に走らせる**（配布物は SBOM を使わない。 直列にすると SBOM の約 2 分を毎回待つ。 実測 2026-10-26）
   publish:
     needs: verify
+    # Pull Request では前提検証だけを行う（配布物も SBOM も作らない）
+    if: github.event_name != 'pull_request'
     permissions:
       contents: read
     uses: ./.github/workflows/publish.yml
@@ -231,7 +269,7 @@ jobs:
   # ────────────────────────────────────────────────────────────
   release:
     needs: [verify, publish, sbom]
-    if: inputs.mode == 'release'
+    if: github.event_name != 'pull_request' && inputs.mode == 'release'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # 承認されたジョブだけがタグと Release を作る（配布物は既に作成済みなので、ここは不可逆な操作だけ）

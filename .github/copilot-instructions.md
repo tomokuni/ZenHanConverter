@@ -64,5 +64,5 @@ ZenHanConverter は Windows デスクトップの全角/半角変換アプリで
 - **文字コードは UTF-8（BOM なし）**で統一する（[`.editorconfig`](../.editorconfig) の `charset = utf-8`）。
 - **作業ツリーの改行コードは CRLF**（[`.editorconfig`](../.editorconfig) の `end_of_line = crlf`）。
 - **設定の保存先は `%LOCALAPPDATA%\ZenHanConverter`** である（`App.Core` の `AppPaths` が単一所有する。 旧名のフォルダーからは初回起動時に移行する）。
-- **CI は GitHub で実行する**（`tomokuni/ZenHanConverter`）。 `dev` への push で Build が走り、**公開（release）は `main` からのみ**行う（dry-run は `dev` でも実行できる）。
+- **CI は GitHub Actions で実行する**（`main` 向け PR と手動実行。 **push では実行しない**。 必須チェックは集約ジョブ `ci`）。 **公開（release）は `main` からのみ**行う（dry-run は `dev` でも実行できる）。
 - **`EsUtil` 側の検証は EsUtil リポジトリで実行する**（本リポジトリの走査は `src/` と `test/` 配下だけを対象にし、EsUtil の文書は走査しない）。

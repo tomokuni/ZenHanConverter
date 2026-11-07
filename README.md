@@ -3,7 +3,7 @@
 **クリップボード全角/半角変換ユーティリティ** — コピーしたテキストを検知し、設定した規則で全角/半角を自動変換してクリップボードへ書き戻します。
 
 ![Release](https://github.com/tomokuni/ZenHanConverter/actions/workflows/release.yml/badge.svg)
-![Build](https://github.com/tomokuni/ZenHanConverter/actions/workflows/build.yml/badge.svg?branch=main)
+![Build](https://github.com/tomokuni/ZenHanConverter/actions/workflows/build.yml/badge.svg?event=pull_request)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2B-0078D6)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 ![Avalonia](https://img.shields.io/badge/UI-Avalonia-8D46D6)

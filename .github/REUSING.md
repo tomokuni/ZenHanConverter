@@ -209,3 +209,32 @@ dotnet test --solution <ソリューション>.slnx -c Release --no-build
 - **タグは `gh release create --target` に作成させてください**（配布物の作成が成功した後にのみタグが作られます）。
 - **`releaseBranches` のワイルドカードに頼りすぎないでください。** `release/` 配下は `release/<major>.<minor>` に限定され、入力バージョンの系列と一致していることも `verify-release-version.ps1` が検証します。
 - **配布物を作る重い処理を push に戻さないでください。** ゲートはビルドとテストの成功であり、配布物が作成できることはリリース実行時に検証されます（`RELEASE.md` の「失敗した場合の復旧」を参照）。
+
+## 複数リポジトリでの共通化（同じ CI を使う）
+
+**`.github/workflows/*.yml` と `.github/rulesets/*.json` は、リポジトリごとに書き分けません。** 次のリポジトリは
+**同じファイル**を使い、リポジトリ固有の値だけを `.github/release-config.json` に置きます（新しいリポジトリも同じ形で足せます）。
+
+| リポジトリ | 種類 | 配布物の作り方 |
+| --- | --- | --- |
+| SaveEvidence | アプリ（4 UI の実行ファイル） | `publish.yml` が `buildScript/publish_*.bat` で publish する |
+| ZenHanConverter | アプリ | 同上（`publish.yml`） |
+| EsUtil | ライブラリ（NuGet パッケージ） | `pack.yml` が `dotnet pack` で作る |
+
+**共通の契約**（どのリポジトリでも同じ）:
+
+| 項目 | 内容 |
+| --- | --- |
+| 必須チェック | **`ci`**（`build.yml` の集約ジョブ）。 ruleset `Protect main` が要求する |
+| `build.yml` の実行契機 | **`main` 向け Pull Request と手動実行だけ**（push では実行しない） |
+| 検証の中身 | `buildScript/verify.ps1`（ビルド・テスト・リポジトリ全体の検査）と `buildScript/verifyDocs.ps1`（文書とコードの走査） |
+| `locks.yml` | `main` 向け PR で `buildScript/updateLocks.ps1` を実行し、`packages.lock.json` の差分を自動コミットする |
+| 走査（`docs` ジョブ） | `buildScript/verifyDocs.ps1`。 **アプリ リポジトリは Windows で実行する**（`VerifyCommon.ps1` が `cmd.exe` で外部コマンドを起動するため。 ubuntu で動かせるように直せたら ubuntu へ移す） |
+| `release.yml` | Pull Request では**前提検証だけ**（版・タグ・CHANGELOG・ブランチ）。 手動実行の `mode` で `dry-run` / `release` を選ぶ |
+| rulesets | [`rulesets/protect-main.json`](rulesets/protect-main.json)（`ci` を必須。 strict）と [`rulesets/tag-version.json`](rulesets/tag-version.json) |
+| 設定の単一所有 | `.github/release-config.json`（製品名・ソリューション・ブランチ・UI の定義）と [`.github/actions/read-config`](actions/read-config/action.yml) |
+
+**リポジトリごとに変えてよいのは次の 2 点だけ**です（それ以外はコピーします）。
+
+- `release-config.json` の値（`product` / `solutionFile` / `uis` など）
+- 配布物の作り方（アプリは `publish.yml`、ライブラリは `pack.yml`）
