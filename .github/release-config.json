@@ -13,7 +13,7 @@
   "settingsFiles": ["AppSetting.json", "Settings.json"],
   "requiredBuildProps": ["EnforceCodeStyleInBuild", "GenerateDocumentationFile", "CopyDocumentationFileToOutputDirectory", "PublishDocumentationFiles", "AnalysisLevel", "AnalysisMode", "TreatWarningsAsErrors"],
   "artifactRetentionDays": 30,
-  "releaseNotes": "4 種の UI 実装の配布物です。いずれも zip で、展開すると exe（Avalonia UI 版はネイティブ DLL も）が入っています。",
+  "releaseNotes": "4 種の UI 実装の配布物です。いずれも zip で、展開すると exe が入っています（Avalonia UI 版はネイティブ DLL、WinUI 3 版はネイティブ DLL と XAML リソースも入っています）。",
   "uis": [
     {
       "name": "MewUI",

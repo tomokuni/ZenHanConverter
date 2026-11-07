@@ -30,8 +30,9 @@ rem
 rem  Passing `-p:PublishSingleFile=true` on the command line flows to the referenced
 rem  projects and fails there (measured), so the switches below are used.
 rem
-rem  Layout: one native exe (plus the runtime DLLs the Windows App SDK needs to
-rem  bootstrap a framework dependent app).
+rem  Layout: one native exe, one resources.pri and the native DLLs the Windows App
+rem  SDK needs to bootstrap a framework dependent app (the runtime itself is not
+rem  bundled).  The whole output folder is shipped, not the exe alone.
 rem ============================================================
 
 rem Move from the script folder (buildScript) to the repository root.
