@@ -102,7 +102,7 @@ dotnet test --project test/App.WinUI3/App.WinUI3.Tests.csproj
 .\buildScript\publish_WinUI3.bat win-arm64   # RID を指定する場合
 ```
 
-- 出力: `publish/winui3-win-x64-aot`（`ZenHanConverter.WinUI3.exe`（Native AOT）と `resources.pri`、ネイティブ DLL 3 個。 実測 2026-11-07 で合計 約 19 MB）
+- 出力: `publish/winui3-win-x64-aot`（`ZenHanConverter.WinUI3.exe`（Native AOT）と `resources.pri`、ネイティブ DLL 3 個）。容量は publish の出力と `buildScript/verifyPublish.ps1` の表示で確認します。
 - **exe だけを取り出しても動作しません。** 出力フォルダーごと配布します（XAML リソースと、ランタイムを起動するための DLL が必要です）。
 - スクリプトはリポジトリ ルートを基準に動作するため、どこから実行しても同じ結果になります。
 - 単一ファイル化（`PublishSingleFile`）とは併用できません（AOT 自体が 1 個のネイティブ exe を作ります）。
