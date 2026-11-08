@@ -98,6 +98,15 @@ jobs:
           & $env:SCRIPT
           if ($LASTEXITCODE -ne 0) { throw "$env:SCRIPT が失敗しました（exit $LASTEXITCODE）" }
 
+      # WinUI 3 版は Windows App Runtime へフレームワーク依存で動くため、**配布物の起動検証にもランナーの
+      # ランタイムが要る**（イメージには 1.6 / 1.8 のみ）。 対象の UI は release-config.json の
+      # `requiresWindowsAppRuntime` が持つ。 版は Directory.Packages.props の Microsoft.WindowsAppSDK が
+      # 決める（スクリプトが導く）。 規則は .github/検証手順.md §17。
+      - name: Windows App Runtime を導入
+        if: matrix.ui.requiresWindowsAppRuntime
+        shell: pwsh
+        run: pwsh -NoProfile -File buildScript/installWindowsAppRuntime.ps1
+
       # 配布物が実際に起動し、終了時に設定を全損しないことを確かめる（Native AOT のトリミング対策の回帰検出）。
       # 検査の内容と合否基準は .github/検証手順.md §18 が単一所有する。
       - name: 配布物の起動を検証

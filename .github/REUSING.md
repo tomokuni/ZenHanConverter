@@ -119,6 +119,7 @@ MTP モードではテスト対象を `--solution` / `--project` で指定しま
 | `output` | publish の出力パス（複数ファイルの場合はフォルダ） |
 | `asset` | Release に添付するファイル名（zip する場合は作成後の名前。 例: `ZenHanConverter.MewUI.zip`） |
 | `zip` | 配布前に zip 化する場合は `true`。 `output` が単一ファイル（exe）でもフォルダ（exe + ネイティブ DLL）でも同じ指定で扱える |
+| `requiresWindowsAppRuntime` | 配布物が Windows App Runtime へフレームワーク依存で動く場合は `true`（`publish.yml` が配布物の起動検証の前に [`buildScript/installWindowsAppRuntime.ps1`](../buildScript/installWindowsAppRuntime.ps1) を実行する。 **版は `Directory.Packages.props` の `Microsoft.WindowsAppSDK` から導く**） |
 
 **UI を増やす場合はこの配列に要素を追加します。** ワークフローとスクリプトの変更は不要です。
 
@@ -209,3 +210,34 @@ dotnet test --solution <ソリューション>.slnx -c Release --no-build
 - **タグは `gh release create --target` に作成させてください**（配布物の作成が成功した後にのみタグが作られます）。
 - **`releaseBranches` のワイルドカードに頼りすぎないでください。** `release/` 配下は `release/<major>.<minor>` に限定され、入力バージョンの系列と一致していることも `verify-release-version.ps1` が検証します。
 - **配布物を作る重い処理を push に戻さないでください。** ゲートはビルドとテストの成功であり、配布物が作成できることはリリース実行時に検証されます（`RELEASE.md` の「失敗した場合の復旧」を参照）。
+
+## 複数リポジトリでの共通化（同じ CI を使う）
+
+**`.github/workflows/*.yml` と `.github/rulesets/*.json` は、リポジトリごとに書き分けません。** 次のリポジトリは
+**配布物を作る呼び出し先（`publish.yml` / `pack.yml`）とその公開処理を除いて同じファイル**を使い、
+リポジトリ固有の値だけを `.github/release-config.json` に置きます（新しいリポジトリも同じ形で足せます）。
+
+| リポジトリ | 種類 | 配布物の作り方 |
+| --- | --- | --- |
+| SaveEvidence | アプリ（4 UI の実行ファイル） | `publish.yml` が `buildScript/publish_*.bat` で publish する |
+| ZenHanConverter | アプリ | 同上（`publish.yml`） |
+| EsUtil | ライブラリ（NuGet パッケージ） | `pack.yml` が `dotnet pack` で作る |
+
+**共通の契約**（どのリポジトリでも同じ）:
+
+| 項目 | 内容 |
+| --- | --- |
+| 必須チェック | **`ci`**（`build.yml` の集約ジョブ）。 ruleset `Protect main` が要求する |
+| `build.yml` の実行契機 | **`main` 向け Pull Request と手動実行だけ**（push では実行しない） |
+| 検証の中身 | `buildScript/verify.ps1`（ビルド・テスト・リポジトリ全体の検査）と `buildScript/verifyDocs.ps1`（文書とコードの走査） |
+| `locks.yml` | `main` 向け PR で `buildScript/updateLocks.ps1` を実行し、`packages.lock.json` の差分を自動コミットする（`GITHUB_TOKEN` の push では `pull_request` が起動しないため、`build.yml` を `workflow_dispatch` で起動し直す） |
+| 走査（`docs` ジョブ） | `buildScript/verifyDocs.ps1`。 **アプリ リポジトリは Windows で実行する**（本リポジトリは WinForms 版が `Microsoft.Extensions.Hosting` を参照し、Linux では復元が `NU1102` で失敗する。 ライブラリ リポジトリは ubuntu で実行している）。 走査スクリプト自体は OS 非依存（npx の起動方法と改行コードの見方を OS で切り替える） |
+| `release.yml` | Pull Request では**前提検証だけ**（版・タグ・CHANGELOG・ブランチ）。 手動実行の `mode` で `dry-run` / `release` を選ぶ |
+| rulesets | [`rulesets/protect-main.json`](rulesets/protect-main.json)（`ci` を必須。 strict）と [`rulesets/tag-version.json`](rulesets/tag-version.json) |
+| 設定の単一所有 | `.github/release-config.json`（製品名・ソリューション・ブランチ・UI の定義）と [`.github/actions/read-config`](actions/read-config/action.yml) |
+
+**リポジトリごとに変えてよいのは次の 3 点だけ**です（それ以外はコピーします）。
+
+- `release-config.json` の値（`product` / `solutionFile` / `uis` など）
+- 配布物の作り方（アプリは `publish.yml`、ライブラリは `pack.yml`）
+- `release.yml` の**配布物を作るジョブ**（呼び出し先の `publish.yml` / `pack.yml` の名前と、NuGet へ公開するかどうか）。 **前提検証・版・タグ・CHANGELOG の検証は共通**です

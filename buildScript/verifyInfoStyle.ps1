@@ -18,7 +18,7 @@
   （実測: 881 件）ため、規則の採用を判断するときに使う。
 
 .PARAMETER Solution
-対象のソリューション ファイル（既定: SaveEvidence.slnx）。
+対象のソリューション ファイル（既定: release-config.json の solutionFile）。
 
 .PARAMETER Fix
 自動修正する（既定は検出のみ）。

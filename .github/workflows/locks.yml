@@ -1,0 +1,163 @@
+# ロックファイル（packages.lock.json）の自動更新
+#
+# 実行契機:
+#   main 向け Pull Request … 版を上げると `packages.lock.json` の `ProjectReference` の版が変わるため、
+#                            古いままだと CI が `NU1004`（lock が古い）で失敗する。 このワークフローが
+#                            `buildScript/updateLocks.ps1` を実行し、**差分があれば Pull Request の
+#                            ブランチ（`dev`）へ自動でコミット**する（開発者の手作業をなくす）。
+#                            **lock が変わりうるファイルを触ったときだけ実行する**（`paths`）。
+#                            このジョブは**必須チェックではない**（ruleset が要求するのは `ci` だけ）ため、
+#                            対象外の Pull Request で走らなくてもマージは妨げられない。
+#
+# 設計の要点:
+#   - **同じリポジトリの Pull Request だけ**を対象にする（fork のブランチへは push できない）。
+#   - **Dependabot 起点の Pull Request は対象外**（`GITHUB_TOKEN` が読み取り専用で push できない）。
+#   - **自動コミットの本文に印（`[skip locks]`）を入れ**、次の実行で何もしない（無限ループを防ぐ）。
+#   - **`GITHUB_TOKEN` による push では `pull_request` の実行が起動しない**（GitHub の仕様）ため、
+#     自動コミットを push したら build.yml を明示的に起動し直す（更新後のコミットに `ci` を付ける）。
+#     `[skip locks]` で更新を省いた実行でも起動し、起動の失敗は再実行で回復できるようにする。
+#   - 差分の判定と更新は buildScript/updateLocks.ps1 が単一所有する（本ファイルは呼ぶだけ）。
+#   - 失敗しても Pull Request は止めない（lock が古いままなら build.yml が `NU1004` で落ちる）。
+name: Locks
+
+on:
+  pull_request:
+    branches: [main]
+    # **lock が変わりうるファイルだけ**を対象にする（版・パッケージの版・参照・対象フレームワークが
+    # lock の中身を決める。 規則は .github/ビルド設定規約.md §4）。
+    paths:
+      - 'Directory.Build.props'
+      - 'Directory.Build.targets'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - 'NuGet.config'
+      - '**/*.csproj'
+      - '**/packages.lock.json'
+      - 'buildScript/updateLocks.ps1'
+      - '.github/workflows/locks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同じ Pull Request で同時に走らせない
+concurrency:
+  group: locks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update:
+    # **push できない Pull Request は対象外**にする（その場合は手元で updateLocks.ps1 を実行する）。
+    #   - fork の Pull Request
+    #   - **Dependabot 起点の Pull Request**（`GITHUB_TOKEN` が読み取り専用になり、`permissions` を
+    #     書いても push できない。 lock は維持者が手元で更新する。 手順は .github/RELEASE.md）
+    if: |
+      (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) &&
+      github.actor != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: windows-latest
+    timeout-minutes: 20
+    permissions:
+      # 自動コミットを Pull Request のブランチへ push する
+      contents: write
+      # 更新後のコミットで Build を起動し直す（下記の `gh workflow run`）
+      actions: write
+    steps:
+      # **Pull Request の head ブランチ**を取得する（`github.ref` は `refs/pull/<番号>/merge` であり push 先ではない）
+      - name: チェックアウト
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          fetch-depth: 0
+
+      # 前回の自動コミットで走った実行は何もしない（無限ループを防ぐ）
+      - name: 自動コミットの印を確認する
+        id: guard
+        shell: pwsh
+        run: |
+          # 印は**本文の 1 行**として入れる（1 行目は日本語の要約にする）。 そのため `%B`（件名 + 本文）で判定する。
+          # **`-like` は使わない**: PowerShell のワイルドカードは `[...]` を文字クラスとして扱うため、
+          # `-like '*[skip locks]*'` は文字 1 つに一致してしまう。 行単位で一致を見る。
+          $lines = @((git log -1 --format=%B) -split "`r?`n" | ForEach-Object { $_.Trim() })
+          if ($lines -contains '[skip locks]') {
+            Write-Host "前回のコミットが自動更新のため省略します: $((git log -1 --format=%s).Trim())"
+            "skip=true" >> $env:GITHUB_OUTPUT
+          }
+          else {
+            "skip=false" >> $env:GITHUB_OUTPUT
+          }
+
+      # 復元済みのパッケージを使い回す。 **キーに lock を含めない**（版を上げると lock は必ず変わるため）。
+      - name: NuGet をキャッシュ
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-locks-${{ hashFiles('Directory.Packages.props', 'NuGet.config', 'global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-locks-
+            nuget-${{ runner.os }}-
+
+      - name: lock を更新
+        if: steps.guard.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          & pwsh -NoProfile -File buildScript/updateLocks.ps1
+          if ($LASTEXITCODE -ne 0) { throw "lock の更新に失敗しました（exit $LASTEXITCODE）" }
+
+      - name: 差分があれば自動コミット
+        id: push
+        if: steps.guard.outputs.skip != 'true'
+        shell: pwsh
+        env:
+          BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # **ネイティブ コマンドの非ゼロ終了は `$ErrorActionPreference` では止まらない**ため、
+          # git の各操作の直後に終了コードを確かめる（push に失敗したまま次の `gh workflow run` が
+          # 成功すると、lock を反映していないのにジョブが成功扱いになる）。
+          function Assert-LastExit([string]$What) {
+            if ($LASTEXITCODE -ne 0) { throw "$What が失敗しました（exit $LASTEXITCODE）。lock は反映されていません" }
+          }
+
+          # **存在しないパスを pathspec に並べない**（1 つでも一致しないと `git add` が失敗する）。
+          # git の `*` は `/` も一致するため、`*packages.lock.json` でルート直下にも `src/` 配下にも当たる。
+          $changed = @(git status --porcelain -- '*packages.lock.json')
+          Assert-LastExit 'git status'
+          if ($changed.Count -eq 0) {
+            Write-Host 'lock は最新です（コミットしません）。'
+            "pushed=false" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+
+          $changed | ForEach-Object { Write-Host "  $_" }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          Assert-LastExit 'git config'
+          git add -- '*packages.lock.json'
+          Assert-LastExit 'git add'
+          # 印（`[skip locks]`）を本文に入れ、次の実行でこのコミットを飛ばす
+          git commit -m 'lock を更新する（版の変更に追随）' -m '[skip locks]'
+          Assert-LastExit 'git commit'
+          git push origin "HEAD:$env:BRANCH"
+          Assert-LastExit 'git push'
+          "pushed=true" >> $env:GITHUB_OUTPUT
+          Write-Host "自動コミットを push しました: $env:BRANCH"
+
+      # **`GITHUB_TOKEN` による push では `pull_request` の実行は起動しない**（GitHub の仕様。
+      # 無限ループを防ぐため）。 そのままだと更新後のコミットに必須チェック `ci` が付かず、
+      # 古い lock で失敗した検証から自動で回復できない。 Build を明示的に起動し直す。
+      # **`[skip locks]` でスキップした実行でも起動する**: 前回の実行が push の後に失敗した場合、
+      # 再実行では lock の更新を省くが、Build の起動はやり直さないと `ci` が付かないままになる。
+      # 二重に起動した場合は build.yml の `concurrency`（同じ ref）が古い実行を打ち切る。
+      - name: 更新後のコミットで Build を起動
+        if: steps.push.outputs.pushed == 'true' || steps.guard.outputs.skip == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh workflow run build.yml --ref "$env:BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "Build の起動に失敗しました（exit $LASTEXITCODE）" }
+          Write-Host "Build を起動しました（ref: $env:BRANCH）"

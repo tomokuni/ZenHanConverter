@@ -7,7 +7,7 @@
 Copilot・CI・開発者が同じ手順を 1 コマンドで再現できるようにする（手作業の再実装をなくす）。
 
 .PARAMETER Solution
-対象のソリューション ファイル（既定: SaveEvidence.slnx）。 CI は release-config.json が持つ値を渡す。
+対象のソリューション ファイル（既定: release-config.json の solutionFile）。 CI は同じ値を渡す。
 
 .PARAMETER Configuration
 ビルド構成（既定: Debug）。 CI は Release を渡す。
@@ -351,7 +351,7 @@ else {
 
 # 2e) 配布物の名前（`<製品名>.<UI名>.exe` / `<製品名>.<UI名>.zip`）
 #     exe と zip の名前が UI ごとに揃っていないと、利用者がどれを展開すべきか分からなくなる
-#     （実測 2026-10-28: プロジェクト名に引きずられて `<製品名>.App.<UI名>` になっていた）。
+#     （実測 2026-10-28: 1 つの UI だけ `<製品名>.zip` で、他は `<製品名>.<UI名>.zip` だった）。
 #     規則の所有者は .github/命名規約.md「アセンブリ名」。
 $distIssues = [System.Collections.Generic.List[string]]::new()
 $releaseConfig = Get-RepoConfig $repoRoot
@@ -366,12 +366,17 @@ foreach ($ui in @($releaseConfig.uis)) {
 }
 Add-Result '配布物の名前' ($distIssues.Count -eq 0) "不一致 $($distIssues.Count) 件"
 $distIssues | ForEach-Object { "      $_" }
-# 2f) 実行ファイルのアーキテクチャ（64bit）
-#     AnyCPU の exe は apphost をビルドしたマシンの RID で作るため、32bit 環境では 32bit になる。
+# 2f) 実行ファイルのアーキテクチャ
+#     方針は .github/release-config.json の `executableArchitecture` が単一所有する（リポジトリごとに違うため、
+#     本スクリプトへ書かない）。 規則は .github/ビルド設定規約.md §4。
+#       x64    … `PlatformTarget` = x64 か**単数形**の `RuntimeIdentifier` = win-x64 を要求する
+#                （AnyCPU の exe は apphost をビルドしたマシンの RID で作られるため、32bit 環境では 32bit になる。
+#                 複数形の `RuntimeIdentifiers` は復元対象の RID 一覧であり、ビルド対象を固定しない）。
+#       anycpu … アーキテクチャを固定しない（`PlatformTarget` / `Prefer32Bit` / `RuntimeIdentifier` を書かない。
+#                 RID が要る処理は publish の `-r` で渡す）。
 #     判定は**コメントを除いた XML** で行う（コメントアウトした指定を「指定あり」と誤認しないため）。
-#     固定と見なすのは PlatformTarget=x64 か**単数形**の RuntimeIdentifier=win-x64 だけ
-#     （複数形の RuntimeIdentifiers は復元対象の RID 一覧であり、ビルド対象を固定しない）。
-#     規則は .github/ビルド設定規約.md §5。
+$archMode = $releaseConfig.executableArchitecture
+if (-not $archMode) { $archMode = 'anycpu' }
 $archIssues = [System.Collections.Generic.List[string]]::new()
 $archChecked = 0
 foreach ($rel in @(git ls-files --cached --others --exclude-standard -- 'src/**/App.*.csproj')) {
@@ -381,19 +386,29 @@ foreach ($rel in @(git ls-files --cached --others --exclude-standard -- 'src/**/
     if ($text -notmatch '<OutputType>(WinExe|Exe)</OutputType>') { continue }
     $archChecked += 1
     $xml = [regex]::Replace($text, '(?s)<!--.*?-->', '')
-    if ($xml -match '<Prefer32Bit>\s*true\s*</Prefer32Bit>' -or $xml -match '<PlatformTarget>\s*x86\s*</PlatformTarget>') {
-        $archIssues.Add(("{0}: 32bit の指定がある" -f $rel))
-    }
-    elseif ($xml -match '<PlatformTarget>\s*x64\s*</PlatformTarget>') { continue }
-    elseif ($xml -match '<RuntimeIdentifier(\s[^>]*)?>\s*win-x64\s*</RuntimeIdentifier>') { continue }
-    elseif ($xml -match '<RuntimeIdentifiers(\s[^>]*)?>') {
-        $archIssues.Add(("{0}: RuntimeIdentifiers（複数形）はビルド対象を固定しない（単数形の RuntimeIdentifier か PlatformTarget を書く）" -f $rel))
+    if ($archMode -eq 'x64') {
+        if ($xml -match '<Prefer32Bit>\s*true\s*</Prefer32Bit>' -or $xml -match '<PlatformTarget>\s*x86\s*</PlatformTarget>') {
+            $archIssues.Add(("{0}: 32bit の指定がある" -f $rel))
+        }
+        elseif ($xml -match '<PlatformTarget>\s*x64\s*</PlatformTarget>') { continue }
+        elseif ($xml -match '<RuntimeIdentifier(\s[^>]*)?>\s*win-x64\s*</RuntimeIdentifier>') { continue }
+        elseif ($xml -match '<RuntimeIdentifiers(\s[^>]*)?>') {
+            $archIssues.Add(("{0}: RuntimeIdentifiers（複数形）はビルド対象を固定しない（単数形の RuntimeIdentifier か PlatformTarget を書く）" -f $rel))
+        }
+        else {
+            $archIssues.Add(("{0}: x64 の指定が無い（PlatformTarget か RuntimeIdentifier を書く）" -f $rel))
+        }
     }
     else {
-        $archIssues.Add(("{0}: x64 の指定が無い（PlatformTarget か RuntimeIdentifier を書く）" -f $rel))
+        if ($xml -match '<Prefer32Bit>\s*true\s*</Prefer32Bit>' -or $xml -match '<PlatformTarget(\s[^>]*)?>') {
+            $archIssues.Add(("{0}: アーキテクチャを固定している（TargetFramework だけで AnyCPU にする）" -f $rel))
+        }
+        elseif ($xml -match '<RuntimeIdentifiers?(\s[^>]*)?>') {
+            $archIssues.Add(("{0}: RuntimeIdentifier を指定している（-r は publish のコマンド ラインで渡す）" -f $rel))
+        }
     }
 }
-Add-Result '実行ファイルのアーキテクチャ' ($archIssues.Count -eq 0) "対象 $archChecked 件 / x64 以外 $($archIssues.Count) 件"
+Add-Result '実行ファイルのアーキテクチャ' ($archIssues.Count -eq 0) "方針 $archMode / 対象 $archChecked 件 / 違反 $($archIssues.Count) 件"
 $archIssues | ForEach-Object { "      $_" }
 
 # ============================================================

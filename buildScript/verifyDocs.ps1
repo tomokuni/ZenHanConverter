@@ -31,7 +31,7 @@ $productName = (Get-RepoConfig $repoRoot).product
 $docs = @(
     Get-ChildItem -Path $repoRoot -File -Filter '*.md'
     Get-ChildItem -Path (Join-Path $repoRoot 'src'), (Join-Path $repoRoot '.github') -Recurse -File -Filter '*.md'
-) | Where-Object { $_.FullName -notmatch '\\(obj|bin|archive)\\' }
+) | Where-Object { $_.FullName -notmatch '[\\/](obj|bin|archive)[\\/]' }
 
 # パスの照合（8a）はビルドスクリプトのコメントも対象にする（実測: 削除済みの検証スクリプトを
 # 指す参照が buildScript/*.bat のコメントに残っていた）
@@ -40,9 +40,9 @@ $scriptDocs = @(Get-ChildItem -Path (Join-Path $repoRoot 'buildScript') -Recurse
 # ソースの一覧（複数の検査が同じ列挙を繰り返さないよう 1 回だけ作る。
 # `-Include` は obj/bin まで全ファイルを走査してから絞るため遅い。 `-Filter` を使う）
 $allCs = @(Get-ChildItem -Path (Join-Path $repoRoot 'src') -Recurse -File -Filter '*.cs' |
-    Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })
+    Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
 $allCsproj = @(Get-ChildItem -Path (Join-Path $repoRoot 'src') -Recurse -File -Filter '*.csproj' |
-    Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })
+    Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
 
 # リポジトリ外の参照先（例: 隣に置いた EsUtil リポジトリ）のソースも読む。
 # 文書が外部の型を引用することはあるため、「型名の接頭辞が実在するか」の判定に含める
@@ -63,7 +63,7 @@ foreach ($csproj in $allCsproj) {
 $externalCs = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
 foreach ($root in $externalSrcRoots) {
     foreach ($f in (Get-ChildItem -Path $root -Recurse -File -Filter '*.cs' |
-            Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })) {
+            Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
         $externalCs.Add($f)
     }
 }
@@ -74,7 +74,7 @@ foreach ($root in $externalSrcRoots) {
 # （実測 2026-10-26: ProjectReference を PackageReference へ変えたときに 2 件の誤検出が出た）。
 $externalPackageTypes = @{}
 $lockFiles = @(Get-ChildItem -Path $repoRoot -Recurse -File -Filter 'packages.lock.json' |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
 if ($lockFiles.Count -gt 0) {
     $locals = Invoke-NativeText 'dotnet' @('nuget', 'locals', 'global-packages', '--list')
     $globalPackages = (($locals.Text + $locals.ErrorText) -split "`r?`n" |
@@ -121,8 +121,14 @@ $mdVersion = 'markdownlint-cli2@0.24.0'
 $mdArgs = @('--yes', $mdVersion, '--config', 'buildScript/markdownlint.json')
 if ($Fix) { $mdArgs += '--fix' }
 $mdArgs += @('src/**/*.md', '.github/**/*.md', '*.md', '!**/obj/**', '!**/bin/**')
-# npx は `cmd.exe` 経由で起動する（`.cmd` は直接起動できない）。 出力の復号は Invoke-NativeText が行う。
-$mdRun = Invoke-NativeText $env:ComSpec (@('/c', 'npx') + $mdArgs)
+# npx は Windows では `cmd.exe` 経由で起動する（`.cmd` は直接起動できない）。 Linux / macOS では
+# 直接起動する（CI の docs ジョブは ubuntu で走る）。 出力の復号は Invoke-NativeText が行う。
+$mdRun = if ($env:ComSpec -and (Test-Path -LiteralPath $env:ComSpec)) {
+    Invoke-NativeText $env:ComSpec (@('/c', 'npx') + $mdArgs)
+}
+else {
+    Invoke-NativeText 'npx' $mdArgs
+}
 $mdText = $mdRun.Text + $mdRun.ErrorText
 # 自動修正した場合は、以降の検査が古い内容を読まないようキャッシュを捨てる
 if ($Fix) { Clear-FileCache }
@@ -140,10 +146,52 @@ $brokenLinks = [System.Collections.Generic.List[string]]::new()
 $externalLinks = 0
 $repoParent = Split-Path $repoRoot -Parent
 $rxLink = [regex]'\]\((?<t>[^)\s]+)\)'
-$rxCode = [regex]'`[^`]*`'
+# **インライン コードは「同じ長さのバックティックで囲まれた区間」**とする（Markdown の仕様）。
+# コード スパンは行をまたげるため、行単位に区切らずに対応させる。 **終端はバックティック列の長さが
+# 開始と一致する場合だけ**認識する（囲みより長い列を内部に含む正当なコード スパンを除去できるようにするため）。
+$rxCode = [regex]'(?s)(?<!`)(`+)(?!`)(?:(?!(?<!`)\1(?!`)).)*?(?<!`)\1(?!`)'
+
+# **フェンス付きコード ブロック（``` / ~~~）はリンク検査の対象外**にする（中身は例示である）。
+# 先に除去しないと、フェンスのバックティックが本文のバックティックと対になり、対応がずれる。
+# 終了フェンスは**開始と同じ文字で、開始以上の長さ**の列だけを認識する（Markdown の仕様）。
+# 状態遷移で 1 行ずつ見る（正規表現では列の長さの比較ができないため）。
+# 改行は CRLF / LF のどちらでも扱えるよう、行の分割と結合で吸収する。
+function Remove-FencedCode([string]$Text) {
+    $lines = $Text -split "`r?`n"
+    $kept = [System.Collections.Generic.List[string]]::new()
+    $fenceChar = [char]0
+    $fenceLength = 0
+    # 開始フェンスは情報文字列（```` ```powershell ```` など）を持てる
+    $rxOpen = [regex]'^[ \t]*(?<run>`{3,}|~{3,})'
+    # 終了フェンスは**列の後ろが空白だけ**の行に限る（情報文字列を持つ行は本文である）
+    $rxClose = [regex]'^[ \t]*(?<run>`{3,}|~{3,})[ \t]*$'
+    foreach ($line in $lines) {
+        if ($fenceChar -eq [char]0) {
+            $m = $rxOpen.Match($line)
+            if ($m.Success) {
+                $fenceChar = $m.Groups['run'].Value[0]
+                $fenceLength = $m.Groups['run'].Value.Length
+                $kept.Add('')
+                continue
+            }
+            $kept.Add($line)
+            continue
+        }
+        # フェンスの中（リンク検査の対象外）
+        $kept.Add('')
+        $m = $rxClose.Match($line)
+        if ($m.Success -and $m.Groups['run'].Value[0] -eq $fenceChar -and $m.Groups['run'].Value.Length -ge $fenceLength) {
+            $fenceChar = [char]0
+            $fenceLength = 0
+        }
+    }
+    return ($kept -join "`n")
+}
+
 foreach ($f in $docs) {
-    # コード片（`...`）の中のリンク風表記は文書の例示なので対象外にする
-    $text = $rxCode.Replace((Get-Text $f.FullName), '``')
+    # コード片の中のリンク風表記は文書の例示なので対象外にする（置換先にバックティックを使わない）
+    $text = Remove-FencedCode (Get-Text $f.FullName)
+    $text = $rxCode.Replace($text, ' ')
     foreach ($m in $rxLink.Matches($text)) {
         $target = $m.Groups['t'].Value
         if ($target -match '^(https?:|mailto:|\w+:|#)') { continue }
@@ -647,7 +695,7 @@ $boolIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 #     - 可搬な層のカテゴリ フォルダは単数形（命名規約）
 #     - `async void` はイベント ハンドラーだけ（コーディング規約 §7）
 $codeIssues = [System.Collections.Generic.List[string]]::new()
-foreach ($f in @($allCs | Where-Object { $_.FullName -match '\\tests\\' })) {
+foreach ($f in @($allCs | Where-Object { $_.FullName -match '[\\/]tests[\\/]' })) {
     $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
     $lines = Get-Lines $f.FullName
     # インターフェースを実装するクラスの行範囲（モック・スパイの public 実装を許すため）
@@ -675,7 +723,7 @@ foreach ($f in @($allCs | Where-Object { $_.FullName -match '\\tests\\' })) {
         }
     }
 }
-foreach ($f in @($allCs | Where-Object { $_.FullName -notmatch '\\(tests|sample)\\' })) {
+foreach ($f in @($allCs | Where-Object { $_.FullName -notmatch '[\\/](tests|sample)[\\/]' })) {
     $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
     $lines = Get-Lines $f.FullName
     for ($i = 0; $i -lt $lines.Count; $i++) {
@@ -690,7 +738,7 @@ foreach ($f in @($allCs | Where-Object { $_.FullName -notmatch '\\(tests|sample)
 $allowedPluralFolders = @('Models', 'Services', 'Views', 'Enums', 'Controls', 'Extensions', 'Properties', 'Interop')
 foreach ($projDir in (Get-ChildItem -Path (Join-Path $repoRoot 'src') -Directory -Filter 'EsUtil.*')) {
     foreach ($d in (Get-ChildItem -Path (Join-Path $projDir.FullName 'src') -Recurse -Directory -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })) {
+            Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
         if ($d.Name -cin $allowedPluralFolders) { continue }
         if ($d.Name -cmatch 's$' -and $d.Name -notmatch '(ss|us|is|as|ics|ous)$') {
             $codeIssues.Add(("{0}  カテゴリ フォルダが複数形（単数形にする。 型の集合を表すカテゴリは除く）" -f $d.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')))
@@ -755,7 +803,7 @@ $namingIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 # 8k) イベントの発火は Raise ヘルパーへ集約する（`event` へ `?.Invoke` を書かない。 コーディング規約 §7）
 $rxEventDecl = [regex]'(?<![\w.])(?:public|internal|private|protected)\s+(?:static\s+)?event\s+(?:EventHandler(?:<[^>]+>)?|\w+(?:<\w+>)?)\s+(?<n>[A-Za-z_]\w*)'
 $invokeIssues = [System.Collections.Generic.List[string]]::new()
-foreach ($f in @($allCs | Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })) {
+foreach ($f in @($allCs | Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
     $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
     $text = Get-Text $f.FullName
     $eventNames = @($rxEventDecl.Matches($text) | ForEach-Object { $_.Groups['n'].Value })
@@ -772,7 +820,7 @@ $invokeIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 
 # 8l) ログ定義のドキュメントコメントへレベルと出力書式を書く（ログ規約 §5）
 $logDocIssues = [System.Collections.Generic.List[string]]::new()
-foreach ($f in @($allCs | Where-Object { $_.FullName -notmatch '\\(obj|bin|tests|sample)\\' })) {
+foreach ($f in @($allCs | Where-Object { $_.FullName -notmatch '[\\/](obj|bin|tests|sample)[\\/]' })) {
     $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
     $lines = Get-Lines $f.FullName
     for ($i = 0; $i -lt $lines.Count; $i++) {
@@ -819,7 +867,7 @@ $unlisted | Select-Object -First 10 | ForEach-Object { "      {0}:{1}  {2}（付
 # 8n) 文書の H1（ドキュメント規約 §2。 対象はリポジトリ直下と src/ 配下の文書）
 $h1Issues = [System.Collections.Generic.List[string]]::new()
 $docFiles = @(@(Get-ChildItem -Path $repoRoot -File -Filter '*.md') + @(Get-ChildItem -Path (Join-Path $repoRoot 'src') -Recurse -File -Filter '*.md'))
-foreach ($f in @($docFiles | Where-Object { $_.FullName -notmatch '\\(obj|bin|archive)\\' })) {
+foreach ($f in @($docFiles | Where-Object { $_.FullName -notmatch '[\\/](obj|bin|archive)[\\/]' })) {
     $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
     if ($rel -eq 'src/README.md') { continue }
     $h1 = $null
@@ -920,10 +968,10 @@ $catchIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 $wiringIssues = [System.Collections.Generic.List[string]]::new()
 foreach ($projDir in (Get-ChildItem -Path (Join-Path $repoRoot 'src') -Directory)) {
     $axamlFiles = @(Get-ChildItem -Path $projDir.FullName -Recurse -File -Filter '*.axaml' -ErrorAction SilentlyContinue |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
     if ($axamlFiles.Count -eq 0) { continue }
     $csFiles = @(Get-ChildItem -Path $projDir.FullName -Recurse -File -Filter '*.cs' -ErrorAction SilentlyContinue |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })
     $csText = ($csFiles | ForEach-Object { Get-Text $_.FullName }) -join "`n"
     $handlerNames = [System.Collections.Generic.HashSet[string]]::new()
     foreach ($x in $axamlFiles) {
@@ -950,7 +998,7 @@ $readmeRequired = @(
 )
 $readmeIssues = [System.Collections.Generic.List[string]]::new()
 foreach ($f in @(Get-ChildItem -Path (Join-Path $repoRoot 'src') -Recurse -File -Filter 'README.md' |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin|sample)\\' })) {
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin|sample)[\\/]' })) {
     $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
     # `src/README.md` は層構成の文書（ドキュメント規約 §2 の例外）
     if ($rel -eq 'src/README.md') { continue }
@@ -981,7 +1029,7 @@ $sysRequired = @(
 )
 $sysIssues = [System.Collections.Generic.List[string]]::new()
 foreach ($f in @(Get-ChildItem -Path (Join-Path $repoRoot 'src') -Recurse -File -Filter 'SPEC_System.md' |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })) {
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
     $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
     $headings = @(Get-Lines $f.FullName |
         Where-Object { $_ -match '^#{2,3} ' } |
@@ -1004,7 +1052,7 @@ foreach ($projDir in (Get-ChildItem -Path (Join-Path $repoRoot 'src') -Directory
     if (-not (Test-Path -LiteralPath $srcDir)) { continue }
     # ソースの型名・ファイル名の集合
     $srcNames = [System.Collections.Generic.HashSet[string]]::new()
-    foreach ($cs in (Get-ChildItem -Path $srcDir -Recurse -File -Filter '*.cs' | Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })) {
+    foreach ($cs in (Get-ChildItem -Path $srcDir -Recurse -File -Filter '*.cs' | Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
         $name = [IO.Path]::GetFileNameWithoutExtension($cs.Name)
         foreach ($part in $name.Split('.')) { [void]$srcNames.Add($part) }
         foreach ($m in [regex]::Matches((Get-Text $cs.FullName), '(?m)^\s*(?:(?:public|internal|private|protected|file)\s+)*(?:static\s+|sealed\s+|abstract\s+|partial\s+|readonly\s+|ref\s+)*(?:class|struct|interface|enum|record(?:\s+(?:class|struct))?)\s+([A-Za-z_]\w*)')) {
@@ -1012,7 +1060,7 @@ foreach ($projDir in (Get-ChildItem -Path (Join-Path $repoRoot 'src') -Directory
         }
     }
     foreach ($t in (Get-ChildItem -Path (Join-Path $projDir.FullName 'tests') -Recurse -File -Filter '*.Tests.cs' -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })) {
+            Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
         $rel = $t.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
         $m = $rxTestFileName.Match($t.Name)
         if (-not $m.Success) { continue }
@@ -1037,14 +1085,14 @@ $testTargetIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 $rxTypeHeading = [regex]'^#{2,3} \d+(?:\.\d+)*\.?\s*(?:`(?<t>[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)`|(?<t2>[A-Za-z_]\w*))'
 $internalIssues = [System.Collections.Generic.List[string]]::new()
 foreach ($f in @(Get-ChildItem -Path (Join-Path $repoRoot 'src') -Recurse -File -Filter 'SPEC_API.md' |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })) {
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
     $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
     $projectDir = (Get-Item $f.FullName).Directory.Parent.FullName
     $srcDir = Join-Path $projectDir 'src'
     if (-not (Test-Path -LiteralPath $srcDir)) { continue }
     # そのプロジェクトの internal 型の集合
     $internalTypes = [System.Collections.Generic.HashSet[string]]::new()
-    foreach ($cs in (Get-ChildItem -Path $srcDir -Recurse -File -Filter '*.cs' | Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })) {
+    foreach ($cs in (Get-ChildItem -Path $srcDir -Recurse -File -Filter '*.cs' | Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
         foreach ($m in [regex]::Matches((Get-Text $cs.FullName), '(?m)^\s*internal\s+(?:static\s+|sealed\s+|abstract\s+|partial\s+|readonly\s+|ref\s+)*(?:class|struct|interface|enum|record(?:\s+(?:class|struct))?)\s+([A-Za-z_]\w*)')) {
             [void]$internalTypes.Add($m.Groups[1].Value)
         }
@@ -1066,7 +1114,11 @@ $internalIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 # 9. 改行コード
 # ============================================================
 Write-Output '== 9. 改行コード =='
-$eolIssues = @(Get-GitList @('ls-files', '--eol') | Select-String 'w/mixed|w/lf')
+# **作業ツリーの改行は OS で異なる**（Windows は `.editorconfig` の CRLF、Linux は LF）。
+# リポジトリの内容そのものの混在（index）は OS に依存しないため、Windows 以外では index を見る
+# （CI の docs ジョブは ubuntu で走る）。
+$eolPattern = if ($IsWindows) { 'w/mixed|w/lf' } else { 'i/mixed|w/mixed' }
+$eolIssues = @(Get-GitList @('ls-files', '--eol') | Select-String $eolPattern)
 Add-Result '改行コード' (@($eolIssues).Count -eq 0) "$(@($eolIssues).Count) 件"
 $eolIssues | Select-Object -First 5 | ForEach-Object { "      $($_.Line)" }
 
@@ -1111,7 +1163,7 @@ function Test-BuildOutput([string]$Folder) {
             Where-Object { $rxBuildOutput.IsMatch($_.Name) -or $_.Extension -in @('.dll', '.exe', '.pdb', '.cache') }).Count -gt 0
 }
 $emptyDirs = @(Get-ChildItem -Path (Join-Path $repoRoot 'src') -Recurse -Directory |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' } |
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' } |
         Where-Object { -not (Test-IgnoredFolder $_.FullName) } |
         Where-Object { @(Get-ChildItem -LiteralPath $_.FullName -Force).Count -eq 0 })
 # 孤立した bin/obj は「親に csproj が無い」ことで判定する（親を毎回列挙せず、csproj を持つフォルダーの集合と照合する）。
@@ -1147,7 +1199,7 @@ $testNameIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 #      宣言そのもの（`xmlns:接頭辞="..."`）を取り除いた残りで `接頭辞:` が使われているかを見る。
 $xamlNamespaceIssues = [System.Collections.Generic.List[string]]::new()
 foreach ($f in (Get-ChildItem -Path (Join-Path $repoRoot 'src') -Recurse -File -Filter '*.axaml' |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })) {
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
     $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
     $lines = Get-Lines $f.FullName
     $prefixes = [System.Collections.Generic.List[string]]::new()
@@ -1179,7 +1231,7 @@ foreach ($proj in (Get-ChildItem -Path (Join-Path $repoRoot 'src') -Directory)) 
     $srcDir = Join-Path $proj.FullName 'src'
     $testDir = Join-Path $proj.FullName 'tests'
     if (-not (Test-Path -LiteralPath $srcDir) -or -not (Test-Path -LiteralPath $testDir)) { continue }
-    foreach ($f in (Get-ChildItem -Path $srcDir -Recurse -File -Filter '*.cs' | Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' })) {
+    foreach ($f in (Get-ChildItem -Path $srcDir -Recurse -File -Filter '*.cs' | Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
         $testTotal++
         $rel = $f.FullName.Substring($srcDir.Length + 1)
         $fileName = [IO.Path]::GetFileNameWithoutExtension($rel) + '.Tests.cs'

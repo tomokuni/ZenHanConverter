@@ -10,7 +10,7 @@
 検証の内容:
 1. publish（`buildScript/publish_*.bat`）を実行し（`-SkipPublish` で省略）、出力フォルダの exe が配布名と一致することを確認する。
 2. 実行ファイルが起動中でないことを確認する（起動中は設定ファイルが競合するため中止する）。
-3. ユーザーの設定ファイル（%LOCALAPPDATA% 配下の SaveEvidence フォルダーの settings.json）を退避する。
+3. ユーザーの設定ファイル（%LOCALAPPDATA% 配下の製品名フォルダー（`release-config.json` の `product`）の settings.json）を退避する。
 4. exe を起動し、メイン ウィンドウが現れるのを待って `WM_CLOSE` で正常終了させる（終了コード 0 を確かめる）。
 5. 終了後の設定ファイルが空（`{}`）でなく、起動前と同じキーを保っていることを確認する（Native AOT のトリミングで
    設定が全損する不具合の回帰検出。 検証は [`検証手順.md`](../.github/検証手順.md) §18）。
@@ -175,14 +175,14 @@ function Get-PublishFingerprint([string]$ScriptPath) {
 
 # SDK のバージョンは指紋の入力である（出力の復号は Invoke-NativeText が行う）
 $script:SdkVersion = (Invoke-NativeText 'dotnet' @('--version')).Text.Trim()
-$fingerprintDir = Join-Path ([IO.Path]::GetTempPath()) 'saveevidence-verify-publish'
+$fingerprintDir = Join-Path ([IO.Path]::GetTempPath()) ("{0}-verify-publish" -f $verifyConfig.product.ToLowerInvariant())
 
 # 退避した設定ファイル（パス -> 退避先）。 finally で必ず戻す
 $settingsBackups = @{}
 # 退避先は**ユーザーのフォルダーの外**（一時フォルダー）へ置き、名前に GUID を付ける。
 # 設定ファイルの隣の固定名（`settings.json.bak`）へ `-Force` で上書きすると、利用者が残していた
 # 復旧用のバックアップを消してしまう（実測 2026-10-28: レビューで指摘）。
-$settingsBackupDir = Join-Path ([IO.Path]::GetTempPath()) ("zenhanconverter-verify-settings-" + [guid]::NewGuid().ToString('N'))
+$settingsBackupDir = Join-Path ([IO.Path]::GetTempPath()) ("{0}-verify-settings-{1}" -f $verifyConfig.product.ToLowerInvariant(), [guid]::NewGuid().ToString('N'))
 
 try {
     foreach ($target in $targets) {
@@ -315,7 +315,7 @@ finally {
             Remove-Item -LiteralPath $settingsBackups[$key] -Force
         }
     }
-    # 退避用の一時フォルダーは残さない
+    # 退避用の一時フォルダーは残さない（空でない場合だけ消す）
     if (Test-Path -LiteralPath $settingsBackupDir) {
         Remove-Item -LiteralPath $settingsBackupDir -Recurse -Force -ErrorAction SilentlyContinue
     }
