@@ -230,6 +230,7 @@ dotnet test --solution <ソリューション>.slnx -c Release --no-build
 | 必須チェック | **`ci`**（`build.yml` の集約ジョブ）。 ruleset `Protect main` が要求する |
 | `build.yml` の実行契機 | **`main` 向け Pull Request と手動実行だけ**（push では実行しない） |
 | 検証の中身 | `buildScript/verify.ps1`（ビルド・テスト・リポジトリ全体の検査）と `buildScript/verifyDocs.ps1`（文書とコードの走査） |
+| 検証スクリプトの共通化 | `buildScript/verifyDocs.ps1` は**リポジトリの種類によらず同一ファイル**を使う。 プロジェクト フォルダの配置は `.github/release-config.json` の `layout`（`roots` / `projectTitleStyle` / `portablePrefixes` / `solutionLabels` / `externalDocTokens`）が単一所有し、陳腐化した識別子は `.github/verify-stale-patterns.txt` が持つ。 `buildScript/verify.ps1` は種類で規則が違う（アプリは配布物とロック、ライブラリはパッケージング・層の参照・AOT の制約）ため、アプリ用とライブラリ用に分かれる |
 | `locks.yml` | `main` 向け PR で `buildScript/updateLocks.ps1` を実行し、`packages.lock.json` の差分を自動コミットする（`GITHUB_TOKEN` の push では `pull_request` が起動しないため、`build.yml` を `workflow_dispatch` で起動し直す） |
 | 走査（`docs` ジョブ） | `buildScript/verifyDocs.ps1`。 **アプリ リポジトリは Windows で実行する**（本リポジトリは WinForms 版が `Microsoft.Extensions.Hosting` を参照し、Linux では復元が `NU1102` で失敗する。 ライブラリ リポジトリは ubuntu で実行している）。 走査スクリプト自体は OS 非依存（npx の起動方法と改行コードの見方を OS で切り替える） |
 | `release.yml` | Pull Request では**前提検証だけ**（版・タグ・CHANGELOG・ブランチ）。 手動実行の `mode` で `dry-run` / `release` を選ぶ |

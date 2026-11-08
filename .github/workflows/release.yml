@@ -111,7 +111,6 @@ jobs:
 
       # 現在どこまでリリースされているか（バージョン・タグ・GitHub Release・配布物）を Summary へ表示する
       - name: 現在のバージョン状況を表示
-        continue-on-error: true
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
