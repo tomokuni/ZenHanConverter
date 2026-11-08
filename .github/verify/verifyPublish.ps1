@@ -41,10 +41,10 @@ publish の入力が前回と同一でも publish する（入力が同一のと
 `WM_CLOSE` を送ってからプロセスが終了するまでの待ち時間（既定 60 秒）。
 
 .EXAMPLE
-pwsh -NoProfile -File buildScript/verifyPublish.ps1
+pwsh -NoProfile -File .github/verify/verifyPublish.ps1
 
 .EXAMPLE
-pwsh -NoProfile -File buildScript/verifyPublish.ps1 -Ui MewUI -SkipPublish
+pwsh -NoProfile -File .github/verify/verifyPublish.ps1 -Ui MewUI -SkipPublish
 #>
 [CmdletBinding()]
 param(
@@ -58,13 +58,13 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $enc = [Text.UTF8Encoding]::new($false)
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 Set-Location $repoRoot
 
 # 結果の記録（Add-Result / Add-Info）とネイティブ コマンドの読み取り（Invoke-NativeText）は
-# buildScript/VerifyCommon.ps1 が単一所有する（本スクリプトは自前の実装を持たない）。
+# .github/verify/VerifyCommon.ps1 が単一所有する（本スクリプトは自前の実装を持たない）。
 # 文字化け対策の根拠は .github/検証手順.md §19。
-. (Join-Path $PSScriptRoot 'VerifyCommon.ps1')
+. (Join-Path $PSScriptRoot '..\verify\VerifyCommon.ps1')
 
 # メイン ウィンドウへ WM_CLOSE を送るためだけの Win32 呼び出し（強制終了させない）
 Add-Type -Namespace SeVerifyPublish -Name Native -MemberDefinition @'
@@ -198,7 +198,7 @@ if ($targets.Count -eq 0) {
 function Get-PublishFingerprint([string]$ScriptPath) {
     $sb = [Text.StringBuilder]::new()
     $paths = [System.Collections.Generic.List[string]]::new()
-    # `buildScript` 全体は含めない（本スクリプトや verify.ps1 の編集で publish が無効化されてしまう）。
+    # 検証スクリプト（`.github/verify/`）は含めない（本スクリプトや verify.ps1 の編集で publish が無効化されてしまう）。
     # publish スクリプトの内容は下で個別に指紋へ入れる。
     # 一覧は Get-GitList（VerifyCommon.ps1）が取る（未追跡も含める。 結果は 1 回だけ読んで使い回される）
     foreach ($rel in (Get-GitList @('-c', 'core.quotepath=false', 'ls-files', '--', 'src', 'Directory.Build.props', 'Directory.Build.targets', 'global.json', '.github/release-config.json'))) { $paths.Add($rel) }

@@ -8,12 +8,12 @@
 # **マージ後に `main` へ載るツリーそのもの**を対象にする。 同じツリーをマージ後にもう一度検証しても
 # 結果は変わらないため、`dev` への push と `main` への push では実行しない（実測: 1 変更あたり
 # 最大 3 回、windows ランナーが走っていた）。 作業ブランチで早く壊れを見つけたいときは、手元の
-# `buildScript/verify.ps1` か workflow_dispatch を使う。
+# `.github/verify/verify.ps1` か workflow_dispatch を使う。
 #
 # **ジョブは同時に走らせる**（直列だと 1 ジョブでビルドと走査を順に待つ）。
 #   verify … ビルドとテスト（走査を除く。 合否基準は .github/検証手順.md）
 #   docs   … 文書とコードの走査（ビルドはしない。 文書の型参照検査のため復元だけ行う。 Windows で走らせる）
-# 検証の中身は buildScript/verify.ps1 が単一所有し、合否基準は .github/検証手順.md が定める。
+# 検証の中身は .github/verify/verify.ps1 が単一所有し、合否基準は .github/検証手順.md が定める。
 #
 # **文書（.md）だけの変更ではビルドもテストも要らない**（走査だけを実行する）。
 # 判定できない場合（手動実行・差分が取れない場合）は**コードの変更として扱う**（取りこぼしを避ける）。
@@ -92,7 +92,7 @@ jobs:
           $global:LASTEXITCODE = 0
 
   # ────────────────────────────────────────────────────────────
-  # 2. ビルドとテスト（`buildScript/verify.ps1` が単一所有する）
+  # 2. ビルドとテスト（`.github/verify/verify.ps1` が単一所有する）
   # ────────────────────────────────────────────────────────────
   verify:
     needs: changes
@@ -126,7 +126,7 @@ jobs:
       # テストが入力待ちで停止する。 規則は .github/検証手順.md §17。
       - name: Windows App Runtime を導入
         shell: pwsh
-        run: pwsh -NoProfile -File buildScript/installWindowsAppRuntime.ps1
+        run: pwsh -NoProfile -File .github/scripts/installWindowsAppRuntime.ps1
 
       # 復元は検証の前に 1 回だけ行う（NuGet キャッシュを効かせ、以降を --no-restore にするため）。
       # **lock どおりに復元する**（-p:RestoreLockedMode=true）。 csproj / Directory.Packages.props と
@@ -139,7 +139,7 @@ jobs:
       # 該当プロジェクトがスキップされて警告が隠れることがある。 規則は .github/検証手順.md §3）。
       - name: 検証（Release）
         shell: pwsh
-        run: pwsh -NoProfile -File buildScript/verify.ps1 -Solution '${{ steps.config.outputs.solution_file }}' -Configuration Release -NoRestore -FullBuild -SkipDocs -SkipFormat
+        run: pwsh -NoProfile -File .github/verify/verify.ps1 -Solution '${{ steps.config.outputs.solution_file }}' -Configuration Release -NoRestore -FullBuild -SkipDocs -SkipFormat
 
   # ────────────────────────────────────────────────────────────
   # 3. 文書とコードの走査（ビルドはしない。 verify と同時に走らせる）
@@ -165,8 +165,8 @@ jobs:
         with:
           # キャッシュの場所は OS で変わる（Windows は `%LOCALAPPDATA%\npm-cache`）
           path: ~\AppData\Local\npm-cache
-          # 版は buildScript/verifyDocs.ps1 が単一所有する（版を上げるとキーが変わる）
-          key: npm-${{ runner.os }}-${{ hashFiles('buildScript/verifyDocs.ps1', 'buildScript/markdownlint.json') }}
+          # 版は .github/verify/verifyDocs.ps1 が単一所有する（版を上げるとキーが変わる）
+          key: npm-${{ runner.os }}-${{ hashFiles('.github/verify/verifyDocs.ps1', '.github/verify/markdownlint.json') }}
           restore-keys: |
             npm-${{ runner.os }}-
 
@@ -185,11 +185,11 @@ jobs:
         # **Linux でも Windows 向け TFM を復元できるようにする**（既定では `NETSDK1100` で失敗する）
         run: dotnet restore '${{ steps.config.outputs.solution_file }}' -p:EnableWindowsTargeting=true
 
-      # 合否基準は .github/検証手順.md（実装は buildScript/verifyDocs.ps1 が単一所有する）
+      # 合否基準は .github/検証手順.md（実装は .github/verify/verifyDocs.ps1 が単一所有する）
       - name: 走査
         shell: pwsh
         run: |
-          & pwsh -NoProfile -File buildScript/verifyDocs.ps1
+          & pwsh -NoProfile -File .github/verify/verifyDocs.ps1
           if ($LASTEXITCODE -ne 0) { throw "走査が失敗しました（exit $LASTEXITCODE）" }
 
   # ────────────────────────────────────────────────────────────

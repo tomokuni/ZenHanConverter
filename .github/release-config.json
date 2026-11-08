@@ -2,6 +2,12 @@
   "product": "ZenHanConverter",
   "versionFile": "Directory.Build.props",
   "solutionFile": "ZenHanConverter.slnx",
+  "layout": {
+    "roots": ["src"],
+    "projectTitleStyle": "name",
+    "solutionLabels": ["ZenHanConverter.slnx"],
+    "scriptRoots": ["buildScript", ".github"]
+  },
   "gateWorkflow": "build.yml",
   "releaseBranches": [
     "main"

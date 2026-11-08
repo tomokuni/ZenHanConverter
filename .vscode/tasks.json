@@ -40,7 +40,7 @@
     {
       "label": "検証（全体）",
       "type": "shell",
-      "command": "pwsh -NoProfile -File buildScript/verify.ps1",
+      "command": "pwsh -NoProfile -File .github/verify/verify.ps1",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -51,49 +51,49 @@
       "label": "検証（全体・全プロジェクトを作り直す）",
       "detail": "コミット前の最終確認。 増分ビルドでは隠れることがある警告を全件出す（既定は増分）",
       "type": "shell",
-      "command": "pwsh -NoProfile -File buildScript/verify.ps1 -FullBuild",
+      "command": "pwsh -NoProfile -File .github/verify/verify.ps1 -FullBuild",
       "problemMatcher": []
     },
     {
       "label": "検証（全体・自動修正）",
       "type": "shell",
-      "command": "pwsh -NoProfile -File buildScript/verify.ps1 -Fix",
+      "command": "pwsh -NoProfile -File .github/verify/verify.ps1 -Fix",
       "problemMatcher": []
     },
     {
       "label": "検証（ビルド省略）",
       "type": "shell",
-      "command": "pwsh -NoProfile -File buildScript/verify.ps1 -SkipBuild -SkipPackage",
+      "command": "pwsh -NoProfile -File .github/verify/verify.ps1 -SkipBuild -SkipPackage",
       "problemMatcher": []
     },
     {
       "label": "検証（テスト省略）",
       "type": "shell",
-      "command": "pwsh -NoProfile -File buildScript/verify.ps1 -SkipTests",
+      "command": "pwsh -NoProfile -File .github/verify/verify.ps1 -SkipTests",
       "problemMatcher": []
     },
     {
       "label": "検証（文書とコードの走査のみ）",
       "type": "shell",
-      "command": "pwsh -NoProfile -File buildScript/verifyDocs.ps1",
+      "command": "pwsh -NoProfile -File .github/verify/verifyDocs.ps1",
       "problemMatcher": []
     },
     {
       "label": "検証（配布物）",
       "type": "shell",
-      "command": "pwsh -NoProfile -File buildScript/verifyPublish.ps1",
+      "command": "pwsh -NoProfile -File .github/verify/verifyPublish.ps1",
       "problemMatcher": []
     },
     {
       "label": "情報レベル（検出）",
       "type": "shell",
-      "command": "pwsh -NoProfile -File buildScript/verifyInfoStyle.ps1",
+      "command": "pwsh -NoProfile -File .github/verify/verifyInfoStyle.ps1",
       "problemMatcher": []
     },
     {
       "label": "情報レベル（修正）",
       "type": "shell",
-      "command": "pwsh -NoProfile -File buildScript/verifyInfoStyle.ps1 -Fix",
+      "command": "pwsh -NoProfile -File .github/verify/verifyInfoStyle.ps1 -Fix",
       "problemMatcher": []
     },
     {

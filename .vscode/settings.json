@@ -6,10 +6,10 @@
     // リポジトリごとに名前の異なるソリューションを指定できない。 根拠は .github/検証手順.md §17）。
     "dotnet.defaultSolution": "ZenHanConverter.slnx",
     // markdownlint 拡張機能（DavidAnson.vscode-markdownlint）は、構成ファイルを**ワークスペースのルート**でのみ
-    // 自動探索する。 本リポジトリは構成を buildScript/ へ置く（ルート直下のファイルを減らすため。
+        // 自動探索する。 本リポジトリは構成を .github/verify/ へ置く（合否を出すものと同じ場所。
     // .github/ビルド設定規約.md §1）ため、場所を明示する。 ${workspaceFolder} は文書ごとのフォルダーへ解決される
     // （複数ルートのワークスペースでも各リポジトリの構成を指す）。
-    "markdownlint.configFile": "${workspaceFolder}/buildScript/markdownlint.json",
+    "markdownlint.configFile": "${workspaceFolder}/.github/verify/markdownlint.json",
     // デバッグ実行時の「モジュールが読み込まれました。シンボルが読み込まれました。」と
     // 「シンボルの読み込みをスキップしました…」は情報であり、動作・例外・ログには影響しない。
     // 起動構成（launch.json）ではなく拡張機能の設定で止める（起動構成の種類によっては無視されるため。

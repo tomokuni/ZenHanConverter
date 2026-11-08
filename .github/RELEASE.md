@@ -46,8 +46,9 @@ UI の追加・変更は **`release-config.json` の `uis[]` を編集します*
     ├── scripts/
     │   ├── version.ps1            # バージョンの規則
     │   ├── set-version.ps1        # バージョンファイルの書き換え（冪等）
-    │   ├── verify-release-version.ps1  # リリース可否の検証
     │   └── show-current-versions.ps1   # 現在のバージョン状況の表示
+    ├── verify/
+    │   └── verify-release-version.ps1  # リリース可否の検証（合否を出すものはここへ置く）
     └── workflows/
         ├── build.yml              # push / PR でビルド・テスト（配布物は作らない）
         ├── publish.yml            # 全 UI の publish と保管（release.yml から呼ばれる）
@@ -240,7 +241,7 @@ semver 形式で入力します。数値部分の**先頭 0 は使用できま�
 
 添付するファイルは `release-config.json` の `uis[].asset` が決めます。`release.yml` は保管された成果物をそのまま添付するため、**UI を追加してもワークフローは変更不要**です。**SBOM（`<製品名>.<版>.sbom.cdx.json`）も併せて添付します**。
 
-**SBOM（CycloneDX）は `buildScript/generateSbom.ps1` が作ります**（ツールの版は [`.config/dotnet-tools.json`](../.config/dotnet-tools.json) が単一所有し、`dotnet tool restore` で揃います）。何のために付けるか:
+**SBOM（CycloneDX）は `.github/scripts/generateSbom.ps1` が作ります**（ツールの版は [`.config/dotnet-tools.json`](../.config/dotnet-tools.json) が単一所有し、`dotnet tool restore` で揃います）。何のために付けるか:
 
 - 配布物（zip）からは「どの依存のどの版を使ったか」が分からない。SBOM があれば、**公開済みの配布物から依存を辿れる**。
 - **EsUtil の版も SBOM に載る**（`EsUtil.*` はパッケージ参照のため、exe のプロパティだけでは分からない）。
@@ -288,7 +289,7 @@ publish は `buildScript/` の `*_publish_*.bat` をそのまま実行するた�
 & ./.github/scripts/set-version.ps1 -Version 0.2.0
 
 # リリース可否を事前確認する（形式・ブランチ・系列・単調性・タグ未作成）
-$info = & ./.github/scripts/verify-release-version.ps1 -Version 0.2.0 -Branch main | ConvertFrom-Json
+$info = & ./.github/verify/verify-release-version.ps1 -Version 0.2.0 -Branch main | ConvertFrom-Json
 $info.tag           # -> v0.2.0
 $info.notesStartTag # -> v0.1.1
 $info.prerelease    # -> False
@@ -312,7 +313,7 @@ Get-MaxVersion -Versions @('1.0.0', '1.2.0')      # -> 1.2.0
 - `release.yml` は `actions: read`（同じコミットの dry-run の参照）と `contents: write`（タグと Release）を使用します。
 - **`build.yml` は配布物を作成しません。** ゲートはビルドとテストの成功であり、配布物が作成できることはリリース実行時に初めて検証されます
   （publish の失敗はタグとバージョンを消費しません。上の「失敗した場合の復旧」を参照）。
-- **push では `build.yml` を実行しません**（同じツリーを検証し直さないため）。 作業ブランチの壊れは手元の `buildScript/verify.ps1` か `workflow_dispatch` で見つけます。 PR の必須チェックは集約ジョブ `ci` です。
+- **push では `build.yml` を実行しません**（同じツリーを検証し直さないため）。 作業ブランチの壊れは手元の `.github/verify/verify.ps1` か `workflow_dispatch` で見つけます。 PR の必須チェックは集約ジョブ `ci` です。
 - 配布物（アーティファクト）の保持期間は `release-config.json` の `artifactRetentionDays`（既定 30 日）です。
   保持期間を過ぎると `release.yml` の `release` ジョブが成果物を取得できなくなるため、リリースは publish の直後に完了させてください。
 - `release.yml` の `publish` と `release` は別ジョブのため、バージョンは 2 回適用されます（publish は作業ツリーのみ、release はコミット）。どちらも冪等で、同一の入力から同一の成果物になります。

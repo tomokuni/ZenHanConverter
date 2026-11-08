@@ -23,7 +23,7 @@ rem    folder (mewui / avaloniaui / winforms / winui3).
 rem
 rem  Output: publish\<ui>-<rid>-<mode>.  The mode is part of the name so that the shape of the
 rem  distribution (single exe or folder) can be read from the name.  The expected folder is
-rem  owned by uis[].output in .github/release-config.json (buildScript/verifyPublish.ps1
+rem  owned by uis[].output in .github/release-config.json (.github/verify/verifyPublish.ps1
 rem  reports a missing folder).
 rem
 rem  Which modes work is decided by the UI and its framework (measured facts: .github/RELEASE.md).

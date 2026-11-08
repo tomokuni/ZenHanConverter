@@ -8,7 +8,7 @@ root = true
 charset = utf-8
 # バッチ ファイル（*.bat）は ASCII だけを書く。 `charset = utf-8` は ASCII を含むため、ここでは強制できない
 # （cmd.exe はバッチ ファイルをコンソールのコードページで復号し、読み取り位置を復号後の文字数で数えるため、
-# 非 ASCII 文字は出力の化けとコメント断片の実行を招く。 検査は `buildScript/verifyDocs.ps1` の「バッチの
+# 非 ASCII 文字は出力の化けとコメント断片の実行を招く。 検査は `.github/verify/verifyDocs.ps1` の「バッチの
 # 文字コード」が行う。 根拠は `.github/検証手順.md` §19）。
 # 作業ツリーの改行コードは CRLF（リポジトリへ格納するブロブは .gitattributes の `* text=auto` が LF へ正規化する）。
 # ここを `lf` にすると `dotnet format` やエディタが作業ツリーを LF へ書き換え、検証（改行コード）に違反する。
@@ -21,7 +21,7 @@ trim_trailing_whitespace = true
 # **末尾の空白を削除しない**（Markdown のハードブレークは行末の半角スペース 2 つ。
 # 保存のたびに削除されると改行が失われ、規約（.github/コーディング規約.md「日本語の体裁」）を守れない。 実測 2026-10-25）。
 # 余分な空白（1 個・3 個以上）は markdownlint の MD009（`br_spaces` = 2）が検出するため、
-# ここを false にしても体裁は崩れない（buildScript/markdownlint.json）。
+# ここを false にしても体裁は崩れない（.github/verify/markdownlint.json）。
 trim_trailing_whitespace = false
 
 # XAML files

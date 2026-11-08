@@ -30,7 +30,7 @@
 System.String
 リリース情報を表す JSON（version, tag, series, prerelease, isBackport, updateVersionFile, markLatest, notesStartTag）。
 .EXAMPLE
-$info = & ./.github/scripts/verify-release-version.ps1 -Version 1.2.0 -Branch main | ConvertFrom-Json
+$info = & ./.github/verify/verify-release-version.ps1 -Version 1.2.0 -Branch main | ConvertFrom-Json
 #>
 [CmdletBinding()]
 param(
@@ -48,7 +48,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-. "$PSScriptRoot/version.ps1"
+. (Join-Path $PSScriptRoot '..\scripts\version.ps1')
 
 if (-not $RepoRoot) {
     # 本スクリプトは <リポジトリルート>/.github/scripts に置かれている

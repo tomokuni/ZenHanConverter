@@ -15,7 +15,7 @@
     `solutions` は複数。 本文へ列挙しない）。
 
 .EXAMPLE
-    pwsh -NoProfile -File buildScript/updateLocks.ps1
+    pwsh -NoProfile -File .github/scripts/updateLocks.ps1
 #>
 [CmdletBinding()]
 param(
@@ -24,10 +24,10 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 Set-Location $repoRoot
 
-. (Join-Path $PSScriptRoot 'VerifyCommon.ps1')
+. (Join-Path $PSScriptRoot '..\verify\VerifyCommon.ps1')
 
 if (-not $Solution -or $Solution.Count -eq 0) { $Solution = @(Get-SolutionList (Get-RepoConfig $repoRoot)) }
 if ($Solution.Count -eq 0) { throw '.github/release-config.json にソリューション（solutionFile / solutions）がありません' }
