@@ -183,6 +183,25 @@ $brokenLinks = [System.Collections.Generic.List[string]]::new()
 $externalLinks = 0
 $repoParent = Split-Path $repoRoot -Parent
 $rxLink = [regex]'\]\((?<t>[^)\s]+)\)'
+# `](パス)` がリンクかどうかを、左側の同じ行に釣り合う `[` があるかで判定する（入れ子は深さで数える）。
+# **`](...)` だけの並びは文書の例示であり、リンクではない**（コード片の対応が崩れた文書に残る `]` を
+# 存在しないパスとして報告しないため。 実測 2026-11-08: 検証手順の `` `](...)` `` で誤検出し、Windows は
+# `Test-Path` が末尾の `.` を落として `...` を存在扱いしたため、CI（Linux）だけが不合格になった）。
+function Test-Link([string]$Text, [int]$CloseBracket) {
+    $depth = 0
+    for ($i = $CloseBracket - 1; $i -ge 0; $i--) {
+        $c = $Text[$i]
+        if ($c -eq "`r" -or $c -eq "`n") { return $false }
+        # エスケープした括弧（`\[` / `\]`）は本文の文字であり、リンクの区切りではない
+        if ($i -gt 0 -and $Text[$i - 1] -eq '\') { continue }
+        if ($c -eq ']') { $depth++ }
+        elseif ($c -eq '[') {
+            if ($depth -eq 0) { return $true }
+            $depth--
+        }
+    }
+    return $false
+}
 # **インライン コードは「同じ長さのバックティックで囲まれた区間」**とする（Markdown の仕様）。
 # コード スパンは行をまたげるため、行単位に区切らずに対応させる。 **終端はバックティック列の長さが
 # 開始と一致する場合だけ**認識する（囲みより長い列を内部に含む正当なコード スパンを除去できるようにするため）。
@@ -230,6 +249,7 @@ foreach ($f in $docs) {
     $text = Remove-FencedCode (Get-Text $f.FullName)
     $text = $rxCode.Replace($text, ' ')
     foreach ($m in $rxLink.Matches($text)) {
+        if (-not (Test-Link $text $m.Index)) { continue }
         $target = $m.Groups['t'].Value
         if ($target -match '^(https?:|mailto:|\w+:|#)') { continue }
         $path = [Uri]::UnescapeDataString($target.Split('#')[0])
