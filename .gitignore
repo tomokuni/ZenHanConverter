@@ -18,3 +18,5 @@ TestResults/
 ## OS
 Thumbs.db
 Desktop.ini
+# SBOM などの生成物（CI がアップロードする。 コミットしない）
+/artifacts/
