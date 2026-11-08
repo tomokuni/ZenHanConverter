@@ -95,6 +95,11 @@ function Get-SettingKeys {
 
 # exe を起動し、ウィンドウが現れてから正常終了させる
 function Invoke-AppRoundTrip([string]$ExePath, [int]$WindowTimeout, [int]$Settle, [int]$ExitTimeout) {
+    # 起動と終了の通過点をアプリに書かせ、異常終了の原因を CI のログだけで追えるようにする
+    # （アプリ側は環境変数 `ZENHANCONVERTER_STARTUP_LOG` が未設定なら何もしない）
+    $startupLog = Join-Path ([IO.Path]::GetTempPath()) ("{0}-startup-{1}.log" -f $verifyConfig.product.ToLowerInvariant(), [guid]::NewGuid().ToString('N'))
+    $env:ZENHANCONVERTER_STARTUP_LOG = $startupLog
+
     $process = Start-Process -FilePath $ExePath -PassThru
 
     $handle = [IntPtr]::Zero
@@ -129,11 +134,31 @@ function Invoke-AppRoundTrip([string]$ExePath, [int]$WindowTimeout, [int]$Settle
 
     # 終了できただけでは合格にしない（ウィンドウが出ても異常終了していれば不具合である）
     if ($process.ExitCode -ne 0) {
-        $detail = Get-CrashDiagnostics ([IO.Path]::GetFileName($ExePath))
+        $detail = Get-CrashDiagnostics ([IO.Path]::GetFileName($ExePath)) + Get-StartupTrace $startupLog
         return [pscustomobject]@{ Closed = $false; Reason = "終了コード $($process.ExitCode) で終了しました（異常終了）$detail" }
     }
 
+    # 成功時もトレースと環境変数を片付ける（失敗時は上の分岐で片付く）
+    [void](Get-StartupTrace $startupLog)
     return [pscustomobject]@{ Closed = $true; Reason = '' }
+}
+
+# アプリが書き出した起動トレースを、不合格の理由へ添える（ファイルは読み終わったら消す）
+function Get-StartupTrace([string]$Path) {
+    try {
+        if (-not (Test-Path -LiteralPath $Path)) { return '（起動トレースなし）' }
+        $lines = @(Get-Content -LiteralPath $Path -Encoding utf8)
+        Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+        if ($lines.Count -eq 0) { return '（起動トレースは空）' }
+        return ('（起動トレース: ' + (($lines | Select-Object -Last 8) -join ' | ') + '）')
+    }
+    catch {
+        return ''
+    }
+    finally {
+        # 成否に関わらず環境変数は残さない（後続の UI の検証へ持ち越さない）
+        Remove-Item Env:\ZENHANCONVERTER_STARTUP_LOG -ErrorAction SilentlyContinue
+    }
 }
 
 # 異常終了の原因を CI のログだけで分かるようにする（アプリケーション ログの障害報告から、
