@@ -4,7 +4,7 @@
 
 .DESCRIPTION
 ビルドとテストを必要としない検査だけを持つ。 所有者は .github/検証手順.md であり、入口は
-buildScript/verify.ps1 である（単独で実行せず、入口から起動される）。 入口は本スクリプトを
+.github/verify/verify.ps1 である（単独で実行せず、入口から起動される）。 入口は本スクリプトを
 背景で起動し、ビルド・テストと重ねる（走査は 1 ファイルずつ読む独立した作業のため）。
 `-Fix` のときは入口が直列で起動する（修正と判定の順序が決まっているため）。
 
@@ -12,7 +12,7 @@ buildScript/verify.ps1 である（単独で実行せず、入口から起動さ
 自動修正できる項目を修正する（markdownlint --fix）。
 
 .EXAMPLE
-pwsh -NoProfile -File buildScript/verifyDocs.ps1
+pwsh -NoProfile -File .github/verify/verifyDocs.ps1
 #>
 [CmdletBinding()]
 param(
@@ -20,10 +20,10 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 Set-Location $repoRoot
 $enc = [Text.UTF8Encoding]::new($false)
-. (Join-Path $PSScriptRoot 'VerifyCommon.ps1')
+. (Join-Path $PSScriptRoot '..\verify\VerifyCommon.ps1')
 # 製品名と配置はリポジトリごとに違うため、release-config.json から取る。
 # `layout.roots` は「リポジトリ ルート直下の、プロジェクト フォルダを束ねるフォルダ」
 # （アプリは `src`、複数ソリューションに分かれたライブラリは `EsUtil*`）。
@@ -55,6 +55,11 @@ function Test-PortableProject([string]$name) {
 # 文書に書いてはいけない外部プロジェクト名（リポジトリごとに違うため release-config.json が持つ）
 $externalDocTokens = @(if ($layout.externalDocTokens) { $layout.externalDocTokens })
 $solutionLabels = @(if ($layout.solutionLabels) { $layout.solutionLabels })
+# 本スクリプト自身の置き場（リポジトリ ルートからの相対）。 除外の判定に使う（置き場は設定へ書かない）
+$verifyDir = $PSScriptRoot.Substring($repoRoot.Length + 1).Replace('\', '/')
+# パスの照合（8a）がコメントも読むフォルダ（スクリプトの置き場はリポジトリごとに違う）
+$scriptRoots = @(if ($layout.scriptRoots) { $layout.scriptRoots })
+if ($scriptRoots.Count -eq 0) { $scriptRoots = @('buildScript', '.github') }
 
 # 以降のドキュメント検査で使う文書一覧（リポジトリ直下の文書も対象にする）
 $docs = @(
@@ -62,9 +67,12 @@ $docs = @(
     Get-ChildItem -Path (@($rootPaths) + @(Join-Path $repoRoot '.github')) -Recurse -File -Filter '*.md'
 ) | Where-Object { $_.FullName -notmatch '[\\/](obj|bin|archive)[\\/]' }
 
-# パスの照合（8a）はビルドスクリプトのコメントも対象にする（実測: 削除済みの検証スクリプトを
+# パスの照合（8a）はスクリプトのコメントも対象にする（実測: 削除済みの検証スクリプトを
 # 指す参照が buildScript/*.bat のコメントに残っていた）
-$scriptDocs = @(Get-ChildItem -Path (Join-Path $repoRoot 'buildScript') -Recurse -File -Include '*.bat', '*.ps1')
+$scriptDocs = @($scriptRoots | ForEach-Object {
+        $dir = Join-Path $repoRoot $_
+        if (Test-Path -LiteralPath $dir) { Get-ChildItem -Path $dir -Recurse -File -Include '*.bat', '*.ps1' }
+    })
 
 # ソースの一覧（複数の検査が同じ列挙を繰り返さないよう 1 回だけ作る。
 # `-Include` は obj/bin まで全ファイルを走査してから絞るため遅い。 `-Filter` を使う）
@@ -147,7 +155,7 @@ Write-Output '== 5. ドキュメント（markdownlint） =='
 # 版が上がると同じ文書の合否が変わる。 CI のキャッシュも版に追随させる）。
 # 版を上げるときは、この行を直してから `-Fix` で全文書を整形し直す。
 $mdVersion = 'markdownlint-cli2@0.24.0'
-$mdArgs = @('--yes', $mdVersion, '--config', 'buildScript/markdownlint.json')
+$mdArgs = @('--yes', $mdVersion, '--config', (Join-Path $PSScriptRoot 'markdownlint.json'))
 if ($Fix) { $mdArgs += '--fix' }
 $mdArgs += @(@($rootPatterns | ForEach-Object { "$_/**/*.md" }) + @('.github/**/*.md', '*.md', '!**/obj/**', '!**/bin/**'))
 # npx は Windows では `cmd.exe` 経由で起動する（`.cmd` は直接起動できない）。 Linux / macOS では
@@ -274,8 +282,8 @@ foreach ($f in ($docs + $scriptDocs)) {
     $docDir = ([IO.Path]::GetDirectoryName($rel) + '/').Replace('\', '/')
     $lines = Get-Lines $f.FullName
     for ($i = 0; $i -lt $lines.Count; $i++) {
-        # 環境変数を含む行のパスはリポジトリ外（%LOCALAPPDATA%\~ 等）を指すため対象外にする
-        if ($lines[$i] -match '%[A-Za-z_]+%|\$env:') { continue }
+        # 変数を含む行のパスは静的に解決できない（`%LOCALAPPDATA%\~` / `$PSScriptRoot/version.ps1` 等）ため対象外にする
+        if ($lines[$i] -match '%[A-Za-z_]+%|\$[A-Za-z_]') { continue }
         $line = $rxLink.Replace($lines[$i], ']()')
         foreach ($m in $rxQuotedPath.Matches($line)) {
             $tok = $m.Groups[1].Value
@@ -362,7 +370,7 @@ foreach ($hit in $staleHits) {
     # 検証手順と本スクリプトは、この検査の説明としてこれらの名前を引用するため対象外にする
     if ($hit -match '検証手順\.md') { continue }
     # 本検査の実装（パターンそのものを書く）は対象外にする
-    if ($hit -match 'buildScript/(verify|verifyDocs|VerifyCommon)\.ps1') { continue }
+    if ($hit -match ([regex]::Escape($verifyDir) + '/(verify|verifyDocs|VerifyCommon)\.ps1')) { continue }
     $matched = $rxStale.Match($hit)
     $label = if ($matched.Success) { $matched.Groups['p'].Value } else { $stalePatterns -join '|' }
     $stale.Add("$label : $hit")
@@ -638,7 +646,7 @@ else {
         $targetDir = Split-Path -Parent $target.FullName
         $targetPrefix = $targetDir + [IO.Path]::DirectorySeparatorChar
         $targetRel = $targetDir.Substring($repoRoot.Length + 1).Replace('\', '/')
-        if ($targetRel -match '^buildScript') { continue }
+        if ($targetRel -match '^(buildScript|\.github)') { continue }
         $scopeFiles = @(@($allCs | Where-Object { $_.FullName.StartsWith($targetPrefix, [StringComparison]::OrdinalIgnoreCase) }) +
             @($docs | Where-Object { $_.FullName.StartsWith($targetPrefix, [StringComparison]::OrdinalIgnoreCase) }))
         foreach ($f in $scopeFiles) {

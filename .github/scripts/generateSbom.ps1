@@ -7,12 +7,12 @@
 # 出力は `-Output` のフォルダへ `<Product>.<Version>.sbom.cdx.json` として置く（ファイル名で対象が分かる）。
 #
 # 使い方:
-#   pwsh -NoProfile -File buildScript/generateSbom.ps1
-#   pwsh -NoProfile -File buildScript/generateSbom.ps1 -Output sbom -Version 0.2.0
+#   pwsh -NoProfile -File .github/scripts/generateSbom.ps1
+#   pwsh -NoProfile -File .github/scripts/generateSbom.ps1 -Output sbom -Version 0.2.0
 #   # 複数のソリューションを並列に作るとき（復元は呼び出し側で 1 回だけ行う）
-#   pwsh -NoProfile -File buildScript/generateSbom.ps1 -Solution <solution>.slnx -SkipToolRestore
+#   pwsh -NoProfile -File .github/scripts/generateSbom.ps1 -Solution <solution>.slnx -SkipToolRestore
 #   # 呼び出し側が既に復元しているとき（pack の直後。 解析だけを行う）
-#   pwsh -NoProfile -File buildScript/generateSbom.ps1 -SkipToolRestore -SkipPackageRestore
+#   pwsh -NoProfile -File .github/scripts/generateSbom.ps1 -SkipToolRestore -SkipPackageRestore
 #
 # ソリューション ファイルと製品名の既定は .github/release-config.json が単一所有する
 # （スクリプトの本文へリポジトリ固有の名前を書かない）。
@@ -32,10 +32,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $enc = [Text.UTF8Encoding]::new($false)
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 Set-Location $repoRoot
 
-. (Join-Path $PSScriptRoot 'VerifyCommon.ps1')
+. (Join-Path $PSScriptRoot '..\verify\VerifyCommon.ps1')
 
 # ソリューション ファイルと製品名は release-config.json が単一所有する
 $config = Get-RepoConfig $repoRoot

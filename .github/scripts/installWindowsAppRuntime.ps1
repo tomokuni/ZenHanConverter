@@ -21,7 +21,7 @@ WinUI 3 版は Windows App Runtime へフレームワーク依存で動く（Win
 リポジトリのルート。 既定は本スクリプトの 1 つ上の階層。
 
 .EXAMPLE
-pwsh -NoProfile -File buildScript/installWindowsAppRuntime.ps1
+pwsh -NoProfile -File .github/scripts/installWindowsAppRuntime.ps1
 #>
 [CmdletBinding()]
 param(
@@ -30,7 +30,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
+if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
 
 $propsPath = Join-Path $RepoRoot 'Directory.Packages.props'
 if (-not (Test-Path -LiteralPath $propsPath)) { throw "パッケージの版の所有ファイルがありません: $propsPath" }

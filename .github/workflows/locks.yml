@@ -3,7 +3,7 @@
 # 実行契機:
 #   main 向け Pull Request … 版を上げると `packages.lock.json` の `ProjectReference` の版が変わるため、
 #                            古いままだと CI が `NU1004`（lock が古い）で失敗する。 このワークフローが
-#                            `buildScript/updateLocks.ps1` を実行し、**差分があれば Pull Request の
+#                            `.github/scripts/updateLocks.ps1` を実行し、**差分があれば Pull Request の
 #                            ブランチ（`dev`）へ自動でコミット**する（開発者の手作業をなくす）。
 #                            **lock が変わりうるファイルを触ったときだけ実行する**（`paths`）。
 #                            このジョブは**必須チェックではない**（ruleset が要求するのは `ci` だけ）ため、
@@ -16,7 +16,7 @@
 #   - **`GITHUB_TOKEN` による push では `pull_request` の実行が起動しない**（GitHub の仕様）ため、
 #     自動コミットを push したら build.yml を明示的に起動し直す（更新後のコミットに `ci` を付ける）。
 #     `[skip locks]` で更新を省いた実行でも起動し、起動の失敗は再実行で回復できるようにする。
-#   - 差分の判定と更新は buildScript/updateLocks.ps1 が単一所有する（本ファイルは呼ぶだけ）。
+#   - 差分の判定と更新は .github/scripts/updateLocks.ps1 が単一所有する（本ファイルは呼ぶだけ）。
 #   - 失敗しても Pull Request は止めない（lock が古いままなら build.yml が `NU1004` で落ちる）。
 name: Locks
 
@@ -33,7 +33,7 @@ on:
       - 'NuGet.config'
       - '**/*.csproj'
       - '**/packages.lock.json'
-      - 'buildScript/updateLocks.ps1'
+      - '.github/scripts/updateLocks.ps1'
       - '.github/workflows/locks.yml'
   workflow_dispatch:
 
@@ -102,7 +102,7 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         shell: pwsh
         run: |
-          & pwsh -NoProfile -File buildScript/updateLocks.ps1
+          & pwsh -NoProfile -File .github/scripts/updateLocks.ps1
           if ($LASTEXITCODE -ne 0) { throw "lock の更新に失敗しました（exit $LASTEXITCODE）" }
 
       - name: 差分があれば自動コミット

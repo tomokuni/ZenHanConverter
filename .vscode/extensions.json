@@ -3,7 +3,7 @@
     // （拡張機能が読む設定は .vscode/settings.json。 根拠は .github/検証手順.md §17）。
     "recommendations": [
         "ms-dotnettools.csdevkit",
-        // Markdown の体裁（buildScript/markdownlint.json の規則。 §11）
+        // Markdown の体裁（.github/verify/markdownlint.json の規則。 §11）
         "DavidAnson.vscode-markdownlint",
         // PowerShell スクリプトの診断（.vscode/PSScriptAnalyzerSettings.psd1。 §17）
         "ms-vscode.powershell",

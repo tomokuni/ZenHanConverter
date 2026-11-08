@@ -5,7 +5,8 @@
   "layout": {
     "roots": ["src"],
     "projectTitleStyle": "name",
-    "solutionLabels": ["ZenHanConverter.slnx"]
+    "solutionLabels": ["ZenHanConverter.slnx"],
+    "scriptRoots": ["buildScript", ".github"]
   },
   "gateWorkflow": "build.yml",
   "releaseBranches": [

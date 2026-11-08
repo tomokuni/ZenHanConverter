@@ -23,15 +23,15 @@
 │   ├── workflows/build.yml        # push / PR でビルド・テスト（配布物は作らない）
 │   ├── workflows/publish.yml      # 全 UI の publish（release から呼ばれる共通ワークフロー）
 │   ├── workflows/release.yml      # 手動実行で検証・publish・タグ・Release 作成
-│   └── scripts/                   # version.ps1（バージョン規則） / set-version.ps1 / verify-release-version.ps1 / show-current-versions.ps1
-├── buildScript/             # ビルド・実行スクリプト（リポジトリルートを基準に動作する）
+│   ├── verify/                    # 合否を出すスクリプト（verify.ps1 が唯一の入口。 verifyDocs / verifyPublish / verifyInfoStyle / VerifyCommon / verify-release-version / markdownlint.json）
+│   └── scripts/                   # 状態を作る操作（version.ps1（バージョン規則） / set-version.ps1 / show-current-versions.ps1 / updateLocks.ps1 / generateSbom.ps1 / installWindowsAppRuntime.ps1）
+├── buildScript/             # 配布物を作る手順（リポジトリルートを基準に動作する）
 │   ├── publish_ui.bat              # 発行の共通手順（UI ごとのスクリプトから呼ぶ）
 │   ├── publish_MewUI.bat           # MewUI 版（Native AOT）
 │   ├── publish_WinUI3.bat          # WinUI 3 版（Native AOT + ネイティブ DLL + XAML リソース）
 │   ├── publish_AvaloniaUI.bat      # Avalonia UI 版（Native AOT + ネイティブ DLL）
 │   ├── publish_WinForms.bat        # WinForms 版（自己完結・単一 exe）
-│   ├── verify.ps1                  # 検証の入口（合否項目は実行時に出力。 .github/検証手順.md が所有者）
-│   ├── verifyDocs.ps1 / VerifyCommon.ps1 / verifyPublish.ps1 / verifyInfoStyle.ps1
+│   └── BannedSymbols.txt           # 使用を禁止する API の一覧（アナライザーが読む）
 ├── src/
 │   ├── App.MewUI/           # MewUI アプリ本体（MewUI 依存）
 │   │   ├── README.md / SPEC_ExtFunc.md / SPEC_System.md
@@ -170,7 +170,7 @@ dotnet run --project src/App.WinForms/App.WinForms.csproj
 
 ### 配布用ビルド
 
-スクリプトは `buildScript/` に置いてあります。**カレントディレクトリに関係なく**リポジトリルートを基準に動作します。
+スクリプトは `buildScript/`（配布物を作る）と `.github/verify/`（合否を出す）と `.github/scripts/`（状態を作る操作）に置いてあります。**カレントディレクトリに関係なく**リポジトリルートを基準に動作します。
 
 | スクリプト（`buildScript/` 配下） | 対象 | 方式 | 出力先 | 出力物 |
 | --- | --- | --- | --- | --- |
@@ -209,7 +209,7 @@ dotnet run --project src/App.WinForms/App.WinForms.csproj
 [`workflows/build.yml`](workflows/build.yml) が、`main` / `dev` / `release/**` への push、`main` 向け Pull Request、手動実行のたびに次を実行します（`windows-latest`）。
 
 1. 復元（`dotnet restore <solutionFile> -p:RestoreLockedMode=true`）
-2. 検証（`pwsh -NoProfile -File buildScript/verify.ps1 -Solution <solutionFile> -Configuration Release -NoRestore`）
+2. 検証（`pwsh -NoProfile -File .github/verify/verify.ps1 -Solution <solutionFile> -Configuration Release -NoRestore`）
    - ビルド（0 警告 / 0 エラー）、テスト全件、NuGet の健全性、文書とコードの走査（合計 36 項目）
    - 配布物の作成は行いません（リリースの `publish.yml` が担当します）
 

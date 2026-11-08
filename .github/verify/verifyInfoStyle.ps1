@@ -33,11 +33,11 @@
 `--no-restore` を付ける（呼び出し側が復元済みのとき）。
 
 .EXAMPLE
-pwsh -NoProfile -File buildScript/verifyInfoStyle.ps1
+pwsh -NoProfile -File .github/verify/verifyInfoStyle.ps1
 .EXAMPLE
-pwsh -NoProfile -File buildScript/verifyInfoStyle.ps1 -Fix
+pwsh -NoProfile -File .github/verify/verifyInfoStyle.ps1 -Fix
 .EXAMPLE
-pwsh -NoProfile -File buildScript/verifyInfoStyle.ps1 -Kind Analyzer -MaxDetail 0
+pwsh -NoProfile -File .github/verify/verifyInfoStyle.ps1 -Kind Analyzer -MaxDetail 0
 #>
 [CmdletBinding()]
 param(
@@ -50,12 +50,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $enc = [Text.UTF8Encoding]::new($false)
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 Set-Location $repoRoot
 
 # `dotnet format` の出力もネイティブ コマンドの出力である（復号は Invoke-NativeText が単一所有する。
 # 文字化けの根拠は .github/検証手順.md §19）。
-. (Join-Path $PSScriptRoot 'VerifyCommon.ps1')
+. (Join-Path $PSScriptRoot '..\verify\VerifyCommon.ps1')
 
 # 対象のソリューション ファイルは release-config.json が単一所有する（`solutionFile` / `solutions` のどちらでもよい）
 if (-not $Solution) { $Solution = @(Get-SolutionList (Get-RepoConfig $repoRoot))[0] }
@@ -93,7 +93,7 @@ foreach ($target in $kinds) {
 
     if ($Fix) {
         Write-Output ("      修正を適用した（終了コード {0}）" -f $exit)
-        Write-Output '      次: dotnet build と buildScript/verify.ps1 で 0 警告・全件合格を確かめる'
+        Write-Output '      次: dotnet build と .github/verify/verify.ps1 で 0 警告・全件合格を確かめる'
         continue
     }
 

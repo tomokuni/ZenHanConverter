@@ -153,7 +153,7 @@ jobs:
           Write-Host "対象の版: $version（コミット済み: $committed / モード: $($env:MODE)）"
 
           # semver・ブランチ・系列・タグ未作成の検証（規則は version.ps1 と verify-release-version.ps1 が持つ）
-          $info = & ./.github/scripts/verify-release-version.ps1 -Version $version -Branch $env:BRANCH -Mode $mode | ConvertFrom-Json
+          $info = & ./.github/verify/verify-release-version.ps1 -Version $version -Branch $env:BRANCH -Mode $mode | ConvertFrom-Json
 
           # **build.yml の成功実行は探さない**（build.yml は Pull Request でだけ走り、マージ後のコミットには
           # 実行が無い。 マージの前提は ruleset の必須チェック `ci` が保証する）。
@@ -237,7 +237,7 @@ jobs:
           PRODUCT: ${{ needs.verify.outputs.product }}
         run: |
           # ツールの版は .config/dotnet-tools.json が単一所有する（CI とローカルで同じものを使う）
-          & pwsh -NoProfile -File buildScript/generateSbom.ps1 -Output 'sbom' -Version $env:VERSION -Product $env:PRODUCT
+          & pwsh -NoProfile -File .github/scripts/generateSbom.ps1 -Output 'sbom' -Version $env:VERSION -Product $env:PRODUCT
           if ($LASTEXITCODE -ne 0) { throw "SBOM の作成に失敗しました（exit $LASTEXITCODE）" }
           Get-ChildItem -Path 'sbom' -File | ForEach-Object { $_.Name }
 

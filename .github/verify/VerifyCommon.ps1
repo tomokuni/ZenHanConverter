@@ -1,6 +1,6 @@
 # 検証スクリプトが共有する土台（結果の記録と、ファイル・ネイティブ コマンドの読み込みの使い回し）。
-# 所有者は .github/検証手順.md であり、手順の実装は各リポジトリの buildScript/verify.ps1（入口）と
-# buildScript/verifyDocs.ps1（文書とコードの走査。 入口から起動される）が担う。
+# 所有者は .github/検証手順.md であり、手順の実装は各リポジトリの .github/verify/verify.ps1（入口）と
+# .github/verify/verifyDocs.ps1（文書とコードの走査。 入口から起動される）が担う。
 # 本ファイルは検査そのものを持たない（**読み込む検証スクリプトは同じ書式で結果を出し、同じ読み込みを使う**。
 # 入口から起動される 2 本のほかに、**リポジトリが独自に持つ検証スクリプトも本ファイルを読み込む**）。
 # **本ファイルは複数のリポジトリへ同じ内容で置くため、リポジトリ固有の名前（プロジェクト名・スクリプト名）を
@@ -110,7 +110,7 @@ function Clear-FileCache {
 # <param name="RepoRoot">リポジトリのルート。省略すると本ファイルの親フォルダー。</param>
 # <returns>`product` / `solutionFile` などを持つオブジェクト。</returns>
 function Get-RepoConfig([string]$RepoRoot) {
-    if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
+    if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
     $path = Join-Path $RepoRoot '.github/release-config.json'
     if (-not (Test-Path -LiteralPath $path)) { throw "リポジトリの設定がありません: $path" }
     return [IO.File]::ReadAllText($path, [Text.UTF8Encoding]::new($false)) | ConvertFrom-Json

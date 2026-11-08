@@ -151,7 +151,7 @@ ZenHanConverter は、クリップボードにコピーされたテキストを�
 | WinForms 版 | Single（AOT 不可） | exe 1 個（自己完結） |
 
 - 出力先は `publish/<UI>-<RID>-<方式>` で、**方式がフォルダー名に現れます**（期待する出力先は [`.github/release-config.json`](.github/release-config.json) の `uis[].output` が単一所有します）。
-- **配布物の大きさは文書へ書きません**（コードを変えるたびに変わるため）。 実測は `buildScript/verifyPublish.ps1` の出力で確認します（[`.github/ドキュメント規約.md`](.github/ドキュメント規約.md)）。
+- **配布物の大きさは文書へ書きません**（コードを変えるたびに変わるため）。 実測は `.github/verify/verifyPublish.ps1` の出力で確認します（[`.github/ドキュメント規約.md`](.github/ドキュメント規約.md)）。
 - **Avalonia UI 版は exe 単体では起動しません**（Avalonia の描画が SkiaSharp のネイティブ ライブラリに依存し、Native AOT でも exe へ同梱できないため）。 展開したフォルダーの DLL と同じ場所に置いて使用します。
 - **WinUI 3 版も exe 単体では起動しません**（XAML リソースと、ランタイムを起動するための DLL が必要です）。 zip を展開したフォルダーごと配置してください。 WinForms 版はこのアプリでは Native AOT を使用しません。
 
@@ -198,11 +198,11 @@ dotnet test --solution ZenHanConverter.slnx -c Release
 **検証は 1 コマンドで実行できます**（ビルド・テスト・ドキュメント・配布物の起動をまとめて確かめます）。
 
 ```powershell
-pwsh -NoProfile -File buildScript/verify.ps1
+pwsh -NoProfile -File .github/verify/verify.ps1
 ```
 
 - 合否基準と手順は [`.github/検証手順.md`](.github/検証手順.md) が単一所有します（CI も同じスクリプトを Release 構成で実行します）。
-- 配布物の起動と設定の往復は `buildScript/verifyPublish.ps1` が検証します（`publish` を含むため数分かかります。 入力が前回と同一なら publish を省略します）。
+- 配布物の起動と設定の往復は `.github/verify/verifyPublish.ps1` が検証します（`publish` を含むため数分かかります。 入力が前回と同一なら publish を省略します）。
 
 ## 5. 操作方法
 

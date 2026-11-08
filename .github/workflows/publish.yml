@@ -105,7 +105,7 @@ jobs:
       - name: Windows App Runtime を導入
         if: matrix.ui.requiresWindowsAppRuntime
         shell: pwsh
-        run: pwsh -NoProfile -File buildScript/installWindowsAppRuntime.ps1
+        run: pwsh -NoProfile -File .github/scripts/installWindowsAppRuntime.ps1
 
       # 配布物が実際に起動し、終了時に設定を全損しないことを確かめる（Native AOT のトリミング対策の回帰検出）。
       # 検査の内容と合否基準は .github/検証手順.md §18 が単一所有する。
@@ -113,7 +113,7 @@ jobs:
         shell: pwsh
         env:
           UI_NAME: ${{ matrix.ui.name }}
-        run: pwsh -NoProfile -File buildScript/verifyPublish.ps1 -Ui $env:UI_NAME -SkipPublish
+        run: pwsh -NoProfile -File .github/verify/verifyPublish.ps1 -Ui $env:UI_NAME -SkipPublish
 
       - name: 配布物を zip 化
         if: matrix.ui.zip
