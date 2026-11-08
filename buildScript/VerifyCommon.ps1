@@ -115,3 +115,14 @@ function Get-RepoConfig([string]$RepoRoot) {
     if (-not (Test-Path -LiteralPath $path)) { throw "リポジトリの設定がありません: $path" }
     return [IO.File]::ReadAllText($path, [Text.UTF8Encoding]::new($false)) | ConvertFrom-Json
 }
+
+# 検証するソリューションの一覧を設定から取り出す。
+# **アプリのリポジトリは 1 本（`solutionFile`）**、**複数のソリューションを持つリポジトリは配列（`solutions`）**を
+# 書く。 どちらの形でも同じスクリプトが動くよう、解決はここへ集約する（リポジトリ間で本文を共有するため）。
+# <param name="RepoConfig">`Get-RepoConfig` の戻り値。</param>
+# <returns>ソリューション ファイルの配列（リポジトリ ルートからの相対パス）。</returns>
+function Get-SolutionList([object]$RepoConfig) {
+    if ($RepoConfig.solutions) { return @($RepoConfig.solutions) }
+    if ($RepoConfig.solutionFile) { return @($RepoConfig.solutionFile) }
+    return @()
+}

@@ -57,8 +57,8 @@ Set-Location $repoRoot
 # 文字化けの根拠は .github/検証手順.md §19）。
 . (Join-Path $PSScriptRoot 'VerifyCommon.ps1')
 
-# 対象のソリューション ファイルは release-config.json が単一所有する
-if (-not $Solution) { $Solution = (Get-RepoConfig $repoRoot).solutionFile }
+# 対象のソリューション ファイルは release-config.json が単一所有する（`solutionFile` / `solutions` のどちらでもよい）
+if (-not $Solution) { $Solution = @(Get-SolutionList (Get-RepoConfig $repoRoot))[0] }
 
 $restoreArgs = if ($NoRestore) { @('--no-restore') } else { @() }
 # 診断行（`<ファイル>(<行>,<列>): <レベル> <規則>: <メッセージ> [<プロジェクト>]`）を分解する
