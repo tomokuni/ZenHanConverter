@@ -129,10 +129,33 @@ function Invoke-AppRoundTrip([string]$ExePath, [int]$WindowTimeout, [int]$Settle
 
     # 終了できただけでは合格にしない（ウィンドウが出ても異常終了していれば不具合である）
     if ($process.ExitCode -ne 0) {
-        return [pscustomobject]@{ Closed = $false; Reason = "終了コード $($process.ExitCode) で終了しました（異常終了）" }
+        $detail = Get-CrashDiagnostics ([IO.Path]::GetFileName($ExePath))
+        return [pscustomobject]@{ Closed = $false; Reason = "終了コード $($process.ExitCode) で終了しました（異常終了）$detail" }
     }
 
     return [pscustomobject]@{ Closed = $true; Reason = '' }
+}
+
+# 異常終了の原因を CI のログだけで分かるようにする（アプリケーション ログの障害報告から、
+# 障害が起きたモジュールと例外コードを拾う）。 取得できなくても検証は止めない（診断は補助情報）。
+function Get-CrashDiagnostics([string]$ExeName) {
+    if (-not $IsWindows) { return '' }
+    try {
+        $events = @(Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddMinutes(-3) } -ErrorAction Stop |
+                Where-Object { $_.Message -and $_.Message.Contains($ExeName, [StringComparison]::OrdinalIgnoreCase) } |
+                Select-Object -First 2)
+        if ($events.Count -eq 0) { return '' }
+        $lines = foreach ($e in $events) {
+            # 「障害が発生しているモジュール名」「例外コード」の行だけを抜く（ログを肥大化させない）
+            foreach ($line in ($e.Message -split "`r?`n")) {
+                if ($line -match 'モジュール名|例外コード|Faulting module|Exception code') { " / $($line.Trim())" }
+            }
+        }
+        return ("（診断: " + (($lines -join '') -replace '^ / ', '') + "）")
+    }
+    catch {
+        return ''
+    }
 }
 
 # リリース設定（UI の定義）を読む
