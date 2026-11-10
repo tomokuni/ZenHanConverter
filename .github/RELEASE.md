@@ -165,7 +165,7 @@ flowchart TD
 
 リリースは **`dry-run`（検証のみ）→ `dry-run-pack`（配布物まで）→ `release` の 3 段階**で行います。**版はリリース前にコミットしておきます**（自動採番しません）。
 
-1. **版を上げてコミットする**（`Directory.Build.props` の `<Version>`）。`dev` で上げ、`main` へマージする
+1. **版を上げてコミットする**（`Directory.Build.props` の `<Version>`。**桁は [`コミット規約.md`](コミット規約.md) §5 の表で決める**）。`dev` で上げ、`main` へマージする
 2. Pull Request の `ci`（必須チェック）が成功していることを確認する（`main` へマージする）
 3. `Actions` → **Release** → `Run workflow` で、**モード `dry-run`** を選んで実行する（版・ブランチ・タグ・CHANGELOG の検証だけ）
    - 配布物の作成（全 UI の publish）と **SBOM の作成**まで行います（**タグ作成も Release 作成もしません**）
