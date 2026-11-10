@@ -10,14 +10,14 @@
   <PropertyGroup>
     <!-- リリースバージョン。全プロジェクトで単一所有し、各 .csproj では指定しない。 -->
     <!-- 自動インクリメントは行わない。リリース前に人が上げてコミットする（.github/RELEASE.md）。 -->
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
 
     <!-- 本リポジトリが使う EsUtil の版（公開済みのパッケージ）。 版の値はここが単一所有し、
          Directory.Packages.props の PackageVersion と InformationalVersion が参照する
          （Directory.Packages.props は本ファイルより後に読み込まれるため、値はここで定義する）。 -->
     <!-- アプリの版から「使った EsUtil の版」を辿れるようにする（`+esutil.0.1.0`）。
          SourceLink のコミット（`+<sha>`）は SDK が後ろへ足す。 -->
-    <EsUtilVersion>0.6.0</EsUtilVersion>
+    <EsUtilVersion>0.6.2</EsUtilVersion>
     <InformationalVersion Condition="'$(EsUtilVersion)' != ''">$(Version)+esutil.$(EsUtilVersion)</InformationalVersion>
   </PropertyGroup>
 
