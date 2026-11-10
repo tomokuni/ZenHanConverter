@@ -235,7 +235,11 @@ $settingsBackupDir = Join-Path ([IO.Path]::GetTempPath()) ("{0}-verify-settings-
 try {
     foreach ($target in $targets) {
         Write-Output "== $($target.name) =="
-        $outputDir = Join-Path $repoRoot (($target.output) -replace '/', '\')
+
+        # 1 つの UI が複数の形態（AOT / 自己完結 Single など）を配布する場合は `outputs` を持つ。
+        # publish スクリプトは全形態を 1 回で作るため、publish は target ごとに 1 回だけ実行する。
+        $outputs = if ($target.outputs) { @($target.outputs) } else { @([pscustomobject]@{ output = $target.output }) }
+        $outputDir = Join-Path $repoRoot (($outputs[0].output) -replace '/', '\')
 
         # 1. publish（-SkipPublish のときは既存の出力を使う。 入力が同一なら省略する）
         if (-not $SkipPublish) {
@@ -261,8 +265,11 @@ try {
             }
         }
 
+        foreach ($output in $outputs) {
+        $outputDir = Join-Path $repoRoot (($output.output) -replace '/', '\')
+
         if (-not (Test-Path -LiteralPath $outputDir -PathType Container)) {
-            Add-Result "$($target.name) 配布物" $false "出力フォルダがありません: $($target.output)"
+            Add-Result "$($target.name) 配布物" $false "出力フォルダがありません: $($output.output)"
             continue
         }
 
@@ -274,7 +281,7 @@ try {
         }
 
         $exes = @(Get-ChildItem -LiteralPath $outputDir -File -Filter '*.exe')
-        Add-Result "$($target.name) 配布物" ($exes.Count -eq 1 -and $exes[0].Name -eq $expectedExeName) "$($target.output) の exe $($exes.Count) 個 / 期待 $expectedExeName"
+        Add-Result "$($target.name) 配布物" ($exes.Count -eq 1 -and $exes[0].Name -eq $expectedExeName) "$($output.output) の exe $($exes.Count) 個 / 期待 $expectedExeName"
         if ($exes.Count -ne 1) {
             $exes | ForEach-Object { "      $($_.Name)" }
             continue
@@ -353,6 +360,7 @@ try {
             }
         }
         $settingsBackups = @{}
+        }
     }
 }
 finally {

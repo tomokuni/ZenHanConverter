@@ -4,7 +4,8 @@
 #   main 向け Pull Request … **前提検証だけを自動で実行する**（配布物は作らない。 版・タグ・CHANGELOG の
 #                             不備をマージ前に見つける）。 実行名は `DryRun <ブランチ> <SHA>`。
 #   手動実行（Actions → Release → Run workflow） … **`mode` で 2 段階に分ける**。
-#     dry-run … 配布物の作成と検証だけを行う（**公開もタグ作成もしない**。 内容は Summary に出す）
+#     dry-run       … 検証だけを行う（配布物も SBOM も作らない。 最も軽い）
+#     dry-run-pack  … 検証 + 配布物の作成と検証（publish.yml）。 **公開もタグ作成もしない**
 #     release … 同じコミットの dry-run が成功していることを前提に、承認 → 配布 → **タグと Release** の順で進む
 #
 # 設計の要点:
@@ -25,7 +26,7 @@
 name: Release
 
 # 実行一覧で dry-run と release を区別する（release 側は dry-run の成功を確認するため、この名前を見る）
-run-name: ${{ (github.event_name == 'pull_request' || inputs.mode == 'dry-run') && 'DryRun' || 'Release' }} ${{ github.ref_name }} ${{ github.sha }}
+run-name: ${{ (github.event_name == 'pull_request' || inputs.mode == 'dry-run') && 'DryRun' || (inputs.mode == 'dry-run-pack' && 'DryRun+Pack' || 'Release') }} ${{ github.ref_name }} ${{ github.sha }}
 
 on:
   # **main 向け Pull Request では前提検証を自動実行する**（マージ後に版やタグの不備へ気づくのを防ぐ）
@@ -34,10 +35,10 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'dry-run（作成と検証のみ）/ release（承認 → 配布 → タグ）'
+        description: 'dry-run（検証のみ）/ dry-run-pack（検証 + 配布物の作成と検証）/ release（承認 → 配布 → タグ）'
         required: true
         type: choice
-        options: [dry-run, release]
+        options: [dry-run, dry-run-pack, release]
         default: dry-run
       version:
         description: '任意: 公開する版（Directory.Build.props の <Version> と一致しなければ失敗します。 dry-run では省略可）'
@@ -134,7 +135,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           # Pull Request は常に dry-run（`inputs.mode` は workflow_dispatch でしか入らない）
-          $dryRun = ($env:EVENT_NAME -eq 'pull_request') -or ($env:MODE -eq 'dry-run')
+          $dryRun = ($env:EVENT_NAME -eq 'pull_request') -or ($env:MODE -eq 'dry-run') -or ($env:MODE -eq 'dry-run-pack')
           # 検証スクリプトへは必ず dry-run / release のどちらかを渡す（PR では inputs.mode が空になる）
           $mode = if ($dryRun) { 'dry-run' } else { 'release' }
           "dry_run=$($dryRun.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
@@ -211,8 +212,8 @@ jobs:
   # ────────────────────────────────────────────────────────────
   sbom:
     needs: verify
-    # Pull Request では前提検証だけを行う（配布物も SBOM も作らない）
-    if: github.event_name != 'pull_request'
+    # Pull Request と dry-run（検証のみ）では作らない
+    if: github.event_name != 'pull_request' && inputs.mode != 'dry-run'
     # Windows を対象にしたプロジェクト（`net10.0-windows…`）は Linux では復元できない
     # （`NETSDK1100`。 実測 2026-10-26）ため、ビルドと同じランナーで作る
     runs-on: windows-latest
@@ -254,8 +255,8 @@ jobs:
   # **sbom と並列に走らせる**（配布物は SBOM を使わない。 直列にすると SBOM の約 2 分を毎回待つ。 実測 2026-10-26）
   publish:
     needs: verify
-    # Pull Request では前提検証だけを行う（配布物も SBOM も作らない）
-    if: github.event_name != 'pull_request'
+    # Pull Request と dry-run（検証のみ）では作らない
+    if: github.event_name != 'pull_request' && inputs.mode != 'dry-run'
     permissions:
       contents: read
     uses: ./.github/workflows/publish.yml

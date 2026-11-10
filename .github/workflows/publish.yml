@@ -119,20 +119,47 @@ jobs:
         if: matrix.ui.zip
         shell: pwsh
         env:
-          # 出力は単一ファイル（exe）とフォルダ（exe + ネイティブ DLL）の両方がある
+          # 出力は単一ファイル（exe）とフォルダ（exe + ネイティブ DLL）の両方がある。
+          # 1 つの UI が複数の形態を持つ場合は `outputs`（配列）で持つ。
+          OUTPUTS: ${{ toJson(matrix.ui.outputs) }}
           OUTPUT: ${{ matrix.ui.output }}
-          ASSET: ${{ matrix.ui.asset }}
+          ASSET_TEMPLATE: ${{ matrix.ui.asset }}
+          VERSION_FILE: ${{ needs.config.outputs.version_file }}
         run: |
-          if (Test-Path -LiteralPath $env:OUTPUT -PathType Container) {
-            # フォルダの場合はフォルダ自身を zip へ含めず、中身を直下へ配置する
-            Compress-Archive -Path "$($env:OUTPUT)/*" -DestinationPath $env:ASSET -Force
+          # 規則の所有者は .github/命名規約.md「アセンブリ名」（zip は版数を含む）。
+          # 版数はバージョン ファイルの <Version> を使う（publish した成果物と同じ値になる）
+          $text = [System.IO.File]::ReadAllText($env:VERSION_FILE, [System.Text.Encoding]::UTF8)
+          $match = [regex]::Match($text, "<Version>([^<]*)</Version>")
+          if (-not $match.Success) { throw "$env:VERSION_FILE に <Version>...</Version> がありません。" }
+
+          $version = $match.Groups[1].Value.Trim()
+
+          # 形態の一覧（`outputs` が無い UI は 1 形態として扱う）
+          $outputs = if ([string]::IsNullOrWhiteSpace($env:OUTPUTS) -or $env:OUTPUTS -eq "null") {
+            @([pscustomobject]@{ output = $env:OUTPUT; asset = $env:ASSET_TEMPLATE })
           }
-          else {
-            # 単一ファイルの場合はそのファイルを直下へ配置する
-            Compress-Archive -Path $env:OUTPUT -DestinationPath $env:ASSET -Force
+          else { @($env:OUTPUTS | ConvertFrom-Json) }
+
+          $assets = @()
+          foreach ($output in $outputs) {
+            $asset = $output.asset.Replace("{version}", $version)
+            if ($asset -match "\{version\}") { throw "asset の {version} を置き換えられませんでした: $($output.asset)" }
+
+            if (Test-Path -LiteralPath $output.output -PathType Container) {
+              # フォルダの場合はフォルダ自身を zip へ含めず、中身を直下へ配置する
+              Compress-Archive -Path "$($output.output)/*" -DestinationPath $asset -Force
+            }
+            else {
+              # 単一ファイルの場合はそのファイルを直下へ配置する
+              Compress-Archive -Path $output.output -DestinationPath $asset -Force
+            }
+
+            $assets += $asset
+            Write-Host "zip を作成しました: $asset"
           }
 
-          Write-Host "zip を作成しました: $env:ASSET"
+          # 後続のアップロード手順が同じ名前を使う（成果物の path は env を参照できる。 複数は改行区切り）
+          "ASSETS=$($assets -join "`n")" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       # この成果物は release.yml が GitHub Release へ添付する（公開先は GitHub Release のみ）
       - name: 成果物をアップロード
@@ -140,6 +167,6 @@ jobs:
         with:
           name: ${{ matrix.ui.name }}
           # zip する UI は作成済みの zip を、しない UI は出力そのものを保管する
-          path: ${{ matrix.ui.zip && matrix.ui.asset || matrix.ui.output }}
+          path: ${{ matrix.ui.zip && env.ASSETS || matrix.ui.output }}
           if-no-files-found: error
           retention-days: ${{ needs.config.outputs.retention }}

@@ -15,7 +15,7 @@
 - [2. 機能一覧](#2-機能一覧)
 - [3. システム要件](#3-システム要件)
 - [4. ビルドと実行](#4-ビルドと実行)
-  - [4.1 配布ビルド（Native AOT）](#41-配布ビルドnative-aot)
+  - [4.1 配布ビルド（AOT 版と Single 版）](#41-配布ビルドaot-版と-single-版)
     - [4.1.1 Native AOT の条件](#411-native-aot-の条件)
     - [4.1.2 配布物の大きさ](#412-配布物の大きさ)
 - [5. クイックスタート](#5-クイックスタート)
@@ -74,8 +74,7 @@
 - .NET 10 SDK（ビルド時）
 - Windows 10（1809 / 17763）以降、Windows 11
 - x64
-- Windows App Runtime は同梱しません。起動時に有無を確認し、無ければ `EsUtil.Ui.WinUI3.Interop` の
-  `WindowsAppRuntimeBootstrap` が導入します（.NET ランタイムは自己完結）
+- Windows App Runtime **2.6.5 以降（x64）** が必要です（版は [`Directory.Packages.props`](../../Directory.Packages.props) の `Microsoft.WindowsAppSDK` が単一所有します）。 AOT 版は同梱せず、起動時に有無を確認して無ければ `EsUtil.Ui.WinUI3.Interop` の `WindowsAppRuntimeBootstrap` が導入します（.NET ランタイムは自己完結）。 同梱した Single 版は導入不要です
 
 クリップボードの監視に Win32 API を使うため、本アプリは Windows 専用です。
 
@@ -92,21 +91,21 @@ dotnet run --project src/App.WinUI3/App.WinUI3.csproj
 dotnet test --project test/App.WinUI3/App.WinUI3.Tests.csproj
 ```
 
-- .NET ランタイムは自己完結です。Windows App Runtime は同梱せず、起動時に有無を確認して無ければ
-  `EsUtil.Ui.WinUI3.Interop` の `WindowsAppRuntimeBootstrap` が導入します。
+- .NET ランタイムは自己完結です。Windows App Runtime は **AOT 版では同梱せず**、起動時に有無を確認して無ければ `EsUtil.Ui.WinUI3.Interop` の `WindowsAppRuntimeBootstrap` が導入します（**下限 2.6.5**）。 **Single 版は同梱しているため導入不要です**。
 
-### 4.1 配布ビルド（Native AOT）
+### 4.1 配布ビルド（AOT 版と Single 版）
 
 ```powershell
 .\buildScript\publish_WinUI3.bat             # 既定は win-x64
 .\buildScript\publish_WinUI3.bat win-arm64   # RID を指定する場合
 ```
 
-- 出力: `publish/winui3-win-x64-aot`（`ZenHanConverter.WinUI3.exe`（Native AOT）と `resources.pri`、ネイティブ DLL 3 個）。容量は publish の出力と `.github/verify/verifyPublish.ps1` の表示で確認します。
+- 出力は **2 つの形**です（どちらもリリースへ添付します）。 容量は publish の出力と `.github/verify/verifyPublish.ps1` の表示で確認します。
+  - `publish/winui3-win-x64-aot` … `ZenHanConverter.WinUI3.exe`（Native AOT）と `resources.pri`、ネイティブ DLL 3 個。 **Windows App Runtime 2.6.5 以降（x64）が必要**です。
+  - `publish/winui3-win-x64-single` … **Windows App Runtime を同梱した単一 exe**。 何も導入できない環境（Windows Sandbox・まっさらな VM）でもそのまま動きます。
 - **exe だけを取り出しても動作しません。** 出力フォルダーごと配布します（XAML リソースと、ランタイムを起動するための DLL が必要です）。
 - スクリプトはリポジトリ ルートを基準に動作するため、どこから実行しても同じ結果になります。
-- 単一ファイル化（`PublishSingleFile`）とは併用できません（AOT 自体が 1 個のネイティブ exe を作ります）。
-  スクリプトは AOT だけを実行し、失敗したときは終了コードを返します（別の出力先へ落とすフォールバックは持ちません）。
+- **AOT 版は単一ファイル化（`PublishSingleFile`）と併用できません**（AOT 自体が 1 個のネイティブ exe を作ります）。 スクリプトは AOT 版と Single 版を順に実行し、どちらかが失敗すればその終了コードを返します。
 - 発行はリポジトリ外の一時領域で行い、必要なファイルだけを出力先へ配置します（リポジトリ内へ直接発行すると、フレームワーク配置のファイルをアプリのコンテンツとして取り込んでしまいます）。
 
 #### 4.1.1 Native AOT の条件

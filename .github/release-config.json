@@ -27,24 +27,32 @@
       "script": "buildScript/publish_MewUI.bat",
       "output": "publish/mewui-win-x64-aot",
       "exe": "ZenHanConverter.MewUI.exe",
-      "asset": "ZenHanConverter.MewUI.zip",
+      "asset": "ZenHanConverter.MewUI.{version}.zip",
       "zip": true
     },
     {
       "name": "WinUI3",
       "script": "buildScript/publish_WinUI3.bat",
-      "output": "publish/winui3-win-x64-aot",
       "exe": "ZenHanConverter.WinUI3.exe",
-      "asset": "ZenHanConverter.WinUI3.zip",
       "zip": true,
-      "requiresWindowsAppRuntime": true
+      "requiresWindowsAppRuntime": true,
+      "outputs": [
+        {
+          "output": "publish/winui3-win-x64-aot",
+          "asset": "ZenHanConverter.WinUI3.{version}.zip"
+        },
+        {
+          "output": "publish/winui3-win-x64-single",
+          "asset": "ZenHanConverter.WinUI3.Single.{version}.zip"
+        }
+      ]
     },
     {
       "name": "WinForms",
       "script": "buildScript/publish_WinForms.bat",
       "output": "publish/winforms-win-x64-single",
       "exe": "ZenHanConverter.WinForms.exe",
-      "asset": "ZenHanConverter.WinForms.zip",
+      "asset": "ZenHanConverter.WinForms.{version}.zip",
       "zip": true
     },
     {
@@ -52,7 +60,7 @@
       "script": "buildScript/publish_AvaloniaUI.bat",
       "output": "publish/avaloniaui-win-x64-aot",
       "exe": "ZenHanConverter.AvaloniaUI.exe",
-      "asset": "ZenHanConverter.AvaloniaUI.zip",
+      "asset": "ZenHanConverter.AvaloniaUI.{version}.zip",
       "zip": true
     }
   ]

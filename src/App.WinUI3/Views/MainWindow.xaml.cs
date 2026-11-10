@@ -167,11 +167,11 @@ public sealed partial class MainWindow : Window
     /// <summary>指定されたウィンドウハンドルの DPI 値を取得します（Win32 API）。</summary>
     /// <param name="hwnd">ウィンドウハンドル</param>
     /// <returns>DPI 値（例: 96, 120, 144）</returns>
-#pragma warning disable SYSLIB1054 // AllowUnsafeBlocks 不要のため DllImport を使用
-    [DllImport("User32.dll")]
+    // LibraryImport（ソース生成）を使う。 DllImport は SYSLIB1054（LibraryImport を使うこと）を出すため、
+    // 抑止ではなく生成側へ寄せる（csproj の AllowUnsafeBlocks=true で生成コードを受け入れている）。
+    [LibraryImport("User32.dll")]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-    private static extern int GetDpiForWindow(nint hwnd);
-#pragma warning restore SYSLIB1054
+    private static partial int GetDpiForWindow(nint hwnd);
 
     /// <summary>指定されたウィンドウの DPI スケールを取得します。</summary>
     /// <param name="window">DPI スケールを取得するウィンドウ</param>

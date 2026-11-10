@@ -35,7 +35,23 @@
       自動初期化はこの入口より先に走るため、ランタイムが無い PC では導入の判断へ到達しない。
     -->
     <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <!-- 要求する Windows App Runtime の版をアプリのビルド版から取る（`Microsoft.WindowsAppSDK.Runtime.Version`
+         が internal で生成される）。 有効にしないと EsUtil の焼き込んだ版で初期化してしまい、アプリの
+         マネージド アセンブリとネイティブ ランタイムが食い違う（実測 2026-11-10: 本文のグリフだけが描かれない）。 -->
+    <WindowsAppSdkIncludeVersionInfo>true</WindowsAppSdkIncludeVersionInfo>
     <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
+  </PropertyGroup>
+
+  <!-- 自己完結の Single 版（buildScript/publish_WinUI3.bat の 2 つ目の形）。
+       `-p:ZenHanConverterSelfContained=true` を渡すと Windows App Runtime を同梱する
+       （.NET は上の SelfContained=true で常に同梱している）。 用途は「ランタイムを導入できない環境
+       （Windows Sandbox・毎回初期化される VM 等）で動かすこと」であり、**配布物**である
+       （`ZenHanConverter.WinUI3.Single.<版数>.zip` を Release へ添付する。 規則は .github/RELEASE.md）。
+       コマンド ラインの `-p:WindowsAppSDKSelfContained=true` は参照プロジェクトへも伝播し、
+       Windows App Runtime を持たないライブラリ側で失敗する（実測 2026-11-09）。そのため本プロジェクトの
+       プロパティとして切り替える（`ProjectReference` へは伝播しない）。 -->
+  <PropertyGroup Condition="'$(ZenHanConverterSelfContained)' == 'true'">
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
 
   <PropertyGroup>

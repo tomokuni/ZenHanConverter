@@ -15,6 +15,11 @@
     <!-- 変換ペアと Win32 実装は EsUtil の公開パッケージが単一所有する（版は Directory.Packages.props） -->
     <PackageReference Include="EsUtil.Feature.ZenHan.Core" />
     <PackageReference Include="EsUtil.Platform.Core" />
+    <!-- ログ（出力先・ファイル名・レベルの表記は .github/ログ規約.md が単一所有する） -->
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
   </ItemGroup>
 
   <ItemGroup>

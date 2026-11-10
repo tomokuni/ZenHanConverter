@@ -30,9 +30,8 @@ rem  Which modes work is decided by the UI and its framework (measured facts: .g
 rem
 rem  Warnings are errors (-warnaserror), so trimming and AOT analysis warnings
 rem  (IL2026 / IL2070 / IL3050 ...) fail the publish as well, except for an explicitly
-rem  documented per-UI warning ID exception (currently WinUI 3 IL2104; see appendix A of
-rem  the build settings rules in .github).  Measured: adding it revealed latent defects
-rem  that the build had not reported.
+rem  documented per-UI warning ID exception (currently WinUI 3 IL2104; see .github/RELEASE.md).
+rem  Measured: adding it revealed latent defects that the build had not reported.
 rem
 rem  Not shipped:
 rem    - *.pdb        debug symbols
@@ -108,9 +107,10 @@ if not defined MODE (
 set "OUTDIR=%CD%\publish\%UI%-%RID%-%MODE%"
 
 rem Pick the exe to ship (the name is owned by <AssemblyName> in the csproj, not decided here).
+rem Framework helper exes are skipped: RestartAgent.exe (Windows App SDK restart API) and
+rem createdump.exe (.NET crash dump tool, added by a self-contained publish).
 set "APP_NAME="
-set "FRAMEWORK_EXE=RestartAgent.exe"
-for %%f in ("%STAGE%\*.exe") do if not defined APP_NAME if /i not "%%~nxf"=="%FRAMEWORK_EXE%" set "APP_NAME=%%~nxf"
+for %%f in ("%STAGE%\*.exe") do if not defined APP_NAME if /i not "%%~nxf"=="RestartAgent.exe" if /i not "%%~nxf"=="createdump.exe" set "APP_NAME=%%~nxf"
 if not defined APP_NAME (
   echo.
   echo [ERROR] No executable found in: %STAGE%
@@ -122,7 +122,8 @@ if exist "%OUTDIR%" rd /s /q "%OUTDIR%"
 mkdir "%OUTDIR%"
 xcopy "%STAGE%\*" "%OUTDIR%\" /E /Q /Y >nul
 del /q "%OUTDIR%\*.pdb" 2>nul
-del /q "%OUTDIR%\%FRAMEWORK_EXE%" 2>nul
+del /q "%OUTDIR%\RestartAgent.exe" 2>nul
+del /q "%OUTDIR%\createdump.exe" 2>nul
 rd /s /q "%STAGE%"
 
 echo [INFO] Mode   : %MODE%
@@ -145,8 +146,10 @@ rem `set "VAR="` makes a variable undefined in cmd, so the intent "empty" is exp
 rem SE_SKIP_*_ARGS instead.
 if not defined SE_AOT_ARGS if not defined SE_SKIP_AOT_ARGS set "SE_AOT_ARGS=-p:PublishAot=true -p:PublishSingleFile=true"
 if not defined SE_SINGLE_ARGS if not defined SE_SKIP_SINGLE_ARGS set "SE_SINGLE_ARGS=-p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true"
+if not defined SE_EXE_ARGS if not defined SE_SKIP_EXE_ARGS set "SE_EXE_ARGS="
 if "%TRY_MODE%"=="aot" set "ARGS=%SE_AOT_ARGS%"
 if "%TRY_MODE%"=="single" set "ARGS=%SE_SINGLE_ARGS%"
+if "%TRY_MODE%"=="exe" set "ARGS=%SE_EXE_ARGS%"
 
 rem SelfContained is not passed explicitly (-r implies it).  Passing it also flows to the
 rem referenced projects, which then demand EnableMsixTooling and WindowsAppSDKSelfContained

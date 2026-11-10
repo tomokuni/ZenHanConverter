@@ -6,6 +6,13 @@
 # 注意事項:
 # - Dependabot の Pull Request は fork 相当（読み取り専用トークン・シークレット無し）で実行される。
 #   本リポジトリの build.yml はシークレットを使用しないため、CI はそのまま動作する。
+# - **NuGet は版の単一所有（Directory.Packages.props）のフォルダだけを対象にする**。 版は Central Package
+#   Management で 1 ファイルが持つため、プロジェクトごとに列挙する必要はない。 列挙すると Dependabot が
+#   フォルダごとに依存を解決して実行が長引く（実測 2026-11-02: 85 フォルダで 12〜56 分。 時間切れで
+#   Pull Request が作られないことがあった）。 登録漏れは verify.ps1 §2e が不合格にする
+#   （規則の所有者は .github/検証手順.md §8）。
+# - **lock（packages.lock.json）の更新は locks.yml が行う**（この Pull Request のブランチへ自動コミットする）。
+#   版を書き換えるのは Directory.Packages.props だけであり、lock はそれに追随して変わるため。
 # - NuGet のメジャー更新（xunit.v3 4 系など、テストの書き方と実行基盤が変わるもの）は自動では作成しない。
 #   ignore の dependency-name は**実際のパッケージ ID と完全一致**させること
 #   （xunit では xunit.v3 / xunit.analyzers に一致しない）。
@@ -21,31 +28,20 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Asia/Tokyo"
-    # 既定は 5 件。アクションの数が少ないため既定のままで足りる
     open-pull-requests-limit: 5
     groups:
       # 複数のアクションを 1 つの Pull Request にまとめる（レビューとマージの回数を減らす）
       actions:
         patterns: ["*"]
 
-  # ─── NuGet（各プロジェクトのパッケージ）───
+  # ─── NuGet（パッケージの版）───
+  # **版の単一所有である Directory.Packages.props のフォルダだけを対象にする**（Central Package Management）。
+  # プロジェクトのフォルダを列挙すると、Dependabot がフォルダごとに依存を解決して実行が長引き、
+  # 時間切れで Pull Request が作られないことがある（実測 2026-11-02: 85 フォルダで 12〜56 分。
+  # 1 フォルダなら数分）。 版は 1 ファイルが持つため、得られる結果は同じである。
+  # 規則の所有者は .github/検証手順.md §8（検査は verify.ps1 §2e）。
   - package-ecosystem: "nuget"
-    # マニフェスト（.csproj）があるディレクトリを指定する（リポジトリルートからの相対パス）
-    # 注意: Dependabot は指定したディレクトリ直下のみを走査する（再帰しない）ため、プロジェクトごとに列挙する
-    directories:
-      - "/src/App.MewUI"
-      - "/src/App.WinUI3"
-      - "/src/App.AvaloniaUI"
-      - "/src/App.WinForms"
-      - "/src/App.Core"
-      - "/src/App.Core.Presentation"
-      - "/test/App.MewUI"
-      - "/test/App.WinUI3"
-      - "/test/App.AvaloniaUI"
-      - "/test/App.WinForms"
-      - "/test/App.Core"
-      - "/test/App.Core.Presentation"
-      - "/test/parity"
+    directory: "/"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 3
@@ -56,8 +52,10 @@ updates:
         update-types: ["minor", "patch"]
     ignore:
       # xunit 系はテストの書き方・実行基盤が変わる（破壊的変更）ため、メジャー更新は手動で判断する
-      # 対象パッケージは**実際の ID と完全一致**させる（本リポジトリは xunit.v3 系列を使用する）
       - dependency-name: "xunit.v3"
         update-types: ["version-update:semver-major"]
       - dependency-name: "xunit.analyzers"
         update-types: ["version-update:semver-major"]
+      # MewUI は API が安定化中（0.x）のため、バージョンは固定して手動で更新する
+      - dependency-name: "Aprillz.MewUI*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
