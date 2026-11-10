@@ -147,10 +147,11 @@ ZenHanConverter は、クリップボードにコピーされたテキストを�
 | --- | --- | --- |
 | MewUI 版 | Single AOT | exe 1 個 |
 | Avalonia UI 版 | Single AOT | exe + ネイティブ DLL 3 個 |
-| WinUI 3 版 | Single AOT | exe + ネイティブ DLL 3 個 + XAML リソース（Windows App Runtime は同梱せず、起動時に確認・導入） |
+| WinUI 3 版（AOT） | Single AOT | exe + ネイティブ DLL 3 個 + XAML リソース（Windows App Runtime は同梱せず、起動時に確認・導入） |
+| WinUI 3 版（Single） | 自己完結 + 単一ファイル | exe 1 個（Windows App Runtime を同梱。 何も導入できない環境向け） |
 | WinForms 版 | Single（AOT 不可） | exe 1 個（自己完結） |
 
-- 出力先は `publish/<UI>-<RID>-<方式>` で、**方式がフォルダー名に現れます**（期待する出力先は [`.github/release-config.json`](.github/release-config.json) の `uis[].output` が単一所有します）。
+- 出力先は `publish/<UI>-<RID>-<方式>` で、**方式がフォルダー名に現れます**（期待する出力先は [`.github/release-config.json`](.github/release-config.json) の `uis[].output`（複数形態は `uis[].outputs[].output`）が単一所有します）。
 - **配布物の大きさは文書へ書きません**（コードを変えるたびに変わるため）。 実測は `.github/verify/verifyPublish.ps1` の出力で確認します（[`.github/ドキュメント規約.md`](.github/ドキュメント規約.md)）。
 - **Avalonia UI 版は exe 単体では起動しません**（Avalonia の描画が SkiaSharp のネイティブ ライブラリに依存し、Native AOT でも exe へ同梱できないため）。 展開したフォルダーの DLL と同じ場所に置いて使用します。
 - **WinUI 3 版も exe 単体では起動しません**（XAML リソースと、ランタイムを起動するための DLL が必要です）。 zip を展開したフォルダーごと配置してください。 WinForms 版はこのアプリでは Native AOT を使用しません。
@@ -163,13 +164,15 @@ ZenHanConverter は、クリップボードにコピーされたテキストを�
 
 | UI | ファイル |
 | --- | --- |
-| Avalonia UI 版 | `ZenHanConverter.AvaloniaUI.zip` |
-| MewUI 版 | `ZenHanConverter.MewUI.zip` |
-| WinUI 3 版 | `ZenHanConverter.WinUI3.zip` |
-| WinForms 版 | `ZenHanConverter.WinForms.zip` |
+| Avalonia UI 版 | `ZenHanConverter.AvaloniaUI.<版数>.zip` |
+| MewUI 版 | `ZenHanConverter.MewUI.<版数>.zip` |
+| WinUI 3 版（AOT） | `ZenHanConverter.WinUI3.<版数>.zip` |
+| WinUI 3 版（Single） | `ZenHanConverter.WinUI3.Single.<版数>.zip` |
+| WinForms 版 | `ZenHanConverter.WinForms.<版数>.zip` |
 
 - いずれも zip を展開して使用します（インストーラーはありません）。
 - .NET ランタイムのインストールは不要です（自己完結）。
+- **WinUI 3 版（AOT）だけは Windows App Runtime 2.6.5 以降（x64）が必要です**（無ければ起動時に案内して導入します。 版は [`Directory.Packages.props`](Directory.Packages.props) の `Microsoft.WindowsAppSDK` が単一所有します）。 **WinUI 3 版（Single）は同梱しているため不要です**。
 - 起動するとホーム画面が表示され、クリップボードにコピーしたテキストを自動変換します。
 
 ### 4.2 ソースからのビルド

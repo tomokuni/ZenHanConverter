@@ -128,7 +128,7 @@ UI の追加・変更は **`release-config.json` の `uis[]` を編集します*
 | --- | --- | --- |
 | [`workflows/build.yml`](workflows/build.yml) | `main` 向け PR、手動実行（**push では実行しない**） | 復元・ビルド・テストと走査（**配布物は作らない**）。 PR の必須チェックは集約ジョブ `ci` |
 | [`workflows/publish.yml`](workflows/publish.yml) | `workflow_call` | 全 UI の publish と保管の単一実装（`version` を受け取るとそのバージョンでビルドする） |
-| [`workflows/release.yml`](workflows/release.yml) | **手動実行のみ。 実行ブランチは `mode` に従う**（`dry-run` は `dryRunBranches`、公開は `releaseBranches`）。 `mode` で 2 段階（`dry-run` / `release`） | 検証 → SBOM → 全 UI の publish →（release のみ）**承認** → タグ + GitHub Release 作成 |
+| [`workflows/release.yml`](workflows/release.yml) | **手動実行のみ。 実行ブランチは `mode` に従う**（`dry-run` は `dryRunBranches`、公開は `releaseBranches`）。 `mode` で 3 段階（`dry-run`（検証のみ）/ `dry-run-pack`（+ 配布物の作成と検証）/ `release`） | 検証 → SBOM → 全 UI の publish →（release のみ）**承認** → タグ + GitHub Release 作成 |
 
 `ci`（`build.yml` の集約ジョブ）の成功はリリースの**前提（ゲート）**です。マージの前提は ruleset が保証するため、`release.yml` はリリース対象コミットに対する `build.yml` の実行を探しません（マージ後のコミットには実行が無いため）。
 
@@ -163,11 +163,11 @@ flowchart TD
 
 ## リリース手順
 
-リリースは **`dry-run` → `release` の 2 段階**で行います。**版はリリース前にコミットしておきます**（自動採番しません）。
+リリースは **`dry-run`（検証のみ）→ `dry-run-pack`（配布物まで）→ `release` の 3 段階**で行います。**版はリリース前にコミットしておきます**（自動採番しません）。
 
 1. **版を上げてコミットする**（`Directory.Build.props` の `<Version>`）。`dev` で上げ、`main` へマージする
 2. Pull Request の `ci`（必須チェック）が成功していることを確認する（`main` へマージする）
-3. `Actions` → **Release** → `Run workflow` で、**モード `dry-run`** を選んで実行する
+3. `Actions` → **Release** → `Run workflow` で、**モード `dry-run`** を選んで実行する（版・ブランチ・タグ・CHANGELOG の検証だけ）
    - 配布物の作成（全 UI の publish）と **SBOM の作成**まで行います（**タグ作成も Release 作成もしません**）
    - `version` は省略できます（省略するとコミット済みの版を使います）
 4. 実行サマリーと成果物（アーティファクト）を確認する
@@ -239,7 +239,7 @@ semver 形式で入力します。数値部分の**先頭 0 は使用できま�
 
 ## Release の添付ファイル
 
-添付するファイルは `release-config.json` の `uis[].asset` が決めます。`release.yml` は保管された成果物をそのまま添付するため、**UI を追加してもワークフローは変更不要**です。**SBOM（`<製品名>.<版>.sbom.cdx.json`）も併せて添付します**。
+添付するファイルは `release-config.json` の `uis[].outputs[].asset`（1 形態だけなら `uis[].asset`）が決めます。 **同じ UI が複数の形態を配布する場合は、形態名を版数の前へ入れます**（例: `ZenHanConverter.WinUI3.Single.0.3.0.zip`）。`release.yml` は保管された成果物をそのまま添付するため、**UI を追加してもワークフローは変更不要**です。**SBOM（`<製品名>.<版>.sbom.cdx.json`）も併せて添付します**。
 
 **SBOM（CycloneDX）は `.github/scripts/generateSbom.ps1` が作ります**（ツールの版は [`.config/dotnet-tools.json`](../.config/dotnet-tools.json) が単一所有し、`dotnet tool restore` で揃います）。何のために付けるか:
 
