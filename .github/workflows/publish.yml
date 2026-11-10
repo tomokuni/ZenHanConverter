@@ -158,8 +158,11 @@ jobs:
             Write-Host "zip を作成しました: $asset"
           }
 
-          # 後続のアップロード手順が同じ名前を使う（成果物の path は env を参照できる。 複数は改行区切り）
-          "ASSETS=$($assets -join "`n")" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          # 後続のアップロード手順が同じ名前を使う（成果物の path は env を参照できる。 複数は改行区切り）。
+          # 複数行の値は NAME=値 の 1 行形式では 2 行目以降が壊れるため、ヒアドキュメント形式で書く。
+          Add-Content -Path $env:GITHUB_ENV -Value 'ASSETS<<ASSETS_END'
+          Add-Content -Path $env:GITHUB_ENV -Value $assets
+          Add-Content -Path $env:GITHUB_ENV -Value 'ASSETS_END'
 
       # この成果物は release.yml が GitHub Release へ添付する（公開先は GitHub Release のみ）
       - name: 成果物をアップロード
