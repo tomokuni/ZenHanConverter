@@ -309,16 +309,6 @@
           "Microsoft.Extensions.Logging.Abstractions": "10.0.14"
         }
       },
-      "Microsoft.Extensions.Logging": {
-        "type": "Transitive",
-        "resolved": "10.0.14",
-        "contentHash": "O2fXL6JmtkFwkigxS8fPTQpLXxGDjgZco5D+h88s++Cl0bDCs023PVkpNoifciJ+f30I82jnp8tpwF0wCLdFtA==",
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection": "10.0.14",
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.14",
-          "Microsoft.Extensions.Options": "10.0.14"
-        }
-      },
       "Microsoft.Extensions.Logging.Abstractions": {
         "type": "Transitive",
         "resolved": "10.0.14",
@@ -565,15 +555,19 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "EsUtil.Feature.ZenHan.Core": "[0.6.0, )",
-          "EsUtil.Platform.Core": "[0.6.0, )"
+          "EsUtil.Feature.ZenHan.Core": "[0.6.2, )",
+          "EsUtil.Platform.Core": "[0.6.2, )",
+          "Microsoft.Extensions.Logging": "[10.0.14, )",
+          "Serilog": "[4.4.0, )",
+          "Serilog.Extensions.Logging": "[10.0.0, )",
+          "Serilog.Sinks.File": "[7.0.0, )"
         }
       },
       "ZenHanConverter.App.Core.Presentation": {
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "ZenHanConverter.App.Core": "[0.3.0, )"
+          "ZenHanConverter.App.Core": "[0.4.0, )"
         }
       },
       "ZenHanConverter.AvaloniaUI": {
@@ -586,8 +580,8 @@
           "AvaloniaUI.DiagnosticsSupport": "[2.2.3, )",
           "CommunityToolkit.Mvvm": "[8.4.2, )",
           "Microsoft.Extensions.Hosting": "[10.0.14, )",
-          "ZenHanConverter.App.Core": "[0.3.0, )",
-          "ZenHanConverter.App.Core.Presentation": "[0.3.0, )"
+          "ZenHanConverter.App.Core": "[0.4.0, )",
+          "ZenHanConverter.App.Core.Presentation": "[0.4.0, )"
         }
       },
       "Avalonia": {
@@ -651,15 +645,15 @@
       },
       "EsUtil.Feature.ZenHan.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.6.0, )",
-        "resolved": "0.6.0",
-        "contentHash": "RFB+VJJaU05zMP8nvIIjZglKZBdNZ0bzWHkFTGTObJcP/mjb7ViGl3mJuf0MbUfCRBlKwYjUT5UXhMKKaGPDIw=="
+        "requested": "[0.6.2, )",
+        "resolved": "0.6.2",
+        "contentHash": "THoNrtXcwVFchRk7+/GqSi1kIkpxTpW5ZUBSsHRxhJtHCYhAQf7rEIFBJFC5+XLWuCba0qlhQMZDpxhzl2LMAw=="
       },
       "EsUtil.Platform.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.6.0, )",
-        "resolved": "0.6.0",
-        "contentHash": "eshFW7EYXw06luqWHwhgCVrsmgF5n/muMMMdjy1X2WrjZ2WjpE6pa0UGVoWjTY/UjariArBPzGARqPiqqkWHuw=="
+        "requested": "[0.6.2, )",
+        "resolved": "0.6.2",
+        "contentHash": "u08Uu8OXNBfUF/o6ESHJRuwmvPONY9gS5g0rFN1myZq73Wm4756W6FS5dmTUyTI3CLeQ9wrRm6BwZJSSlqDQkg=="
       },
       "Microsoft.Extensions.Hosting": {
         "type": "CentralTransitive",
@@ -689,6 +683,42 @@
           "Microsoft.Extensions.Logging.EventLog": "10.0.14",
           "Microsoft.Extensions.Logging.EventSource": "10.0.14",
           "Microsoft.Extensions.Options": "10.0.14"
+        }
+      },
+      "Microsoft.Extensions.Logging": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.14, )",
+        "resolved": "10.0.14",
+        "contentHash": "O2fXL6JmtkFwkigxS8fPTQpLXxGDjgZco5D+h88s++Cl0bDCs023PVkpNoifciJ+f30I82jnp8tpwF0wCLdFtA==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection": "10.0.14",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.14",
+          "Microsoft.Extensions.Options": "10.0.14"
+        }
+      },
+      "Serilog": {
+        "type": "CentralTransitive",
+        "requested": "[4.4.0, )",
+        "resolved": "4.4.0",
+        "contentHash": "ZC6Le3rr4TVJJjS4KsQAesxeF1EhW9qcZmmG7eP5Y2G3+gTGkJEUXkq4+tZNPtyp05I0wWOxnIjwtxFweJsObw=="
+      },
+      "Serilog.Extensions.Logging": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.0, )",
+        "resolved": "10.0.0",
+        "contentHash": "vx0kABKl2dWbBhhqAfTOk53/i8aV/5VaT3a6il9gn72Wqs2pM7EK2OB6No6xdqK2IaY6Zf9gdjLuK9BVa2rT+Q==",
+        "dependencies": {
+          "Microsoft.Extensions.Logging": "10.0.0",
+          "Serilog": "4.2.0"
+        }
+      },
+      "Serilog.Sinks.File": {
+        "type": "CentralTransitive",
+        "requested": "[7.0.0, )",
+        "resolved": "7.0.0",
+        "contentHash": "fKL7mXv7qaiNBUC71ssvn/dU0k9t0o45+qm2XgKAlSt19xF+ijjxyA3R6HmCgfKEKwfcfkwWjayuQtRueZFkYw==",
+        "dependencies": {
+          "Serilog": "4.2.0"
         }
       }
     }
