@@ -1,6 +1,7 @@
 using Avalonia;
+using EsUtil.ZenHanConverter.App.Core.Logging;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace EsUtil.ZenHanConverter.App.AvaloniaUI;
@@ -21,8 +22,18 @@ public static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // ログを最初に用意する（以降の失敗を残せる。 出力先とファイル名は .github/ログ規約.md）
+        s_logger = AppLog
+            .Initialize(typeof(Program).Assembly.GetName().Name ?? "ZenHanConverter.AvaloniaUI", "[App.AvaloniaUI]")
+            .CreateLogger(nameof(Program));
+        s_logger.LogAppStart(typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown");
+        s_logger.LogStartupEnvironment(0);
+
         SubscribeExceptionHandlers();
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+
+        s_logger.LogAppExit(0);
+        AppLog.Shutdown();
     }
 
     /// <summary>Avalonia アプリケーションを構成します。ビジュアルデザイナからも参照されます。</summary>
@@ -43,16 +54,15 @@ public static class Program
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
             if (e.ExceptionObject is Exception ex)
-                Log($"[致命的]: {ex.Message}");
+                s_logger.LogUnhandledException(ex, "AppDomain.UnhandledException");
         };
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
-            Log($"[Task]: {e.Exception.Message}");
+            s_logger.LogUnhandledException(e.Exception, "TaskScheduler.UnobservedTaskException");
             e.SetObserved();
         };
     }
 
-    /// <summary>ログを出力します。</summary>
-    /// <param name="message">出力するメッセージ。</param>
-    private static void Log(string message) => Debug.WriteLine(message);
+    /// <summary>ロガー（例外ハンドラーと起動・終了の記録に使う）。</summary>
+    private static ILogger s_logger = null!;
 }

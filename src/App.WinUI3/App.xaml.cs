@@ -1,3 +1,5 @@
+using EsUtil.Ui.WinUI3.Interop.Bootstrapping;
+using EsUtil.ZenHanConverter.App.Core.Logging;
 using EsUtil.ZenHanConverter.App.WinUI3.Services;
 using EsUtil.ZenHanConverter.App.WinUI3.Views;
 using EsUtil.ZenHanConverter.App.Core.Models;
@@ -86,6 +88,47 @@ public partial class App : Application
         e.SetObserved();
     }
 
+    /// <summary>実行環境を 1 行だけ記録します。</summary>
+    /// <param name="window">表示したメイン ウィンドウ（表示倍率の取得元）。</param>
+    /// <remarks>
+    /// 描画の不具合はアプリの値ではなく環境（OS・ランタイムの版・GPU・倍率）で決まることがあります。
+    /// **倍率は表示後に確定する**ため、<c>OnLaunched</c> から呼びます。<br/>
+    /// 取得に失敗しても起動を妨げません（値は <c>(不明)</c> になる）。
+    /// </remarks>
+    private static void LogEnvironment(MainWindow window)
+    {
+        try
+        {
+            var logger = AppLog.Initialize(AppLogAssemblyName, "[App.WinUI3]").CreateLogger("App");
+            var process = AppLog.DescribeProcess();
+            var installed = WindowsAppRuntimeInventory.GetInstalledVersions();
+            logger.LogEnvironment(
+                process.OperatingSystem,
+                process.DotNet,
+                installed.Count == 0 ? "(なし)" : string.Join(", ", installed.Select(version => version.ToString(4))),
+                WindowsAppRuntimeRequirementVersion,
+                WindowsAppRuntimeInventory.TryGetLoadedVersion(out var loaded) ? loaded.ToString(4) : "(不明)",
+                EnvironmentInfo.DescribeVirtualScreen(),
+                (window.Content as FrameworkElement)?.RasterizationScale ?? 0,
+                EnvironmentInfo.DescribeMonitorScales(),
+                EnvironmentInfo.DescribeAdapters());
+        }
+        catch (Exception ex) when (EsUtil.Platform.Core.Common.BoundaryCatch.IsRecoverable(ex))
+        {
+            // 診断のための記録であり、失敗しても起動を妨げない
+            Debug.WriteLine($"[環境情報]: 記録に失敗しました: {ex.Message}");
+        }
+    }
+
+    /// <summary>この実行ファイルのアセンブリ名（ログ ファイル名に使います）。</summary>
+    private static string AppLogAssemblyName => typeof(App).Assembly.GetName().Name ?? "ZenHanConverter.WinUI3";
+
+    /// <summary>このビルドが要求する Windows App Runtime の版。</summary>
+    private static string WindowsAppRuntimeRequirementVersion => new Version(
+        Microsoft.WindowsAppSDK.Runtime.Version.Major,
+        Microsoft.WindowsAppSDK.Runtime.Version.Minor,
+        Microsoft.WindowsAppSDK.Runtime.Version.Build).ToString(3);
+
     /// <summary>アプリケーションが起動された時に呼び出されます。メインウィンドウを表示し、初期ページを設定します。</summary>
     /// <param name="args">起動引数。</param>
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -96,6 +139,9 @@ public partial class App : Application
         if (homeItem is not null) mainWindow.ViewModel.SelectedPage = homeItem;
 
         mainWindow.Activate();
+
+        // 起動時に 1 度だけ環境を記録する（倍率が確定するのは表示後。 値と書式は .github/ログ規約.md）
+        LogEnvironment(mainWindow);
 
         var navigation = GetService<INavigationService>();
         navigation.Initialize();

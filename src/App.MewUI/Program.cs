@@ -1,11 +1,12 @@
 using Aprillz.MewUI;
+using EsUtil.ZenHanConverter.App.Core.Logging;
 using EsUtil.ZenHanConverter.App.MewUI.Services;
 using EsUtil.ZenHanConverter.App.MewUI.Views;
 using EsUtil.ZenHanConverter.App.Core.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace EsUtil.ZenHanConverter.App.MewUI;
@@ -25,6 +26,12 @@ public static class Program
     /// <summary>アプリケーションのエントリポイントです。</summary>
     public static void Main()
     {
+        // ログを最初に用意する（以降の失敗を残せる。 出力先とファイル名は .github/ログ規約.md）
+        s_logger = AppLog
+            .Initialize(typeof(Program).Assembly.GetName().Name ?? "ZenHanConverter.MewUI", "[App.MewUI]")
+            .CreateLogger(nameof(Program));
+        s_logger.LogAppStart(typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown");
+
         SubscribeExceptionHandlers();
 
         var builder = Host.CreateApplicationBuilder();
@@ -37,12 +44,18 @@ public static class Program
         host.Services.GetRequiredService<AppSetting>().Initialize();
         host.Services.GetRequiredService<ConvertConfig>().Initialize();
 
+        // 環境を 1 行だけ記録する（.github/ログ規約.md）
+        s_logger.LogStartupEnvironment(0);
+
         Application
             .Create()
             .UseWin32()
             .UseDirect2D()
             .BuildMainWindow(() => host.Services.GetRequiredService<MainWindow>())
             .Run();
+
+        s_logger.LogAppExit(0);
+        AppLog.Shutdown();
     }
 
     /// <summary>集約エラーハンドラーを購読します。UI/バックグラウンド/非同期タスクの未処理例外を補足します。</summary>
@@ -51,21 +64,20 @@ public static class Program
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
             if (e.ExceptionObject is Exception ex)
-                Log($"[致命的]: {ex.Message}");
+                s_logger.LogUnhandledException(ex, "AppDomain.UnhandledException");
         };
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
-            Log($"[Task]: {e.Exception.Message}");
+            s_logger.LogUnhandledException(e.Exception, "TaskScheduler.UnobservedTaskException");
             e.SetObserved();
         };
         Application.DispatcherUnhandledException += e =>
         {
-            Log($"[UI]: {e.Exception.Message}");
+            s_logger.LogUnhandledException(e.Exception, "DispatcherUnhandledException");
             e.Handled = true;
         };
     }
 
-    /// <summary>ログを出力します。</summary>
-    /// <param name="message">出力するメッセージ。</param>
-    private static void Log(string message) => Debug.WriteLine(message);
+    /// <summary>ロガー（例外ハンドラーと起動・終了の記録に使う）。</summary>
+    private static ILogger s_logger = null!;
 }

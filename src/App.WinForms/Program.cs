@@ -1,9 +1,10 @@
+using EsUtil.ZenHanConverter.App.Core.Logging;
 using EsUtil.ZenHanConverter.App.WinForms.Services;
 using EsUtil.ZenHanConverter.App.WinForms.Views;
 using EsUtil.ZenHanConverter.App.Core.Models;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -26,10 +27,19 @@ public static class Program
     /// <value>ビルド済みの IServiceProvider インスタンス。</value>
     private static IServiceProvider s_services { get; set; } = null!;
 
+    /// <summary>ロガー（例外ハンドラーと起動・終了の記録に使う）。</summary>
+    private static ILogger s_logger = null!;
+
     /// <summary>アプリケーションのエントリポイントです。</summary>
     [STAThread]
     public static void Main()
     {
+        // ログを最初に用意する（以降の失敗を残せる。 出力先とファイル名は .github/ログ規約.md）
+        s_logger = AppLog
+            .Initialize(typeof(Program).Assembly.GetName().Name ?? "ZenHanConverter.WinForms", "[App.WinForms]")
+            .CreateLogger(nameof(Program));
+        s_logger.LogAppStart(typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown");
+
         ApplicationConfiguration.Initialize();
         SubscribeExceptionHandlers();
 
@@ -43,7 +53,13 @@ public static class Program
         GetService<AppSetting>().Initialize();
         GetService<ConvertConfig>().Initialize();
 
-        Application.Run(GetService<MainForm>());
+        var mainForm = GetService<MainForm>();
+        // 倍率が確定してから環境を 1 行だけ記録する（.github/ログ規約.md）
+        s_logger.LogStartupEnvironment(mainForm.DeviceDpi / 96.0);
+
+        Application.Run(mainForm);
+        s_logger.LogAppExit(0);
+        AppLog.Shutdown();
     }
 
     /// <summary>DI コンテナから指定した型のサービスを取得します。</summary>
@@ -59,20 +75,16 @@ public static class Program
     {
         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
 
-        Application.ThreadException += (_, e) => Log($"[UI]: {e.Exception.Message}");
+        Application.ThreadException += (_, e) => s_logger.LogUnhandledException(e.Exception, "Application.ThreadException");
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
             if (e.ExceptionObject is Exception ex)
-                Log($"[致命的]: {ex.Message}");
+                s_logger.LogUnhandledException(ex, "AppDomain.UnhandledException");
         };
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
-            Log($"[Task]: {e.Exception.Message}");
+            s_logger.LogUnhandledException(e.Exception, "TaskScheduler.UnobservedTaskException");
             e.SetObserved();
         };
     }
-
-    /// <summary>ログを出力します。</summary>
-    /// <param name="message">出力するメッセージ。</param>
-    private static void Log(string message) => Debug.WriteLine(message);
 }
