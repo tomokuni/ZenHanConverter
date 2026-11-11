@@ -5,7 +5,7 @@
 #                             不備をマージ前に見つける）。 実行名は `DryRun <ブランチ> <SHA>`。
 #   手動実行（Actions → Release → Run workflow） … **`mode` で 2 段階に分ける**。
 #     dry-run       … 検証だけを行う（配布物も SBOM も作らない。 最も軽い）
-#     dry-run-pack  … 検証 + 配布物の作成と検証（publish.yml）。 **公開もタグ作成もしない**
+#     dry-run-pack  … 検証 + 配布物の作成と検証（publish.yml）+ SBOM。 **公開もタグ作成もしない**
 #     release … 同じコミットの dry-run が成功していることを前提に、承認 → 配布 → **タグと Release** の順で進む
 #
 # 設計の要点:
@@ -208,7 +208,7 @@ jobs:
           ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 
   # ────────────────────────────────────────────────────────────
-  # 2. SBOM（CycloneDX）を作る（dry-run でも作って検証する）
+  # 2. SBOM（CycloneDX）を作る（dry-run-pack と release で作る）
   # ────────────────────────────────────────────────────────────
   sbom:
     needs: verify
