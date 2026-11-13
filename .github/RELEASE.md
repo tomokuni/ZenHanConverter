@@ -322,7 +322,7 @@ Get-MaxVersion -Versions @('1.0.0', '1.2.0')      # -> 1.2.0
 - **NuGet のメジャー更新は作成されません**（テストの書き方が変わるため、手動で判断します）。
 - Dependabot は**指定したディレクトリ直下のみを走査します**（再帰しません）。プロジェクトを増やした場合は
   `dependabot.yml` の `directories` にも追加してください。
-- Pull Request の内容を確認して `main` へマージします（マージ方式は Squash merge を推奨）。必須チェック `ci` は Pull Request で実行されるため、マージ後の再実行はありません。
+- Pull Request の内容を確認して `main` へ **Merge commit** でマージします（Squash / Rebase は使わない。 検証した `refs/pull/<番号>/merge` と同じ親・同じツリーのコミットを `main` の HEAD にするため。 [`コミット規約.md`](コミット規約.md) §3）。必須チェック `ci` は Pull Request で実行されるため、マージ後の再実行はありません。
 - **Dependabot は `packages.lock.json` を一部のプロジェクトしか更新しません**（Dependabot の制限）。 そのため NuGet の Pull Request は、**そのままでは CI が `NU1004`（lock が古い）で失敗します**。 ブランチを取得して `dotnet restore <ソリューション> --force-evaluate` を実行し、lock を追加コミットしてからマージします（版の更新自体は PR の内容のままです）。
 - 破壊的な変更（`actions/upload-artifact` のメジャー更新など）は、CI が失敗した内容を確認して修正します。
 
