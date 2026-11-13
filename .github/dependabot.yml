@@ -1,7 +1,7 @@
 # 依存関係（GitHub Actions と NuGet パッケージ）の更新を検知し、Pull Request を作成する。
 #
 # 作成された Pull Request は build.yml（main 向け PR）でビルドとテストが実行される。
-# 内容を確認して main へマージする（方式は Squash merge を推奨）。
+# 内容を確認して main へマージする（方式は Merge commit。 検証したマージ結果と同じ親・同じツリーのコミットを main の HEAD にするため）。
 #
 # 注意事項:
 # - Dependabot の Pull Request は fork 相当（読み取り専用トークン・シークレット無し）で実行される。
