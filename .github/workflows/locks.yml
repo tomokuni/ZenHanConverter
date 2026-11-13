@@ -70,6 +70,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
           fetch-depth: 0
 
+      # .NET SDK は global.json が単一所有する（ランナー イメージには .NET 11 SDK がまだ無い）
+      - name: .NET SDK を導入
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
       # 前回の自動コミットで走った実行は何もしない（無限ループを防ぐ）
       - name: 自動コミットの印を確認する
         id: guard

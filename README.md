@@ -5,7 +5,7 @@
 ![Release](https://github.com/tomokuni/ZenHanConverter/actions/workflows/release.yml/badge.svg)
 ![Build](https://github.com/tomokuni/ZenHanConverter/actions/workflows/build.yml/badge.svg?event=pull_request)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2B-0078D6)
-![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
+![.NET](https://img.shields.io/badge/.NET-11.0-512BD4)
 ![Avalonia](https://img.shields.io/badge/UI-Avalonia-8D46D6)
 ![MewUI](https://img.shields.io/badge/UI-MewUI-00BFFF)
 ![WinUI3](https://img.shields.io/badge/UI-WinUI%203-0078D4)
@@ -126,7 +126,7 @@ ZenHanConverter は、クリップボードにコピーされたテキストを�
 | 項目 | 要件 |
 | --- | --- |
 | **OS** | Windows 10（1809 / 17763）以降、Windows 11 |
-| **.NET ランタイム** | .NET 10.0 以降（配布物は自己完結のため不要） |
+| **.NET ランタイム** | .NET 11.0 以降（配布物は自己完結のため不要） |
 | **アーキテクチャ** | x64 |
 
 クリップボードの監視に Win32 API を使うため、本アプリは **Windows 専用**です。

@@ -10,7 +10,7 @@
 
 ## 技術スタック
 
-- .NET 10
+- .NET 11
 - CommunityToolkit.Mvvm 8.*
 - EsUtil.Feature.ZenHan.Core（0.1.* のパッケージ参照。全角/半角変換ペア）
 - EsUtil.Platform.Core（0.2.* のパッケージ参照。幾何型・DPI 換算・Win32 のクリップボード／仮想画面）

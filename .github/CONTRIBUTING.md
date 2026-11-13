@@ -102,7 +102,7 @@ dotnet build ZenHanConverter.slnx
   （例: Avalonia 12 に対する `SkiaSharp` 4 系・`HarfBuzzSharp` 14 系）描画や Native AOT が壊れる恐れがあるため、更新しません。
 - テストは **xunit.v3 4 系**（Microsoft.Testing.Platform）を使用します。VSTest 専用の `Microsoft.NET.Test.Sdk` / `xunit.runner.visualstudio` / `coverlet.collector` は参照しません。
 - .NET SDK のバージョンとテスト ランナーはリポジトリルートの `global.json` が単一所有します（ワークフローへ `dotnet-version` を書きません）。
-  - **.NET SDK はランナー イメージに含まれる最新版をそのまま使います**（`actions/setup-dotnet` は使いません）。
+  - **.NET SDK は `global.json` が単一所有します**（ランナー イメージに .NET 11 SDK が含まれないため、CI は `actions/setup-dotnet` で導入します）。
     イメージの SDK は `C:\Program Files\dotnet` に入り PATH も通っているため、そのまま `dotnet` を実行できます。
     `global.json` は `rollForward: latestFeature` のため、イメージの 10.0 SDK で要件を満たします。
   - キャッシュは NuGet の復元のみを対象にします（最も時間を使う工程）。**`build.yml` は共通の 1 つ**（全 13 プロジェクトをビルドするため約 1.9GB が必要）、
@@ -194,12 +194,12 @@ dotnet run --project src/App.WinForms/App.WinForms.csproj
 
 | スクリプト（`buildScript/` 配下） | 対象 | 出力先 |
 | --- | --- | --- |
-| `publish_MewUI.bat` | MewUI 版 | `src\App.MewUI\bin\Release\net10.0-windows10.0.17763.0\` |
-| `publish_WinUI3.bat` | WinUI 3 版 | `src\App.WinUI3\bin\Release\net10.0-windows10.0.26100.0\win-x64\` |
-| `publish_AvaloniaUI.bat` | Avalonia UI 版 | `src\App.AvaloniaUI\bin\Release\net10.0-windows10.0.17763.0\` |
-| `publish_WinForms.bat` | WinForms 版 | `src\App.WinForms\bin\Release\net10.0-windows10.0.17763.0\` |
+| `publish_MewUI.bat` | MewUI 版 | `src\App.MewUI\bin\Release\net11.0-windows10.0.17763.0\` |
+| `publish_WinUI3.bat` | WinUI 3 版 | `src\App.WinUI3\bin\Release\net11.0-windows10.0.26100.0\win-x64\` |
+| `publish_AvaloniaUI.bat` | Avalonia UI 版 | `src\App.AvaloniaUI\bin\Release\net11.0-windows10.0.17763.0\` |
+| `publish_WinForms.bat` | WinForms 版 | `src\App.WinForms\bin\Release\net11.0-windows10.0.17763.0\` |
 
-- 生成物はフレームワーク依存のため、実行には .NET 10 ランタイムが必要です。
+- 生成物はフレームワーク依存のため、実行には .NET 11 ランタイムが必要です。
   - ただし **WinUI 3 版は .NET ランタイムが自己完結**（`SelfContained`）です。 Windows App Runtime は同梱せず、
     起動時に有無を確認して無ければ導入します（実行には出力フォルダーごと必要です）。
 - 配布用の exe が必要な場合は `buildScript/publish_<UI>.bat` を使用してください（発行の手順は `buildScript/publish_ui.bat` が単一所有します）。

@@ -214,13 +214,19 @@ jobs:
     needs: verify
     # Pull Request と dry-run（検証のみ）では作らない
     if: github.event_name != 'pull_request' && inputs.mode != 'dry-run'
-    # Windows を対象にしたプロジェクト（`net10.0-windows…`）は Linux では復元できない
+    # Windows を対象にしたプロジェクト（`net11.0-windows…`）は Linux では復元できない
     # （`NETSDK1100`。 実測 2026-10-26）ため、ビルドと同じランナーで作る
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
       - name: チェックアウト
         uses: actions/checkout@v7
+
+      # .NET SDK は global.json が単一所有する（ランナー イメージには .NET 11 SDK がまだ無い）
+      - name: .NET SDK を導入
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
 
       # ツール（CycloneDX）の取得と復元をキャッシュする（初回は約 2 分かかる。 実測 2026-10-26）
       - name: NuGet をキャッシュ

@@ -10,7 +10,7 @@ UI フレームワークの型を一切参照せず、`src/App.Core` と `Commun
 
 ## 技術スタック
 
-- .NET 10
+- .NET 11
 - CommunityToolkit.Mvvm 8.*（`ObservableObject` / `[ObservableProperty]` / `[RelayCommand]`）
 - `src/App.Core`（モデル・変換ロジック・カテゴリ定義）
 
