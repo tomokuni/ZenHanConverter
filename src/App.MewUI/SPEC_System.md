@@ -12,7 +12,7 @@ UI フレームワークとして MewUI（コードファースト・NativeAOT �
 
 ## 技術スタック
 
-- .NET 10
+- .NET 11
 - MewUI（`Aprillz.MewUI.Windows` 0.*）
 - CommunityToolkit.Mvvm 8.*（変換設定・ViewModel）
 - Microsoft.Extensions.Hosting 10.*（DI）

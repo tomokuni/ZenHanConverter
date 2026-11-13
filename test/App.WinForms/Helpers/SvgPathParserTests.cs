@@ -13,7 +13,7 @@ public sealed class SvgPathParserTests
     /// <summary>検証対象のアイコンのパスデータ。</summary>
     /// <value>Core が所有する 2 つの Fluent Icons のパスデータ。</value>
     /// <remarks>属性引数には実行時の値を使用できないため、<see cref="MemberDataAttribute"/> で供給します。</remarks>
-    public static TheoryData<string> IconPathData => new() { FluentIconData.ConvertRange, FluentIconData.Settings };
+    public static TheoryData<string> IconPathData { get; } = new() { FluentIconData.ConvertRange, FluentIconData.Settings };
 
     /// <summary>Core が所有する 2 つのアイコンが例外なく解釈でき、図形を持つことを検証します。</summary>
     /// <param name="pathData">検証する SVG パスデータ。</param>

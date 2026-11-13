@@ -64,7 +64,12 @@ jobs:
       - name: チェックアウト
         uses: actions/checkout@v7
 
-      # .NET SDK はランナー イメージの最新版を使う（setup-dotnet は不要）。
+      # .NET SDK は global.json が単一所有する（ランナー イメージには .NET 11 SDK がまだ無い）。
+      - name: .NET SDK を導入
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
       # NuGet のキャッシュは UI ごとに分ける。
       # 4 ジョブが同時に走るため、共通の大きなキャッシュ（約 1.9GB）を 4 重に復元すると
       # 競合して 1 ジョブあたりの復元が 40 秒台から 90 秒超へ伸びる。

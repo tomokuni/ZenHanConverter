@@ -3,7 +3,7 @@
 ![Release](https://github.com/tomokuni/ZenHanConverter/actions/workflows/release.yml/badge.svg)
 ![Build](https://github.com/tomokuni/ZenHanConverter/actions/workflows/build.yml/badge.svg?branch=main)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2B-0078D6)
-![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
+![.NET](https://img.shields.io/badge/.NET-11.0-512BD4)
 ![WinUI3](https://img.shields.io/badge/UI-WinUI%203-0078D4)
 ![License](https://img.shields.io/badge/License-MIT-3DA639)
 
@@ -45,7 +45,7 @@
 
 ## 1. 概要
 
-クリップボードにコピーされたテキストを自動検出し、設定した変換規則に基づいて全角/半角変換を実行する WinUI 3 アプリケーションです（.NET 10.0 / Windows App SDK / C# 14 / MVVM / XAML）。
+クリップボードにコピーされたテキストを自動検出し、設定した変換規則に基づいて全角/半角変換を実行する WinUI 3 アプリケーションです（.NET 11.0 / Windows App SDK / C# 14 / MVVM / XAML）。
 
 変換結果は自動的にクリップボードへ書き戻されるため、**ペースト操作だけで変換済みのテキストを利用できます**。 変換仕様・設定画面の設定仕様・設定ファイルは Avalonia UI 版・MewUI 版・WinForms 版と共通です。
 
@@ -71,7 +71,7 @@
 
 ## 3. システム要件
 
-- .NET 10 SDK（ビルド時）
+- .NET 11 SDK（ビルド時）
 - Windows 10（1809 / 17763）以降、Windows 11
 - x64
 - Windows App Runtime **2.6.5 以降（x64）** が必要です（版は [`Directory.Packages.props`](../../Directory.Packages.props) の `Microsoft.WindowsAppSDK` が単一所有します）。 AOT 版は同梱せず、起動時に有無を確認して無ければ `EsUtil.Ui.WinUI3.Interop` の `WindowsAppRuntimeBootstrap` が導入します（.NET ランタイムは自己完結）。 同梱した Single 版は導入不要です

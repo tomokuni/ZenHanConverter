@@ -12,7 +12,7 @@ UI フレームワークとして Avalonia UI（クロスプラットフォー�
 
 ## 技術スタック
 
-- .NET 10
+- .NET 11
 - Avalonia UI 12.*（`Avalonia` / `Avalonia.Desktop` / `Avalonia.Themes.Fluent` / `Avalonia.Fonts.Inter`）
 - AvaloniaUI.DiagnosticsSupport 2.*（Debug 構成のみ。廃止された `Avalonia.Diagnostics` は使用しません）
 - CommunityToolkit.Mvvm 8.*（変換設定・ViewModel）

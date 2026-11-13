@@ -79,7 +79,7 @@ public static class FluentIconData
             throw new InvalidOperationException("SVG にパスデータ（d 属性）がありません。");
 
         start += PathDataAttribute.Length;
-        var end = svg.IndexOf('"', start);
+        var end = svg.IndexOf('"', start, StringComparison.Ordinal);
         if (end < 0)
             throw new InvalidOperationException("SVG のパスデータ（d 属性）が閉じられていません。");
 

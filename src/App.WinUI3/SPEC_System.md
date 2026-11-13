@@ -10,7 +10,7 @@ UI フレームワークとして WinUI 3（Windows App SDK）を使用します
 
 ## 技術スタック
 
-- .NET 10
+- .NET 11
 - WinUI 3（`Microsoft.WindowsAppSDK` 2.*）
 - CommunityToolkit.Mvvm 8.*（変換設定・ViewModel）
 - CommunityToolkit.WinUI.Controls.*（Segmented / SettingsControls / Primitives）

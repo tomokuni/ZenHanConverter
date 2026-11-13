@@ -22,7 +22,9 @@
 # release.yml（publish.yml）が 1 度だけ作る（規則は .github/RELEASE.md）。
 #
 # .NET SDK のバージョンはリポジトリルートの global.json が単一所有する（ワークフローでは指定しない）。
-# .NET SDK はランナー イメージに含まれる最新版をそのまま使う（actions/setup-dotnet を使わない）。
+# .NET SDK のバージョンはリポジトリルートの global.json が単一所有する（ワークフローでは指定しない）。
+# **ランナー イメージには .NET 11 SDK がまだ含まれないため、actions/setup-dotnet で導入する**
+# （実測 2026-11-13: `windows-2025` のイメージは 10.0.4xx まで。 版は global.json から読む）。
 #
 # README の「build」バッジは `?event=pull_request` を指定する（既定は**既定ブランチの最新実行**であり、
 # push では実行しないため、古い push の結果が残って Pull Request の失敗を表示できない）。
@@ -109,7 +111,12 @@ jobs:
         id: config
         uses: ./.github/actions/read-config
 
-      # .NET SDK はランナー イメージの最新版を使う（setup-dotnet は不要）。
+# .NET SDK は global.json が単一所有する（版をワークフローへ書かない）。
+      - name: .NET SDK を導入
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
       # キーは「取得するパッケージの集合」で決める（csproj を混ぜると、パッケージが変わらない変更でも
       # キーが変わり、キャッシュを保存し直す）。 lock の内容も入れる（同じ csproj でも別の復元になる）。
       - name: NuGet をキャッシュ
@@ -153,6 +160,12 @@ jobs:
     steps:
       - name: チェックアウト
         uses: actions/checkout@v7
+
+# .NET SDK は global.json が単一所有する（版をワークフローへ書かない）。
+      - name: .NET SDK を導入
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
 
       # 対象のソリューション ファイルは release-config.json が単一所有する
       - name: リリース設定を読む

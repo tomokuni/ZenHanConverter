@@ -69,7 +69,7 @@ internal static class SegmentItems
     /// <remarks>区切りは最後の全角スペースとし、名称に含まれる空白はそのまま名称部へ残します。</remarks>
     public static (string Name, string Symbol) SplitLabel(string label)
     {
-        var index = label.LastIndexOf(LabelSeparator);
+        var index = label.LastIndexOf(LabelSeparator, StringComparison.Ordinal);
         return index < 0 ? (label, string.Empty) : (label[..index], label[(index + 1)..]);
     }
 

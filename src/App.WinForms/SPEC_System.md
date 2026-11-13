@@ -6,14 +6,14 @@
 ## システム概要
 
 クリップボードのテキストを監視し、全角/半角の自動変換を行う Windows 向けデスクトップアプリケーションです。
-UI フレームワークに **Windows Forms**（.NET 10）を使用します。
+UI フレームワークに **Windows Forms**（.NET 11）を使用します。
 
 **全角/半角変換は常に有効です**（オン/オフの切り替えはありません）。切り替えできるのはクリップボード連携（コピーの検知と変換結果の書き戻し）のみで、`AppSetting.IsClipboardConvertEnabled` が保持します。
 
 ## 技術スタック
 
-- .NET 10
-- Windows Forms（`UseWindowsForms` / `net10.0-windows`）
+- .NET 11
+- Windows Forms（`UseWindowsForms` / `net11.0-windows`）
 - CommunityToolkit.Mvvm 8.*（変換設定・ViewModel）
 - Microsoft.Extensions.Hosting 10.*（DI）
 - EsUtil.Feature.ZenHan.Core（変換ペア。`src/App.Core` のパッケージ参照経由）

@@ -478,7 +478,7 @@ if (-not $SkipTests) {
     foreach ($m in [regex]::Matches($testText, '(?:合格|Passed|成功|Succeeded):\s*(\d+)', 'IgnoreCase')) { $passed += [int]$m.Groups[1].Value }
     $failed = 0
     foreach ($m in [regex]::Matches($testText, '(?:失敗|Failed):\s*(\d+)', 'IgnoreCase')) { $failed += [int]$m.Groups[1].Value }
-    $projects = [regex]::Matches($testText, '\.dll \(net10\.0[^)]*\)').Count
+    $projects = [regex]::Matches($testText, '\.dll \(net\d+\.\d+[^)]*\)').Count
     Add-Result 'テスト' ($failed -eq 0 -and $passed -gt 0 -and $test.ExitCode -eq 0) "合格 $passed / 失敗 $failed / $projects プロジェクト / 終了コード $($test.ExitCode)"
     Add-SectionTiming 'テスト'
     if ($failed -gt 0) {

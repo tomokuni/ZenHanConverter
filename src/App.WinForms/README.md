@@ -3,7 +3,7 @@
 ![Release](https://github.com/tomokuni/ZenHanConverter/actions/workflows/release.yml/badge.svg)
 ![Build](https://github.com/tomokuni/ZenHanConverter/actions/workflows/build.yml/badge.svg?branch=main)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2B-0078D6)
-![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
+![.NET](https://img.shields.io/badge/.NET-11.0-512BD4)
 ![WinForms](https://img.shields.io/badge/UI-WinForms-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-3DA639)
 
@@ -35,7 +35,7 @@
 
 ## 1. 概要
 
-クリップボードにコピーされたテキストを自動検出し、設定した変換規則に基づいて全角/半角変換を実行する Windows Forms アプリケーションです（.NET 10.0 / C# 14 / MVVM）。
+クリップボードにコピーされたテキストを自動検出し、設定した変換規則に基づいて全角/半角変換を実行する Windows Forms アプリケーションです（.NET 11.0 / C# 14 / MVVM）。
 
 画面は XAML を使わず**コードで構築**し、タイトルバー・スイッチ・セグメント ボタンなどの部品もこのプロジェクトが持ちます。 変換結果は自動的にクリップボードへ書き戻されるため、**ペースト操作だけで変換済みのテキストを利用できます**。 変換仕様・設定画面の設定仕様・設定ファイルは Avalonia UI 版・MewUI 版・WinUI 3 版と共通です。
 
@@ -61,7 +61,7 @@
 
 ## 3. システム要件
 
-- .NET 10 SDK（ビルド時）
+- .NET 11 SDK（ビルド時）
 - Windows 10（1809 / 17763）以降、Windows 11
 - x64
 
@@ -172,7 +172,7 @@ dotnet test --project test/App.WinForms/App.WinForms.Tests.csproj
 
 ## 11. 依存関係
 
-- Windows Forms（.NET 10 の Windows Desktop ランタイム）
+- Windows Forms（.NET 11 の Windows Desktop ランタイム）
 - CommunityToolkit.Mvvm 8.*（変換設定・ViewModel）
 - Microsoft.Extensions.Hosting 10.*（DI）
 
