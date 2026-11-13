@@ -453,7 +453,7 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "ZenHanConverter.App.Core": "[0.4.0, )"
+          "ZenHanConverter.App.Core": "[0.5.0, )"
         }
       },
       "EsUtil.Feature.ColumnPacking.Core": {
