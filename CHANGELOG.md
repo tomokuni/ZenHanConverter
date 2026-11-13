@@ -11,7 +11,7 @@
 
 ### 変更
 
-- 依存パッケージを最新化しました（EsUtil 0.6.3・Avalonia 12.1.6・Microsoft.Extensions 11.0.0・xunit.v3 4.0.3）。
+- 依存パッケージを最新化しました（EsUtil 0.6.5・Avalonia 12.1.6・Microsoft.Extensions 11.0.0・xunit.v3 4.0.3）。
 - **.NET 11 で新しく有効になった解析規則に追随しました**（`CA1307` の `StringComparison`、WinForms の警告）。 動作は変わりません。
 - **CI は `actions/setup-dotnet` で `global.json` の .NET SDK を導入するようにしました**（ランナー イメージに .NET 11 SDK が含まれないため）。
 

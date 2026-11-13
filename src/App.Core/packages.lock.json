@@ -10,15 +10,15 @@
       },
       "EsUtil.Feature.ZenHan.Core": {
         "type": "Direct",
-        "requested": "[0.6.3, )",
-        "resolved": "0.6.3",
-        "contentHash": "NAAiR/ZJo1qzOqI+VD7DyMthpIzc8YkufkwPc9GkrjH4Vmp67P8Cj+/tw9qRZFGR2jBqIOEtOaNENmJAVRvvsQ=="
+        "requested": "[0.6.5, )",
+        "resolved": "0.6.5",
+        "contentHash": "/S6MOWeLw3fvHihz27XHJBfsg0DiPZbA9IAf72zz9CJzSkR1xpkcqx29dS5uMWdsdhFwjneCak2KtLLzA54qtg=="
       },
       "EsUtil.Platform.Core": {
         "type": "Direct",
-        "requested": "[0.6.3, )",
-        "resolved": "0.6.3",
-        "contentHash": "5jck282pVjqsCvoA0VIAARbsJ/tW/vdbTtpJPzF0qp1u4p0RrOW/6zCiGaVdeipGEYSublR/xhBsBQ8c+kVnZg=="
+        "requested": "[0.6.5, )",
+        "resolved": "0.6.5",
+        "contentHash": "cGGilU7BlaTrjoCyN9SlYVqg7vpHGtcz3mMseEB2acWfMvdOPyAAAPxcOjoqOdCSa2QH8+Td4Zm0oilEZMSk7A=="
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
