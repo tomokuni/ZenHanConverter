@@ -52,6 +52,12 @@
        プロパティとして切り替える（`ProjectReference` へは伝播しない）。 -->
   <PropertyGroup Condition="'$(ZenHanConverterSelfContained)' == 'true'">
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- .NET 11 は IncludeAllContentForSelfExtract を非推奨として警告する（NETSDK1244）が、
+         Windows App SDK 2.6.5 の単一ファイル配布は Dll の SxS リダイレクトのために同プロパティを要求する
+         （実測 2026-11-13: false にすると `PublishSingleFile requires IncludeAllContentForSelfExtract for
+         Dll SxS redirection` で公開が失敗する）。 警告をメッセージへ落とす
+         （抑止の理由は .github/ビルド設定規約.md 付録 A）。 -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);NETSDK1244</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <PropertyGroup>
