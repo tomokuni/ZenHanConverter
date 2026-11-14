@@ -1084,8 +1084,8 @@ foreach ($file in @(Get-ChildItem -Path $rootPaths -Recurse -File -Filter '*.cs'
     $lineNumber = 0
     foreach ($line in (Get-Lines $file.FullName)) {
         $lineNumber++
-        if ($line -match '\[\s*(assembly:\s*)?(Un)?[Ss]upportedOSPlatform\(') {
-            $platformAttrIssues.Add(("{0}:{1}  手書きのプラットフォーム属性（<SupportedOSPlatformVersion> へ寄せる）" -f $rel, $lineNumber))
+        if ($line -match '\[\s*assembly:\s*(Un)?[Ss]upportedOSPlatform\(') {
+            $platformAttrIssues.Add(("{0}:{1}  アセンブリ単位の手書き属性（下限は <SupportedOSPlatformVersion> が持つ）" -f $rel, $lineNumber))
         }
     }
 }
