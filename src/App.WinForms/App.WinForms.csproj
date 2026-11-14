@@ -15,6 +15,7 @@
     <ApplicationUseCompatibleTextRendering>false</ApplicationUseCompatibleTextRendering>
     <!-- Win32 P/Invoke（LibraryImport ソース生成）が unsafe コードを生成するため許可する -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -22,6 +23,7 @@
     <AssemblyName>ZenHanConverter.WinForms</AssemblyName>
     <Product>ZenHanConverter</Product>
     <Description>ZenHanConverter (WinForms) - full-width / half-width text converter</Description>
+  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

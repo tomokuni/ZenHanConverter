@@ -9,6 +9,7 @@
     <AssemblyName>ZenHanConverter.MewUI</AssemblyName>
     <Product>ZenHanConverter</Product>
     <Description>ZenHanConverter (MewUI) - full-width / half-width text converter</Description>
+  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

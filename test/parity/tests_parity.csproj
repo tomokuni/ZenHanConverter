@@ -19,6 +19,7 @@
       テストが結果を出さないまま停止する。テストは WinRT を使わないため初期化は不要。
     -->
     <WindowsAppSdkAutoInitialize>false</WindowsAppSdkAutoInitialize>
+  <SupportedOSPlatformVersion>10.0.18362.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

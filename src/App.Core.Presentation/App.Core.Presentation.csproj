@@ -6,6 +6,7 @@
     <AssemblyName>ZenHanConverter.App.Core.Presentation</AssemblyName>
     <Description>UI framework agnostic presentation layer (ViewModels) for ZenHanConverter</Description>
     <Copyright>Copyright (c) 2025</Copyright>
+  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

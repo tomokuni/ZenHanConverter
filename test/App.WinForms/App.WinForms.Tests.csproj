@@ -8,6 +8,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>EsUtil.ZenHanConverter.Tests.App.WinForms</RootNamespace>
     <AssemblyName>ZenHanConverter.Tests.App.WinForms</AssemblyName>
+  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>
