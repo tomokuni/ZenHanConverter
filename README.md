@@ -26,7 +26,7 @@
 - [5. クイックスタート](#5-クイックスタート)
 - [6. 設定ファイルとログ](#6-設定ファイルとログ)
 - [7. アーキテクチャとプロジェクト構成](#7-アーキテクチャとプロジェクト構成)
-- [8. 旧名からの移行](#8-旧名からの移行)
+- [8. 旧版の設定の引き継ぎ](#8-旧版の設定の引き継ぎ)
 - [9. ドキュメント](#9-ドキュメント)
 - [10. トラブルシューティングと問い合わせ](#10-トラブルシューティングと問い合わせ)
 - [11. 開発への参加](#11-開発への参加)
@@ -131,12 +131,9 @@ UI 非依存のコアと提示層（Presentation）を 4 つの UI が共有し�
 | `src/App.AvaloniaUI` / `App.MewUI` / `App.WinUI3` / `App.WinForms` | 各 UI 版アプリ | 各プロジェクトの `README.md` |
 | `test/App.*` | 単体テスト（`test/parity` は 4 UI の挙動の一致を検証） | [`test/parity/README.md`](test/parity/README.md) |
 
-## 8. 旧名からの移行
+## 8. 旧版の設定の引き継ぎ
 
-旧名は `ClipboardZenHanConverter` です。  リポジトリ名・製品名・アセンブリ名・実行ファイル名・配布物名・設定の保存先を `ZenHanConverter` へ変更しました（旧 URL は GitHub が転送します）。
-
-- 設定の保存先は `%LOCALAPPDATA%\ClipboardZenHanConverter` から `%LOCALAPPDATA%\ZenHanConverter` へ変わります。  **初回起動時に旧フォルダーの内容を新しいフォルダーへ移行**します（上書きはしません。  旧フォルダーは残るため、確認後に削除してください）。
-- 旧リポジトリの WinUI 3 版は、本リポジトリの `src/App.WinUI3` へ統合済みです。
+設定の保存先は `%LOCALAPPDATA%\ZenHanConverter` です。 **旧版の保存先（`%LOCALAPPDATA%\ClipboardZenHanConverter`）がある場合は、初回起動時にその内容を新しい保存先へコピーします**（上書きはしません。 旧フォルダーは残るため、確認後に削除してください）。
 
 ## 9. ドキュメント
 

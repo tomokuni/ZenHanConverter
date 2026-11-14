@@ -10,7 +10,7 @@
   <PropertyGroup>
     <!-- リリースバージョン。全プロジェクトで単一所有し、各 .csproj では指定しない。 -->
     <!-- 自動インクリメントは行わない。リリース前に人が上げてコミットする（.github/RELEASE.md）。 -->
-    <Version>0.5.0</Version>
+    <Version>0.5.1</Version>
 
     <!-- 本リポジトリが使う EsUtil の版（公開済みのパッケージ）。 版の値はここが単一所有し、
          Directory.Packages.props の PackageVersion と InformationalVersion が参照する

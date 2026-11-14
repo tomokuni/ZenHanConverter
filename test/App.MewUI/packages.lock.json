@@ -361,7 +361,7 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "ZenHanConverter.App.Core": "[0.5.0, )"
+          "ZenHanConverter.App.Core": "[0.5.1, )"
         }
       },
       "ZenHanConverter.MewUI": {
@@ -371,8 +371,8 @@
           "CommunityToolkit.Mvvm": "[8.4.2, )",
           "EsUtil.Feature.ColumnPacking.Core": "[0.6.5, )",
           "Microsoft.Extensions.Hosting": "[11.0.0, )",
-          "ZenHanConverter.App.Core": "[0.5.0, )",
-          "ZenHanConverter.App.Core.Presentation": "[0.5.0, )"
+          "ZenHanConverter.App.Core": "[0.5.1, )",
+          "ZenHanConverter.App.Core.Presentation": "[0.5.1, )"
         }
       },
       "Aprillz.MewUI.Windows": {
