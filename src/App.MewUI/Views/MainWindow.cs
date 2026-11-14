@@ -5,6 +5,7 @@ using EsUtil.ZenHanConverter.App.MewUI.Helpers;
 using EsUtil.ZenHanConverter.App.MewUI.Services;
 using EsUtil.Platform.Core.Geometry;
 using EsUtil.ZenHanConverter.App.Core.Models;
+using EsUtil.ZenHanConverter.App.Core.Helpers;
 using EsUtil.ZenHanConverter.App.Core.Native;
 using EsUtil.ZenHanConverter.App.Core.Presentation.ViewModels;
 
@@ -451,6 +452,16 @@ public sealed class MainWindow : Window
         navigationView.PaneDisplayMode = PaneDisplayMode.Inline;
         navigationView.PaneWidth = 100;
         navigationView.SelectedIndex = 0;
+
+        // ペインの下端に UI 名とアプリの版を 2 行で出す（選択できない Header 行として置く。
+        // 行の文字列に改行を含めるため Header にする。 書式は AppVersion が単一所有する）
+        var footerItems = new[] { new NavItem("Version", AppVersion.For("MewUI"), FluentIcons.Settings) };
+        navigationView.FooterPane.Items(
+            footerItems,
+            x => x.Text,
+            kind: _ => NavigationItemKind.Header,
+            keySelector: x => x.Tag);
+
         return navigationView;
     }
 

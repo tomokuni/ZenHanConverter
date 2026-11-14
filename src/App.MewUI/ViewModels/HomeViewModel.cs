@@ -1,7 +1,9 @@
 using EsUtil.ZenHanConverter.App.Core.Interfaces;
+using EsUtil.ZenHanConverter.App.Core.Logging;
 using EsUtil.ZenHanConverter.App.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using EsUtil.ZenHanConverter.App.Core.Presentation.ViewModels;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -21,6 +23,9 @@ namespace EsUtil.ZenHanConverter.App.MewUI.ViewModels;
 /// </remarks>
 public partial class HomeViewModel : ObservableObject, IDisposable
 {
+    /// <summary>ロガー（バックグラウンドの変換は画面に出ないため、記録で追えるようにする）。</summary>
+    private static readonly ILogger s_logger = AppLog.CreateLogger(nameof(HomeViewModel));
+
     /// <summary>テキスト変換器（DIP: ITextConverter）。</summary>
     private readonly ITextConverter _converter;
     /// <summary>クリップボードサービス（DIP: IClipboardService）。</summary>
@@ -90,7 +95,9 @@ public partial class HomeViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or UnauthorizedAccessException)
         {
-            // バックグラウンド時などクリップボードアクセスが拒否されるケースは想定内の通常動作。
+            // バックグラウンド時などクリップボードアクセスが拒否されるケースは想定内だが、
+            // 握りつぶさず記録する（「変換されない」をログから追えるようにする）
+            s_logger.LogClipboardAccessFailed(ex, "読み取りまたは書き戻し");
         }
     }
 
@@ -108,25 +115,47 @@ public partial class HomeViewModel : ObservableObject, IDisposable
     private async Task HandleClipboardChangeAsync()
     {
         if (_isUpdatingClipboard || !_appSetting.IsClipboardConvertEnabled)
+        {
+            s_logger.LogClipboardConversionSkipped("変換が無効、または書き戻し中");
             return;
+        }
 
         var text = await _clipboardService.GetTextAsync();
-        if (string.IsNullOrEmpty(text) || string.Equals(ConvertedText, text, StringComparison.Ordinal))
+        if (string.IsNullOrEmpty(text))
+        {
+            s_logger.LogClipboardConversionSkipped("テキストが空");
             return;
+        }
+
+        // 内容は記録しない（機密が含まれ得るため、文字数だけで切り分ける）
+        s_logger.LogClipboardChanged(text.Length);
+
+        if (string.Equals(ConvertedText, text, StringComparison.Ordinal))
+        {
+            s_logger.LogClipboardConversionSkipped("表示中の変換結果と同じ");
+            return;
+        }
 
         // await 中に無効化された場合は、読み取り結果を破棄してクリップボードに触れない。
         if (!_appSetting.IsClipboardConvertEnabled)
+        {
+            s_logger.LogClipboardConversionSkipped("読み取り中に変換が無効化された");
             return;
+        }
 
         BeforeText = text;
         if (string.Equals(ConvertedText, HomeDisplayText.NoChange, StringComparison.Ordinal))
+        {
+            s_logger.LogClipboardConversionSkipped("変換しても内容が変わらない");
             return;
+        }
 
         try
         {
             _isUpdatingClipboard = true;
             _clipboardService.SetText(ConvertedText);
             _clipboardService.Flush();
+            s_logger.LogClipboardConverted(text.Length, ConvertedText.Length);
         }
         finally
         {

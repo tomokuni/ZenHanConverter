@@ -79,6 +79,15 @@
                 <!-- アイコンは FluentIcons（Core の SVG パスデータ）をコードから設定し、MewUI 版と形状を揃える -->
                 <NavigationViewItem x:Name="HomeNavItem" Content="ホーム" Tag="Home" IsSelected="True"/>
             </NavigationView.MenuItems>
+            <!-- UI 名とアプリの版（2 行）。 折りたたみ時は幅が足りないため、PaneOpened/PaneClosed で表示を切り替える -->
+            <NavigationView.PaneFooter>
+                <TextBlock x:Name="VersionText"
+                           Margin="12,4,8,8"
+                           FontSize="11"
+                           Opacity="0.7"
+                           TextWrapping="Wrap"
+                           Visibility="Collapsed"/>
+            </NavigationView.PaneFooter>
             <Grid x:Name="contentFrame"/>
         </NavigationView>
     </Grid>

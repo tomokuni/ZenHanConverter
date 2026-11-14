@@ -1,6 +1,7 @@
 using EsUtil.ZenHanConverter.App.WinUI3.Helpers;
 using EsUtil.ZenHanConverter.App.WinUI3.ViewModels;
 using EsUtil.Platform.Core.Geometry;
+using EsUtil.ZenHanConverter.App.Core.Helpers;
 using EsUtil.ZenHanConverter.App.Core.Models;
 using EsUtil.ZenHanConverter.App.Core.Native;
 using EsUtil.ZenHanConverter.App.Core.Presentation.ViewModels;
@@ -55,6 +56,11 @@ public sealed partial class MainWindow : Window
 
         ApplyNavigationIcons();
         BindPresetSelector();
+        UpdateVersionText();
+
+        // 折りたたみ時は 2 行の版表示が入らないため、ペインの開閉に追随して表示を切り替える
+        navigationView.PaneOpened += (_, _) => VersionText.Visibility = Visibility.Visible;
+        navigationView.PaneClosed += (_, _) => VersionText.Visibility = Visibility.Collapsed;
 
         // SettingsItem は NavigationView のテンプレート適用時に生成されるため、ロード後にも設定する
         this.RootGrid.Loaded += (_, _) => ApplyNavigationIcons();
@@ -118,6 +124,10 @@ public sealed partial class MainWindow : Window
         if (navigationView.SettingsItem is NavigationViewItem settingsItem)
             settingsItem.Icon = new PathIcon { Data = FluentIcons.Settings };
     }
+
+    /// <summary>ペイン下端の UI 名とアプリの版を設定します。</summary>
+    /// <remarks>書式（2 行・<c>v</c> の付け方）は AppVersion が単一所有します。</remarks>
+    private void UpdateVersionText() => VersionText.Text = AppVersion.For("WinUI3");
 
     /// <summary>ウィンドウアクティブ化時に AppSetting からサイズと位置を復元します。</summary>
     /// <remarks>処理フロー: <br/>
