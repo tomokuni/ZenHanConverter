@@ -8,6 +8,7 @@
     <Copyright>Copyright (c) 2025</Copyright>
     <!-- Win32 P/Invoke（LibraryImport ソース生成）が unsafe コードを生成するため許可する -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -66,6 +66,9 @@ public partial class MainWindow : Window
         AppSetting = appSetting;
         DataContext = viewModel;
 
+        // ナビゲーション ペインの下端に UI 名とアプリの版を 2 行で出す（書式は AppVersion が単一所有する）
+        VersionText.Text = AppVersion.For("AvaloniaUI");
+
         // 保存済みのサイズを初期値として適用（位置は表示後に適用する）
         Width = appSetting.WindowWidth;
         Height = appSetting.WindowHeight;
@@ -176,6 +179,8 @@ public partial class MainWindow : Window
         _isNavPaneExpanded = !_isNavPaneExpanded;
         NavPane.Width = _isNavPaneExpanded ? NavPaneExpandedWidth : NavPaneCompactWidth;
         NavList.Classes.Set("compact", !_isNavPaneExpanded);
+        // 折りたたみ時は 2 行の版表示が入らないため隠す（アイコンだけの幅に収める）
+        VersionText.IsVisible = _isNavPaneExpanded;
     }
 
     /// <summary>ウィンドウを最小化します。</summary>

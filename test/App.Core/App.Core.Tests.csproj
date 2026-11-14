@@ -6,6 +6,7 @@
     <IsPackable>false</IsPackable>
     <RootNamespace>EsUtil.ZenHanConverter.Tests.App.Core</RootNamespace>
     <AssemblyName>ZenHanConverter.Tests.App.Core</AssemblyName>
+  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

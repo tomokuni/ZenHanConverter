@@ -2,7 +2,6 @@ using EsUtil.Platform.Core.Coord;
 using EsUtil.Platform.Core.Geometry;
 using EsUtil.Platform.Core.Native.Win;
 using System;
-using System.Runtime.Versioning;
 
 namespace EsUtil.ZenHanConverter.App.Core.Native;
 
@@ -20,7 +19,6 @@ namespace EsUtil.ZenHanConverter.App.Core.Native;
 /// 注意点: <br/>
 /// - <see cref="WinVirtualScreen"/> は Windows 専用のため、本クラスも Windows でのみ動作します
 /// </remarks>
-[SupportedOSPlatform("windows10.0.17763")]
 public static class ScreenVisibleArea
 {
     /// <summary>仮想画面の外接矩形を DIP（論理ピクセル）で取得します。</summary>

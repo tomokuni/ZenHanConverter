@@ -12,6 +12,7 @@
       実行時 XAML ローダー（avares スキームでの読み込み）は使用しないため、その警告のみ抑止します。
     -->
     <NoWarn>$(NoWarn);AVLN3001</NoWarn>
+  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -19,6 +20,7 @@
     <AssemblyName>ZenHanConverter.AvaloniaUI</AssemblyName>
     <Product>ZenHanConverter</Product>
     <Description>ZenHanConverter (Avalonia UI) - full-width / half-width text converter</Description>
+  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

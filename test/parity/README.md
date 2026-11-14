@@ -73,15 +73,15 @@ dotnet test --project test\parity\tests_parity.csproj
 > OS のドラッグ操作を開始し、リサイズはフォームが `Padding` で確保した外周で `WM_NCHITTEST` に応答します。
 > 子コントロールが覆う領域には `WM_NCHITTEST` が届かないため、このように役割を分けています。
 
-## 6. 実装済みの一致（旧・意図的な差分）
+## 6. 4 UI 版で揃えている挙動
 
-以下は MewUI 版にのみ存在した機能で、他の UI へ移植して挙動を揃えました。
+次の機能は 4 UI 版とも同じように動作します（実装は各 UI 版が持ち、設定と判定は共有コアが単一所有します）。
 
-| 機能 | 状態 |
+| 機能 | 揃え方 |
 | --- | --- |
-| クリップボード変換の有効/無効トグル | WinUI 版・Avalonia UI 版・WinForms 版へ追加（タイトルバー。`AppSetting.IsClipboardConvertEnabled` を共有） |
-| ウィンドウ位置の保存・復元・画面外補正 | WinUI 版・Avalonia UI 版・WinForms 版へ追加（DPI 換算して保存し、Core の `ScreenVisibleArea` で補正） |
-| 変換前テキストボックスの編集 | WinUI 版を編集可能に変更（`LineNumberTextBox.IsReadOnly` の既定値が `true` のため `IsReadOnly="False"` を明示） |
-| 置換ルールの即時検証 | MewUI 版・WinUI 3 版へ追加（`ReplacePairItem` の変更通知を `SettingsViewModel` が購読する実装へ統一。旧 MewUI 版は View 側で検証していた） |
-| ホーム画面の上下 2 分割 | 全 UI へ追加（上下の比率を保持するため、ウィンドウの高さを変えても比率が維持されます） |
-| 全角/半角変換の常時有効化 | 全 UI から変換の有効/無効スイッチを削除（`IsEnabledZenHan` は画面側で参照しない） |
+| クリップボード変換の有効/無効トグル | 4 UI 版ともタイトルバーに置き、`AppSetting.IsClipboardConvertEnabled` を共有する |
+| ウィンドウ位置の保存・復元・画面外補正 | 4 UI 版とも DPI 換算して保存し、Core の `ScreenVisibleArea` で補正する |
+| 変換前テキストボックスの編集 | 4 UI 版とも編集できる（WinUI 3 は `LineNumberTextBox.IsReadOnly` の既定が `true` のため `IsReadOnly="False"` を明示する） |
+| 置換ルールの即時検証 | 4 UI 版とも `ReplacePairItem` の変更通知を `SettingsViewModel` が購読して検証する |
+| ホーム画面の上下 2 分割 | 4 UI 版とも上下の比率を保持し、ウィンドウの高さを変えても比率を維持する |
+| 全角/半角変換の常時有効化 | 4 UI 版とも変換の有効/無効スイッチを画面に置かない（`IsEnabledZenHan` は画面側で参照しない） |

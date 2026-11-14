@@ -42,25 +42,6 @@ UI フレームワークの型を一切参照せず、`src/App.Core` と `Commun
 逆方向の依存はありません。Presentation 層は UI の型（`Control` / `Window` / `Dispatcher` 等）を参照しないため、
 ヘッドレスで単体テストできます。
 
-## 共通化の経緯と効果
-
-共通化前は、同じ ViewModel が 4 つのアプリに重複していました。
-
-| 型 | App.MewUI | App.WinUI3 | App.AvaloniaUI | App.WinForms | 計 |
-| --- | --- | --- | --- | --- | --- |
-| `SettingsViewModel` | 242 行 | 246 行 | 277 行 | 277 行 | 1042 行 |
-| `ZenHanConvertItem` | 92 行 | 92 行 | 143 行 | 143 行 | 470 行 |
-| `ReplacePairItem` | 55 行 | 51 行 | 58 行 | 58 行 | 222 行 |
-| `PresetEditDialogViewModel` | — | — | 161 行 | 161 行 | 322 行 |
-| `SegmentOption` | — | — | 38 行 | 38 行 | 76 行 |
-| **計** | | | | | **2132 行** |
-
-実装は 2 系統（MewUI 版 ≡ WinUI 3 版 / Avalonia UI 版 ≡ WinForms 版）に分かれており、
-系統内の差異は名前空間の行のみ、系統間の差異は `Options`（選択肢ごとのバインド）の有無でした。
-機能差も生じており、MewUI 版・WinUI 3 版は置換ルールの編集が即時検証されない状態でした。
-
-1 実装へ統一した結果、**2132 行 → 677 行（−1455 行）** となり、機能差も解消しています。
-
 ## アーキテクチャ
 
 ```mermaid

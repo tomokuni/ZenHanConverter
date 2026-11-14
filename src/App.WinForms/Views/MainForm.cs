@@ -102,6 +102,9 @@ public sealed class MainForm : Form
     /// <summary>ナビゲーションペイン。</summary>
     private readonly ListBox _navList = new();
 
+    /// <summary>ナビゲーションペインの下端に出す UI 名とアプリの版（2 行）。</summary>
+    private readonly Label _navFooter = new();
+
     /// <summary>ナビゲーションペインの開閉ボタン。</summary>
     private readonly Button _navToggleButton = new();
 
@@ -183,6 +186,7 @@ public sealed class MainForm : Form
 
         var body = new Panel { Dock = DockStyle.Fill };
         body.Controls.Add(_contentHost);
+        body.Controls.Add(_navFooter);
         body.Controls.Add(_navList);
 
         Controls.Add(body);
@@ -297,11 +301,23 @@ public sealed class MainForm : Form
 
         _navList.Width = (int)Math.Round(logicalWidth * scale);
         _navList.Invalidate();
+
+        // 折りたたみ時は 2 行の版表示が入らないため隠す（アイコンだけの幅に収める）
+        _navFooter.Visible = _isNavPaneExpanded;
     }
 
     /// <summary>ナビゲーションペインを構築します。</summary>
     private void BuildNavigationPane()
     {
+        // 下端の版表示は Dock=Bottom で先に追加する（後から足すと Left の一覧が下まで伸びて隠れる）
+        _navFooter.Dock = DockStyle.Bottom;
+        _navFooter.Height = (int)Math.Round(AppTheme.NavFooterHeight * (DeviceDpi / 96.0));
+        _navFooter.TextAlign = ContentAlignment.MiddleCenter;
+        _navFooter.Font = new Font(_navFooter.Font.FontFamily, 8.25f);
+        _navFooter.ForeColor = AppTheme.NavFooterForeground;
+        _navFooter.BackColor = AppTheme.NavPaneBackground;
+        _navFooter.Text = AppVersion.For("WinForms");
+
         _navList.Dock = DockStyle.Left;
         _navList.BorderStyle = BorderStyle.None;
         _navList.BackColor = AppTheme.NavPaneBackground;

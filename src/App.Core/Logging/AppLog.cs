@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using EsUtil.ZenHanConverter.App.Core.Helpers;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
@@ -40,6 +41,16 @@ public static partial class AppLog
     /// <remarks>拡張子の直前に Serilog が日付を入れるため、<c>.</c> を 2 つ置きます（<c>..log</c>）。</remarks>
     public static string GetLogFilePath(string assemblyName)
         => Path.Combine(Folder, assemblyName + "..log");
+
+    /// <summary>カテゴリ名を指定してロガーを作成します。</summary>
+    /// <param name="categoryName">ロガー カテゴリ名（例: <c>HomeViewModel</c>）。</param>
+    /// <returns>ロガー。 <see cref="Initialize"/> より前や、ログを書けない環境では何も出力しません。</returns>
+    /// <remarks>
+    /// <b>初期化前に呼んでも安全です</b>: 未初期化（およびテスト）では <c>NullLogger</c> を返し、
+    /// 呼び出し側の分岐を増やしません。
+    /// </remarks>
+    public static ILogger CreateLogger(string categoryName)
+        => s_factory?.CreateLogger(categoryName) ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
     /// <summary>実行環境の値（OS と .NET）を組み立てます。</summary>
     /// <returns>OS の版とアーキテクチャ、実行している .NET の版。</returns>
@@ -150,13 +161,53 @@ public static partial class AppLog
     /// <param name="logger">ロガー。</param>
     /// <param name="version">アプリの版。</param>
     /// <remarks>LogLevel: Information / 出力書式: <c>アプリケーション起動 (version={Version})</c></remarks>
-    public static void LogAppStart(this ILogger logger, string version) => logger.LogAppStartCore(Prefix, version);
+    public static void LogAppStart(this ILogger logger, string version) => logger.LogAppStartCore(Prefix, version, AppVersion.EsUtilVersion);
 
     /// <summary>アプリの終了を記録します。</summary>
     /// <param name="logger">ロガー。</param>
     /// <param name="exitCode">終了コード。</param>
     /// <remarks>LogLevel: Information / 出力書式: <c>アプリケーション終了 (exitCode={ExitCode})</c></remarks>
     public static void LogAppExit(this ILogger logger, int exitCode) => logger.LogAppExitCore(Prefix, exitCode);
+
+    /// <summary>クリップボードの変更を検出したことを記録します。</summary>
+    /// <param name="logger">ロガー。</param>
+    /// <param name="length">取得したテキストの文字数。</param>
+    /// <remarks>
+    /// LogLevel: Debug / 出力書式: <c>クリップボードの変更を検出: 文字数={Length}</c><br/>
+    /// <b>内容は記録しません</b>（利用者のコピーした文字列には機密が含まれ得るため。 文字数だけで切り分けられます）。
+    /// </remarks>
+    public static void LogClipboardChanged(this ILogger logger, int length)
+        => logger.LogClipboardChangedCore(Prefix, length);
+
+    /// <summary>クリップボードの変換結果を記録します。</summary>
+    /// <param name="logger">ロガー。</param>
+    /// <param name="beforeLength">変換前の文字数。</param>
+    /// <param name="afterLength">変換後の文字数。</param>
+    /// <remarks>
+    /// LogLevel: Debug / 出力書式: <c>クリップボードを変換しました: 文字数 {BeforeLength} → {AfterLength}</c><br/>
+    /// <b>内容は記録しません</b>（利用者のコピーした文字列には機密が含まれ得るため）。
+    /// </remarks>
+    public static void LogClipboardConverted(this ILogger logger, int beforeLength, int afterLength)
+        => logger.LogClipboardConvertedCore(Prefix, beforeLength, afterLength);
+
+    /// <summary>クリップボード変換を中止した理由を記録します。</summary>
+    /// <param name="logger">ロガー。</param>
+    /// <param name="reason">中止した理由。</param>
+    /// <remarks>LogLevel: Debug / 出力書式: <c>クリップボード変換を中止: {Reason}</c></remarks>
+    public static void LogClipboardConversionSkipped(this ILogger logger, string reason)
+        => logger.LogClipboardConversionSkippedCore(Prefix, reason);
+
+    /// <summary>クリップボードへアクセスできなかったことを記録します。</summary>
+    /// <param name="logger">ロガー。</param>
+    /// <param name="ex">発生した例外。</param>
+    /// <param name="operation">失敗した操作（読み取り / 書き戻し）。</param>
+    /// <remarks>
+    /// LogLevel: Warning / 出力書式: <c>クリップボードへアクセスできませんでした: {Operation}</c><br/>
+    /// バックグラウンド時のアクセス拒否は想定内ですが、<b>握りつぶさず記録します</b>
+    /// （「変換されない」報告をログから追えるようにするため。 [`.github/例外処理規約.md`](../../../.github/例外処理規約.md) §4）。
+    /// </remarks>
+    public static void LogClipboardAccessFailed(this ILogger logger, Exception ex, string operation)
+        => logger.LogClipboardAccessFailedCore(Prefix, ex, operation);
 
     /// <summary>未処理の例外を記録します。</summary>
     /// <param name="logger">ロガー。</param>
@@ -247,12 +298,14 @@ public static partial class AppLog
     /// <param name="logger">ロガー。</param>
     /// <param name="prefix">接頭辞。</param>
     /// <param name="version">アプリの版。</param>
+    /// <param name="esUtilVersion">使っている EsUtil の版。</param>
     /// <remarks>
     /// LogLevel: Information <br/>
-    /// 出力書式: <c>{Prefix} アプリケーション起動 (version={Version})</c>
+    /// 出力書式: <c>{Prefix} アプリケーション起動 (version={Version}, esutil={EsUtilVersion})</c><br/>
+    /// 使っている EsUtil の版も残します（パッケージ参照のため、ログだけでは版が分かりません）。
     /// </remarks>
-    [LoggerMessage(LogLevel.Information, "{Prefix} アプリケーション起動 (version={Version})")]
-    private static partial void LogAppStartCore(this ILogger logger, string prefix, string version);
+    [LoggerMessage(LogLevel.Information, "{Prefix} アプリケーション起動 (version={Version}, esutil={EsUtilVersion})")]
+    private static partial void LogAppStartCore(this ILogger logger, string prefix, string version, string esUtilVersion);
 
     /// <summary>終了を記録します。</summary>
     /// <param name="logger">ロガー。</param>
@@ -264,6 +317,52 @@ public static partial class AppLog
     /// </remarks>
     [LoggerMessage(LogLevel.Information, "{Prefix} アプリケーション終了 (exitCode={ExitCode})")]
     private static partial void LogAppExitCore(this ILogger logger, string prefix, int exitCode);
+
+    /// <summary>クリップボードの変更を検出したことを記録します。</summary>
+    /// <param name="logger">ロガー。</param>
+    /// <param name="prefix">接頭辞。</param>
+    /// <param name="length">取得したテキストの文字数。</param>
+    /// <remarks>
+    /// LogLevel: Debug <br/>
+    /// 出力書式: <c>{Prefix} クリップボードの変更を検出: 文字数={Length}</c>
+    /// </remarks>
+    [LoggerMessage(LogLevel.Debug, "{Prefix} クリップボードの変更を検出: 文字数={Length}")]
+    private static partial void LogClipboardChangedCore(this ILogger logger, string prefix, int length);
+
+    /// <summary>クリップボードの変換結果を記録します。</summary>
+    /// <param name="logger">ロガー。</param>
+    /// <param name="prefix">接頭辞。</param>
+    /// <param name="beforeLength">変換前の文字数。</param>
+    /// <param name="afterLength">変換後の文字数。</param>
+    /// <remarks>
+    /// LogLevel: Debug <br/>
+    /// 出力書式: <c>{Prefix} クリップボードを変換しました: 文字数 {BeforeLength} → {AfterLength}</c>
+    /// </remarks>
+    [LoggerMessage(LogLevel.Debug, "{Prefix} クリップボードを変換しました: 文字数 {BeforeLength} → {AfterLength}")]
+    private static partial void LogClipboardConvertedCore(this ILogger logger, string prefix, int beforeLength, int afterLength);
+
+    /// <summary>クリップボード変換を中止した理由を記録します。</summary>
+    /// <param name="logger">ロガー。</param>
+    /// <param name="prefix">接頭辞。</param>
+    /// <param name="reason">中止した理由。</param>
+    /// <remarks>
+    /// LogLevel: Debug <br/>
+    /// 出力書式: <c>{Prefix} クリップボード変換を中止: {Reason}</c>
+    /// </remarks>
+    [LoggerMessage(LogLevel.Debug, "{Prefix} クリップボード変換を中止: {Reason}")]
+    private static partial void LogClipboardConversionSkippedCore(this ILogger logger, string prefix, string reason);
+
+    /// <summary>クリップボードへアクセスできなかったことを記録します。</summary>
+    /// <param name="logger">ロガー。</param>
+    /// <param name="prefix">接頭辞。</param>
+    /// <param name="ex">発生した例外。</param>
+    /// <param name="operation">失敗した操作。</param>
+    /// <remarks>
+    /// LogLevel: Warning <br/>
+    /// 出力書式: <c>{Prefix} クリップボードへアクセスできませんでした: {Operation}</c>（例外はスタックトレース込み）
+    /// </remarks>
+    [LoggerMessage(LogLevel.Warning, "{Prefix} クリップボードへアクセスできませんでした: {Operation}")]
+    private static partial void LogClipboardAccessFailedCore(this ILogger logger, string prefix, Exception ex, string operation);
 
     /// <summary>未処理の例外を記録します。</summary>
     /// <param name="logger">ロガー。</param>

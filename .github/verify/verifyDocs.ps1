@@ -1024,8 +1024,13 @@ $readmeRequired = @(
     [pscustomobject]@{ Name = 'ライセンス'; Pattern = 'ライセンス' }
 )
 $readmeIssues = [System.Collections.Generic.List[string]]::new()
-foreach ($f in @(Get-ChildItem -Path $rootPaths -Recurse -File -Filter 'README.md' |
-        Where-Object { $_.FullName -notmatch '[\\/](obj|bin|sample)[\\/]' })) {
+# リポジトリ ルートの README も同じ必須節を持つ（ドキュメント規約 §3。 索引であっても 5 節は要る）
+$readmeRoot = Join-Path $repoRoot 'README.md'
+$readmeFiles = @()
+if (Test-Path $readmeRoot) { $readmeFiles += Get-Item $readmeRoot }
+$readmeFiles += @(Get-ChildItem -Path $rootPaths -Recurse -File -Filter 'README.md' |
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin|sample)[\\/]' })
+foreach ($f in $readmeFiles) {
     $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
     # `src/README.md` は層構成の文書（ドキュメント規約 §2 の例外）
     if ($rel -eq "$($rootNames[0])/README.md") { continue }
@@ -1070,6 +1075,22 @@ foreach ($f in @(Get-ChildItem -Path $rootPaths -Recurse -File -Filter 'SPEC_Sys
 Add-Result 'SPEC_System の必須節' ($sysIssues.Count -eq 0) "$($sysIssues.Count) 件"
 $sysIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 
+# 8z) 手書きのプラットフォーム属性（ビルド設定規約 §5。 下限は <SupportedOSPlatformVersion> が単一所有する）
+#     属性は AllowMultiple のため、手書きが残っていてもビルドは通り、下限を下げても CA1416 が出ないまま古い下限が効く。
+$platformAttrIssues = [System.Collections.Generic.List[string]]::new()
+foreach ($file in @(Get-ChildItem -Path $rootPaths -Recurse -File -Filter '*.cs' |
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' })) {
+    $rel = $file.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
+    $lineNumber = 0
+    foreach ($line in (Get-Lines $file.FullName)) {
+        $lineNumber++
+        if ($line -match '\[\s*assembly:\s*(Un)?[Ss]upportedOSPlatform\(') {
+            $platformAttrIssues.Add(("{0}:{1}  アセンブリ単位の手書き属性（下限は <SupportedOSPlatformVersion> が持つ）" -f $rel, $lineNumber))
+        }
+    }
+}
+Add-Result 'プラットフォーム属性' ($platformAttrIssues.Count -eq 0) "$($platformAttrIssues.Count) 件"
+$platformAttrIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 # 8t) テストの `{対象}` の実在（テスト規約 §2。 削除・改名した対象のテストを残さない）
 #     `{対象}` は実在のソース（ファイル名または型名）と一致するか、その名前で始まる（`<対象><観点>` を許す）。
 $rxTestFileName = [regex]'(?<target>.+)\.Tests\.cs$'

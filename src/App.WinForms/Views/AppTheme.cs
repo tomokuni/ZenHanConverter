@@ -94,6 +94,12 @@ internal static class AppTheme
     /// <summary>ナビゲーション項目のアイコンと文字の間隔（論理ピクセル）。</summary>
     internal const int NavIconSpacing = 10;
 
+    /// <summary>ナビゲーション ペインの下端に出す UI 名とバージョンの高さ（論理ピクセル）。</summary>
+    internal const int NavFooterHeight = 40;
+
+    /// <summary>ナビゲーション ペインの下端に出す UI 名とバージョンの文字色。</summary>
+    internal static readonly Color NavFooterForeground = Color.FromArgb(0x60, 0x60, 0x60);
+
     /// <summary>トグルスイッチのトラックの幅（論理ピクセル）。</summary>
     internal const int SwitchTrackWidth = 40;
 

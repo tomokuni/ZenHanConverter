@@ -109,26 +109,37 @@
                         Background="#F6F8FA"
                         BorderBrush="#E1E1E1"
                         BorderThickness="0,0,1,0">
-                    <ListBox x:Name="NavList"
-                             ItemsSource="{Binding NavItems}"
-                             SelectedItem="{Binding SelectedNavItem, Mode=TwoWay}"
-                             Background="Transparent"
-                             BorderThickness="0">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="vm:NavigationItem">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <!-- アイコン色はテーマの主要テキスト色を継承させ、選択状態やダークテーマに追従させる -->
-                                    <Path Data="{Binding Icon}"
-                                          Width="16"
-                                          Height="16"
-                                          Stretch="Uniform"
-                                          Fill="{DynamicResource TextControlForeground}"
-                                          VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <Grid RowDefinitions="*,Auto">
+                        <ListBox x:Name="NavList"
+                                 Grid.Row="0"
+                                 ItemsSource="{Binding NavItems}"
+                                 SelectedItem="{Binding SelectedNavItem, Mode=TwoWay}"
+                                 Background="Transparent"
+                                 BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:NavigationItem">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <!-- アイコン色はテーマの主要テキスト色を継承させ、選択状態やダークテーマに追従させる -->
+                                        <Path Data="{Binding Icon}"
+                                              Width="16"
+                                              Height="16"
+                                              Stretch="Uniform"
+                                              Fill="{DynamicResource TextControlForeground}"
+                                              VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <!-- UI 名とアプリの版（2 行）。 折りたたみ時は幅が足りないため非表示にする -->
+                        <TextBlock x:Name="VersionText"
+                                   Grid.Row="1"
+                                   Margin="4,2,4,8"
+                                   FontSize="11"
+                                   TextAlignment="Center"
+                                   Opacity="0.7"
+                                   TextWrapping="Wrap" />
+                    </Grid>
                 </Border>
 
                 <ContentControl Grid.Column="1" Content="{Binding CurrentView}" />
