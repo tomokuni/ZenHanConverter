@@ -72,7 +72,7 @@
 ## 3. システム要件
 
 - .NET 11 SDK（ビルド時）
-- Windows Server 2022 / Windows 11（ビルド 20348）以降（対象フレームワーク `net11.0-windows10.0.20348.0`）
+- Windows 10 バージョン 1809（ビルド 17763）以降（対象フレームワーク `net11.0-windows10.0.17763.0`）
 - x64
 - Windows App Runtime **2.6.5 以降（x64）** が必要です（版は [`Directory.Packages.props`](../../Directory.Packages.props) の `Microsoft.WindowsAppSDK` が単一所有します）。 AOT 版は同梱せず、起動時に有無を確認して無ければ `EsUtil.Ui.WinUI3.Interop` の `WindowsAppRuntimeBootstrap` が導入します（.NET ランタイムは自己完結）。 同梱した Single 版は導入不要です
 
