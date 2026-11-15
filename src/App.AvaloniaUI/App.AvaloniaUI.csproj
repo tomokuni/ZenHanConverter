@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <PlatformTarget>x64</PlatformTarget>
-    <TargetFramework>net11.0-windows10.0.17763.0</TargetFramework>
+    <TargetFramework>net11.0-windows10.0.20348.0</TargetFramework>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- コンパイル時バインディングを既定にし、実行時リフレクション（AOT 非互換）を排除する -->
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
@@ -12,7 +12,6 @@
       実行時 XAML ローダー（avares スキームでの読み込み）は使用しないため、その警告のみ抑止します。
     -->
     <NoWarn>$(NoWarn);AVLN3001</NoWarn>
-  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -20,7 +19,6 @@
     <AssemblyName>ZenHanConverter.AvaloniaUI</AssemblyName>
     <Product>ZenHanConverter</Product>
     <Description>ZenHanConverter (Avalonia UI) - full-width / half-width text converter</Description>
-  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

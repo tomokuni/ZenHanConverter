@@ -825,6 +825,95 @@ foreach ($f in $allCs) {
 Add-Result 'フィールドとインターフェースの命名' ($namingIssues.Count -eq 0) "$($namingIssues.Count) 件"
 $namingIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 
+# 8j-3) 識別子は ASCII（命名規約 §1「コメントとドキュメントは日本語で書き、識別子は英語にする」）
+#     コメントと文字列・文字リテラルを除いた残りに非 ASCII が在れば、それは識別子である。
+#     （実測 2026-11-15: ログ文言の日本語化で、文字列だけでなく公開イベント名まで置換され、
+#       `CancelRequested` が日本語の識別子になったまま公開された）。
+#     テストとサンプルは対象外（テスト メソッド名は日本語のタイトルを使う。 [テスト規約]）。
+$asciiIssues = [System.Collections.Generic.List[string]]::new()
+foreach ($f in $allCs) {
+    if ($f.FullName -match '[\\/](tests|sample)[\\/]') { continue }
+    if ($f.Name -match '\.g\.cs$|AssemblyInfo\.cs$') { continue }
+    $rel = $f.FullName.Substring($repoRoot.Length + 1).Replace('\', '/')
+    $s = Get-Text $f.FullName
+    $code = [Text.StringBuilder]::new($s.Length)
+    $i = 0
+    $state = 0          # 0=コード 1=行コメント 2=ブロック コメント 3=文字列 4=逐語的文字列 5=文字リテラル
+    $interpolated = $false
+    while ($i -lt $s.Length) {
+        $c = $s[$i]
+        $next = if ($i + 1 -lt $s.Length) { $s[$i + 1] } else { [char]0 }
+        $keep = ($c -eq "`r" -or $c -eq "`n")
+        switch ($state) {
+            0 {
+                if ($c -eq '/' -and $next -eq '/') { $state = 1; [void]$code.Append('  '); $i += 2; continue }
+                if ($c -eq '/' -and $next -eq '*') { $state = 2; [void]$code.Append('  '); $i += 2; continue }
+                if ($c -eq '$' -and $next -eq '"') { $state = 3; $interpolated = $true; [void]$code.Append('  '); $i += 2; continue }
+                if ($c -eq '@' -and $next -eq '"') { $state = 4; [void]$code.Append('  '); $i += 2; continue }
+                if ($c -eq '"') { $state = 3; $interpolated = $false; [void]$code.Append(' '); $i++; continue }
+                if ($c -eq "'") { $state = 5; [void]$code.Append(' '); $i++; continue }
+                [void]$code.Append($c); $i++; continue
+            }
+            1 {
+                if ($keep) { $state = 0; [void]$code.Append($c) } else { [void]$code.Append(' ') }
+                $i++; continue
+            }
+            2 {
+                if ($c -eq '*' -and $next -eq '/') { $state = 0; [void]$code.Append('  '); $i += 2; continue }
+                [void]$code.Append($(if ($keep) { $c } else { ' ' })); $i++; continue
+            }
+            3 {
+                if ($c -eq '\' -and $i + 1 -lt $s.Length) { [void]$code.Append('  '); $i += 2; continue }
+                if ($c -eq '"') { $state = 0; [void]$code.Append(' '); $i++; continue }
+                # 補間の穴 `{...}` は中に文字列を持つため、波かっこの深さを数えて丸ごと潰す
+                if ($interpolated -and $c -eq '{' -and $next -ne '{') {
+                    $depth = 0
+                    while ($i -lt $s.Length) {
+                        $h = $s[$i]
+                        $hn = if ($i + 1 -lt $s.Length) { $s[$i + 1] } else { [char]0 }
+                        if ($h -eq '{') { $depth++ }
+                        elseif ($h -eq '}') { $depth-- }
+                        if ($h -eq '"') {
+                            [void]$code.Append(' '); $i++
+                            while ($i -lt $s.Length -and $s[$i] -ne '"') {
+                                [void]$code.Append($(if ($s[$i] -eq "`r" -or $s[$i] -eq "`n") { $s[$i] } else { ' ' })); $i++
+                            }
+                            if ($i -lt $s.Length) { [void]$code.Append(' '); $i++ }
+                            continue
+                        }
+                        [void]$code.Append($(if ($h -eq "`r" -or $h -eq "`n") { $h } else { ' ' }))
+                        $i++
+                        if ($depth -le 0) { break }
+                    }
+                    continue
+                }
+                if ($interpolated -and $c -eq '{' -and $next -eq '{') { [void]$code.Append('  '); $i += 2; continue }
+                [void]$code.Append($(if ($keep) { $c } else { ' ' })); $i++; continue
+            }
+            4 {
+                if ($c -eq '"' -and $next -eq '"') { [void]$code.Append('  '); $i += 2; continue }
+                if ($c -eq '"') { $state = 0; [void]$code.Append(' '); $i++; continue }
+                [void]$code.Append($(if ($keep) { $c } else { ' ' })); $i++; continue
+            }
+            5 {
+                if ($c -eq '\' -and $i + 1 -lt $s.Length) { [void]$code.Append('  '); $i += 2; continue }
+                if ($c -eq "'") { $state = 0; [void]$code.Append(' '); $i++; continue }
+                [void]$code.Append($(if ($keep) { $c } else { ' ' })); $i++; continue
+            }
+        }
+    }
+    $codeLines = $code.ToString() -split "`r?`n"
+    for ($k = 0; $k -lt $codeLines.Count; $k++) {
+        # プリプロセッサ指令（`#region` の説明文など）は識別子ではない
+        if ($codeLines[$k].TrimStart().StartsWith('#')) { continue }
+        if ($codeLines[$k] -match '[^\x00-\x7F]') {
+            $asciiIssues.Add(("{0}:{1}  識別子に非 ASCII 文字（識別子は英語にする）: {2}" -f $rel, ($k + 1), $codeLines[$k].Trim()))
+        }
+    }
+}
+Add-Result '識別子は ASCII' ($asciiIssues.Count -eq 0) "$($asciiIssues.Count) 件"
+$asciiIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
+
 # 8k) イベントの発火は Raise ヘルパーへ集約する（`event` へ `?.Invoke` を書かない。 コーディング規約 §7）
 $rxEventDecl = [regex]'(?<![\w.])(?:public|internal|private|protected)\s+(?:static\s+)?event\s+(?:EventHandler(?:<[^>]+>)?|\w+(?:<\w+>)?)\s+(?<n>[A-Za-z_]\w*)'
 $invokeIssues = [System.Collections.Generic.List[string]]::new()
@@ -1075,7 +1164,7 @@ foreach ($f in @(Get-ChildItem -Path $rootPaths -Recurse -File -Filter 'SPEC_Sys
 Add-Result 'SPEC_System の必須節' ($sysIssues.Count -eq 0) "$($sysIssues.Count) 件"
 $sysIssues | Select-Object -First 10 | ForEach-Object { "      $_" }
 
-# 8z) 手書きのプラットフォーム属性（ビルド設定規約 §5。 下限は <SupportedOSPlatformVersion> が単一所有する）
+# 8z) 手書きのプラットフォーム属性（ビルド設定規約 §4。 下限は対象フレームワークが単一所有する）
 #     属性は AllowMultiple のため、手書きが残っていてもビルドは通り、下限を下げても CA1416 が出ないまま古い下限が効く。
 $platformAttrIssues = [System.Collections.Generic.List[string]]::new()
 foreach ($file in @(Get-ChildItem -Path $rootPaths -Recurse -File -Filter '*.cs' |
@@ -1085,7 +1174,7 @@ foreach ($file in @(Get-ChildItem -Path $rootPaths -Recurse -File -Filter '*.cs'
     foreach ($line in (Get-Lines $file.FullName)) {
         $lineNumber++
         if ($line -match '\[\s*assembly:\s*(Un)?[Ss]upportedOSPlatform\(') {
-            $platformAttrIssues.Add(("{0}:{1}  アセンブリ単位の手書き属性（下限は <SupportedOSPlatformVersion> が持つ）" -f $rel, $lineNumber))
+            $platformAttrIssues.Add(("{0}:{1}  アセンブリ単位の手書き属性（下限は対象フレームワークが持つ）" -f $rel, $lineNumber))
         }
     }
 }

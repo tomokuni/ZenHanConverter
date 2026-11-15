@@ -1,22 +1,64 @@
-## .NET build outputs
-bin/
-obj/
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# Release artifacts (buildScript の出力先)
 publish/
-*.user
+*.DotSettings.user
 
-## Visual Studio
+# Visual Studio cache/options
 .vs/
+*.user
+*.suo
+*.cache
+*.ldf
+*.sdf
 
-# publish の RID 付き復元が作る lock（コミットする packages.lock.json とは別。 buildScript/publish_ui.bat）
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+
+# publish の RID 付き復元が作る lock（コミットする packages.lock.json とは別。 publish_ui.bat）
 packages.*.lock.json
 
-## Test results
-TestResults/
-*.coverage
-*.coveragexml
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/
 
-## OS
+# Test Results
+TestResults/
+.trx
+
+# IDE
+.idea/
+.work/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
 Thumbs.db
-Desktop.ini
+
+# Python
+.venv
+
+# git
+.git
+
+# Project-specific
+*.log
+appsettings.local.json
+*.tmp
+FolderProfile.pubxml.user
+
+# AI モデル（配布も履歴への追加もしない。 GitHub の 100 MB/ファイル制限に抵触する）
+*.onnx
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+**/weights/
 # SBOM などの生成物（CI がアップロードする。 コミットしない）
 /artifacts/

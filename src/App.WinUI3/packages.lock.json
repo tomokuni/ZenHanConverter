@@ -1,7 +1,7 @@
 {
   "version": 2,
   "dependencies": {
-    "net11.0-windows10.0.22621": {
+    "net11.0-windows10.0.20348": {
       "CommunityToolkit.Mvvm": {
         "type": "Direct",
         "requested": "[8.4.2, )",
@@ -49,24 +49,24 @@
       },
       "EsUtil.Ui.WinUI3.ColumnPacking": {
         "type": "Direct",
-        "requested": "[0.6.5, )",
-        "resolved": "0.6.5",
-        "contentHash": "h22bfWo36fHcURivUD/4Kskxk7iZPzFsER12YHu6sEY48aBdH39tZ1i+OG724TuOvDUKF6DnG/qI+HbEbqWE7Q==",
+        "requested": "[0.7.1, )",
+        "resolved": "0.7.1",
+        "contentHash": "iWeoZSQxyMnIiG1dpSv/RUKLBMzigWueIC9PAh8uVXX+AwQ8YZnVf2SEioALcEEFPnKtSQmH5AODSIxuWjS2qQ==",
         "dependencies": {
-          "EsUtil.Feature.ColumnPacking.Core": "0.6.5",
+          "EsUtil.Feature.ColumnPacking.Core": "0.7.1",
           "Microsoft.Windows.SDK.BuildTools": "10.0.28000.2957",
-          "Microsoft.WindowsAppSDK": "2.6.5"
+          "Microsoft.WindowsAppSDK": "2.0.1"
         }
       },
       "EsUtil.Ui.WinUI3.Interop": {
         "type": "Direct",
-        "requested": "[0.6.5, )",
-        "resolved": "0.6.5",
-        "contentHash": "y2Zh6wU5VBsR43e1qxd9lzadoEZc9x++1cxLTcXgs1RFKBBvP0fwKePyaECuQZtBCHLkmq3F0u3zCpuHvphVrA==",
+        "requested": "[0.7.1, )",
+        "resolved": "0.7.1",
+        "contentHash": "U5L3AdLoS5JQAxBQJ6DN/E5A5L54DgN8KPAIim6+An3GTZ/KmploYhZDiE/MQOBqb6t5nowNNiXn4TYpafbeZw==",
         "dependencies": {
-          "EsUtil.Platform.Core": "0.6.5",
+          "EsUtil.Platform.Core": "0.7.1",
           "Microsoft.Windows.SDK.BuildTools": "10.0.28000.2957",
-          "Microsoft.WindowsAppSDK": "2.6.5"
+          "Microsoft.WindowsAppSDK": "2.0.1"
         }
       },
       "Meziantou.Analyzer": {
@@ -441,8 +441,8 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "EsUtil.Feature.ZenHan.Core": "[0.6.5, )",
-          "EsUtil.Platform.Core": "[0.6.5, )",
+          "EsUtil.Feature.ZenHan.Core": "[0.7.1, )",
+          "EsUtil.Platform.Core": "[0.7.1, )",
           "Microsoft.Extensions.Logging": "[11.0.0, )",
           "Serilog": "[4.4.0, )",
           "Serilog.Extensions.Logging": "[10.0.0, )",
@@ -453,26 +453,26 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "ZenHanConverter.App.Core": "[0.5.1, )"
+          "ZenHanConverter.App.Core": "[0.6.0, )"
         }
       },
       "EsUtil.Feature.ColumnPacking.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.6.5, )",
-        "resolved": "0.6.5",
-        "contentHash": "c3YAgCkm5PY8u247icJZ17F9eCIrdymOToPGeD7LJO/K8+tZgBZT42cGoTeztGxxAa75FGfuP46SWUwwPY80Sg=="
+        "requested": "[0.7.1, )",
+        "resolved": "0.7.1",
+        "contentHash": "gZAeUuRuhqTBc4A2U+4CRp9YAaElkn2HAull5YoTqhn6HZyHzyRKFjtmhrjo8FboSj3xWg6RmRw/9jW9Uv3zlg=="
       },
       "EsUtil.Feature.ZenHan.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.6.5, )",
-        "resolved": "0.6.5",
-        "contentHash": "/S6MOWeLw3fvHihz27XHJBfsg0DiPZbA9IAf72zz9CJzSkR1xpkcqx29dS5uMWdsdhFwjneCak2KtLLzA54qtg=="
+        "requested": "[0.7.1, )",
+        "resolved": "0.7.1",
+        "contentHash": "gdDZz7NcKdQX9CWk7ixFs2YMAJF+lXGGxzF2D7zG9+YJjX1uHyOBHwAfY6KKc54c/cpx24JkRHd040h2y2XIGg=="
       },
       "EsUtil.Platform.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.6.5, )",
-        "resolved": "0.6.5",
-        "contentHash": "cGGilU7BlaTrjoCyN9SlYVqg7vpHGtcz3mMseEB2acWfMvdOPyAAAPxcOjoqOdCSa2QH8+Td4Zm0oilEZMSk7A=="
+        "requested": "[0.7.1, )",
+        "resolved": "0.7.1",
+        "contentHash": "PnxlqWl1OAjRTKeKgILmlaUopvTENM8++St+v4Udr42fFs3dkMr1nOBFiHIHEq8KesM/0s4u32pe8B0xW4qlJQ=="
       },
       "Microsoft.Extensions.Logging": {
         "type": "CentralTransitive",
@@ -509,7 +509,7 @@
         }
       }
     },
-    "net11.0-windows10.0.22621/win-x64": {
+    "net11.0-windows10.0.20348/win-x64": {
       "Microsoft.Web.WebView2": {
         "type": "Transitive",
         "resolved": "1.0.3719.77",

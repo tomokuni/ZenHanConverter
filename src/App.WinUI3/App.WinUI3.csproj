@@ -2,9 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net11.0-windows10.0.22621.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.26100.0</TargetPlatformMinVersion>
-    <SupportedOSPlatformVersion>10.0.18362.0</SupportedOSPlatformVersion>
+    <TargetFramework>net11.0-windows10.0.20348.0</TargetFramework>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- 単数形で固定する（複数形は復元対象の一覧であり、ビルド対象を x64 に固定しない。 規則は .github/ビルド設定規約.md §4） -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>

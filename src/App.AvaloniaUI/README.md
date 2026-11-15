@@ -63,7 +63,7 @@
 ## 3. システム要件
 
 - .NET 11 SDK（ビルド時）
-- Windows 10（1703 / 15063）以降、Windows 11
+- Windows Server 2022 / Windows 11（ビルド 20348）以降
 - x64
 - Avalonia 12.*
 
