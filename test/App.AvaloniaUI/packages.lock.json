@@ -1,7 +1,7 @@
 {
   "version": 2,
   "dependencies": {
-    "net11.0-windows10.0.20348": {
+    "net11.0-windows10.0.17763": {
       "Meziantou.Analyzer": {
         "type": "Direct",
         "requested": "[3.0.339, )",
@@ -125,13 +125,19 @@
         "resolved": "8.3.1.3",
         "contentHash": "NGZ2+ZVNPM+NdHB/asW0/ykWngyHWwcqjrbN2nDeH1B/aptPGlCUl8wkQ2cSJxw5fdWgdmIPmNuTPWpLwNVXWg==",
         "dependencies": {
-          "HarfBuzzSharp.NativeAssets.Win32": "8.3.1.3"
+          "HarfBuzzSharp.NativeAssets.Win32": "8.3.1.3",
+          "HarfBuzzSharp.NativeAssets.macOS": "8.3.1.3"
         }
       },
       "HarfBuzzSharp.NativeAssets.Linux": {
         "type": "Transitive",
         "resolved": "8.3.1.3",
         "contentHash": "RI6A1LgmooU30+4QIyFt5rmBCzP0VzTR+587IJSGvYIsHHWlahFufihYxtraLfsIhW7I8dn6+xX+DZGygOPKWQ=="
+      },
+      "HarfBuzzSharp.NativeAssets.macOS": {
+        "type": "Transitive",
+        "resolved": "8.3.1.3",
+        "contentHash": "KPTq0xnslkI6nAo0jh3ptcQPJvZZr7MWYXa2jUe4SnHc9q+JlHElmNXp0sfFoiTgoCX7WOYpYsurypuH9Gehxw=="
       },
       "HarfBuzzSharp.NativeAssets.WebAssembly": {
         "type": "Transitive",
@@ -340,13 +346,19 @@
         "resolved": "3.119.4",
         "contentHash": "53NOSUZ1Us+91Sm0uCkIivh/k7jOowRErZT2sIWwPFN9mLUvdxnE6rS4sWo4255+Rd2MWUSF+j0NMZHD6Cke+Q==",
         "dependencies": {
-          "SkiaSharp.NativeAssets.Win32": "3.119.4"
+          "SkiaSharp.NativeAssets.Win32": "3.119.4",
+          "SkiaSharp.NativeAssets.macOS": "3.119.4"
         }
       },
       "SkiaSharp.NativeAssets.Linux": {
         "type": "Transitive",
         "resolved": "3.119.4",
         "contentHash": "UAyVzbqNfZsZbKbzj68zXLyUyF/SbTKmzTfOO6qDu++dtIUMMTzPBe8oOuzU/DiewpfKoUUlOSsJmqWc6blxBw=="
+      },
+      "SkiaSharp.NativeAssets.macOS": {
+        "type": "Transitive",
+        "resolved": "3.119.4",
+        "contentHash": "fgBOWEqbY012x7gMfJU4ezgz6dfhJb30Z6YdW35h85Zoe39+a8YNbAAwL29ihPfWoppg5AjvyKNzD1oCvlqWwA=="
       },
       "SkiaSharp.NativeAssets.WebAssembly": {
         "type": "Transitive",
@@ -440,8 +452,8 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "EsUtil.Feature.ZenHan.Core": "[0.7.1, )",
-          "EsUtil.Platform.Core": "[0.7.1, )",
+          "EsUtil.Feature.ZenHan.Core": "[0.7.2, )",
+          "EsUtil.Platform.Core": "[0.7.2, )",
           "Microsoft.Extensions.Logging": "[11.0.0, )",
           "Serilog": "[4.4.0, )",
           "Serilog.Extensions.Logging": "[10.0.0, )",
@@ -452,7 +464,7 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "ZenHanConverter.App.Core": "[0.6.0, )"
+          "ZenHanConverter.App.Core": "[0.7.0, )"
         }
       },
       "ZenHanConverter.AvaloniaUI": {
@@ -465,8 +477,8 @@
           "AvaloniaUI.DiagnosticsSupport": "[2.2.3, )",
           "CommunityToolkit.Mvvm": "[8.4.2, )",
           "Microsoft.Extensions.Hosting": "[11.0.0, )",
-          "ZenHanConverter.App.Core": "[0.6.0, )",
-          "ZenHanConverter.App.Core.Presentation": "[0.6.0, )"
+          "ZenHanConverter.App.Core": "[0.7.0, )",
+          "ZenHanConverter.App.Core.Presentation": "[0.7.0, )"
         }
       },
       "Avalonia": {
@@ -529,15 +541,15 @@
       },
       "EsUtil.Feature.ZenHan.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.7.1, )",
-        "resolved": "0.7.1",
-        "contentHash": "gdDZz7NcKdQX9CWk7ixFs2YMAJF+lXGGxzF2D7zG9+YJjX1uHyOBHwAfY6KKc54c/cpx24JkRHd040h2y2XIGg=="
+        "requested": "[0.7.2, )",
+        "resolved": "0.7.2",
+        "contentHash": "8OohneGKkZPThsvBZJF94+xFkOeGK4iZvqCd7L6jkqSvbWr3UUO1zT/cJZ6xMie+ZtrG8xDv7zK1DKRoQWn3tQ=="
       },
       "EsUtil.Platform.Core": {
         "type": "CentralTransitive",
-        "requested": "[0.7.1, )",
-        "resolved": "0.7.1",
-        "contentHash": "PnxlqWl1OAjRTKeKgILmlaUopvTENM8++St+v4Udr42fFs3dkMr1nOBFiHIHEq8KesM/0s4u32pe8B0xW4qlJQ=="
+        "requested": "[0.7.2, )",
+        "resolved": "0.7.2",
+        "contentHash": "5FewWXY8yzOEMZzqqP3o0dEQEXTib9dOuZgOArFqIfHvRsbDxSj4nUEl9ViMBnM/eBKshvarY/w+DKAAbIcO+A=="
       },
       "Microsoft.Extensions.Hosting": {
         "type": "CentralTransitive",

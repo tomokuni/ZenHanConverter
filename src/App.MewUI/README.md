@@ -62,7 +62,7 @@ MewUI は XAML を使わず**コードで画面を構築する** UI フレーム
 ## 3. システム要件
 
 - .NET 11 SDK（ビルド時）
-- Windows Server 2022 / Windows 11（ビルド 20348）以降
+- Windows 10 バージョン 1809（ビルド 17763）以降
 - x64
 - Native AOT のリンクには Visual Studio の C++ ビルド ツール（`link.exe`）が必要（配布ビルドのみ）
 
