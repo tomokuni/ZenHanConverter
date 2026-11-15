@@ -2,13 +2,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net11.0-windows10.0.17763.0</TargetFramework>
+    <TargetFramework>net11.0-windows10.0.20348.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <!-- 参照先の App.WinForms が WinForms を使用するため、テスト側でも同じフレームワーク参照が必要 -->
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>EsUtil.ZenHanConverter.Tests.App.WinForms</RootNamespace>
     <AssemblyName>ZenHanConverter.Tests.App.WinForms</AssemblyName>
-  <SupportedOSPlatformVersion>10.0.15063.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

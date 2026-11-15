@@ -23,9 +23,6 @@ packages/
 # publish の RID 付き復元が作る lock（コミットする packages.lock.json とは別。 publish_ui.bat）
 packages.*.lock.json
 
-# Local NuGet source
-local-nuget/
-
 # BenchmarkDotNet
 BenchmarkDotNet.Artifacts/
 
