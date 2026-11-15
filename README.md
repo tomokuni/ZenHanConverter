@@ -4,7 +4,7 @@
 
 ![Release](https://github.com/tomokuni/ZenHanConverter/actions/workflows/release.yml/badge.svg)
 ![Build](https://github.com/tomokuni/ZenHanConverter/actions/workflows/build.yml/badge.svg?event=pull_request)
-![Platform](https://img.shields.io/badge/Platform-Windows%2010%2B-0078D6)
+![Platform](https://img.shields.io/badge/Platform-Windows%2010%20(1809%2C%2017763)%2B-0078D6)
 ![.NET](https://img.shields.io/badge/.NET-11.0-512BD4)
 ![Avalonia](https://img.shields.io/badge/UI-Avalonia-8D46D6)
 ![MewUI](https://img.shields.io/badge/UI-MewUI-00BFFF)
@@ -61,7 +61,7 @@ ZenHanConverter は、クリップボードの文字列を監視し、**数字�
 
 | 項目 | 要件 |
 | --- | --- |
-| **OS** | Windows 10 バージョン 1809（ビルド 17763）以降（**WinUI 3 版だけ Windows 10 2004（ビルド 19041）以降**。 第三者パッケージの制約） |
+| **OS** | Windows 10 バージョン 1809（ビルド 17763）以降（**WinUI 3 版だけ Windows 10 バージョン 2004（ビルド 19041）以降**。 第三者パッケージの制約） |
 | **.NET ランタイム** | .NET 11.0 以降（自己完結の配布物は同梱のため不要） |
 | **WinUI 3 版の追加要件** | Windows App Runtime 2.6.5 以降（無い場合は起動時に導入できます） |
 | **アーキテクチャ** | x64 |

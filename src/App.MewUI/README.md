@@ -2,7 +2,7 @@
 
 ![Release](https://github.com/tomokuni/ZenHanConverter/actions/workflows/release.yml/badge.svg)
 ![Build](https://github.com/tomokuni/ZenHanConverter/actions/workflows/build.yml/badge.svg?branch=main)
-![Platform](https://img.shields.io/badge/Platform-Windows%2010%2B-0078D6)
+![Platform](https://img.shields.io/badge/Platform-Windows%2010%20(1809%2C%2017763)%2B-0078D6)
 ![.NET](https://img.shields.io/badge/.NET-11.0-512BD4)
 ![MewUI](https://img.shields.io/badge/UI-MewUI-00BFFF)
 ![License](https://img.shields.io/badge/License-MIT-3DA639)
