@@ -34,8 +34,8 @@ var converted = converter.Convert("ＡＢＣ１２３");
 ## 4. 依存
 
 - `CommunityToolkit.Mvvm` — ObservableProperty 生成・変更通知
-- `EsUtil.Feature.ZenHan.Core`（0.1.* のパッケージ参照）— 全角/半角変換ペア
-- `EsUtil.Platform.Core`（0.2.* のパッケージ参照）— 幾何型（`EsPoint` / `EsSize` / `EsRect`）・DPI 換算・クリップボードと仮想画面の Win32 実装
+- `EsUtil.Feature.ZenHan.Core`（パッケージ参照。 版は `Directory.Build.props` の `EsUtilVersion`）— 全角/半角変換ペア
+- `EsUtil.Platform.Core`（パッケージ参照。 版は `EsUtilVersion`）— 幾何型（`EsPoint` / `EsSize` / `EsRect`）・DPI 換算・クリップボードと仮想画面の Win32 実装
 
 UI フレームワークには依存しません。 Win32 API の呼び出しは `EsUtil.Platform.Core` の `Native.Win` が単一所有します。
 
@@ -62,8 +62,8 @@ dotnet test --solution ZenHanConverter.slnx -c Release
 | ドキュメント | 内容 |
 | --- | --- |
 | [README.md](README.md) | 本ドキュメント（機能・画面・使い方） |
-| [SPEC_ExtFunc.md](SPEC_ExtFunc.md) | 外部機能仕様書（公開 API） |
-| [SPEC_System.md](SPEC_System.md) | システム仕様書（構成・動作仕様） |
+| [SPEC_ExtFunc.md](docs/SPEC_ExtFunc.md) | 外部機能仕様書（公開 API） |
+| [SPEC_System.md](docs/SPEC_System.md) | システム仕様書（構成・動作仕様） |
 | [.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md) | 開発者向け（ビルド・テスト・CI） |
 | [.github/RELEASE.md](../../.github/RELEASE.md) | リリース手順 |
 

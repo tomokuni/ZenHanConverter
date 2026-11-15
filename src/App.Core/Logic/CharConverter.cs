@@ -25,12 +25,7 @@ namespace EsUtil.ZenHanConverter.App.Core.Logic;
 /// - ユーザー定義の置換ルール適用<br/><br/>
 /// 特徴: <br/>
 /// - EsUtil.Feature.ZenHan.Core ライブラリに基づく正確な変換ペア<br/>
-/// - 結果はキャッシュされてパフォーマンスを最適化<br/>
-/// - Config 変更時にキャッシュ自動無効化<br/><br/>
-/// 最適化手法: <br/>
-/// - ConvertPairs をキャッシュし Config 変更時のみ再計算<br/>
-/// - SymbolMap による宣言的なマッピング定義<br/>
-/// - ソースジェネレーターによる正規表現の事前コンパイル<br/><br/>
+/// - Config 変更時に変換ペアのキャッシュを破棄する<br/><br/>
 /// 注意点: <br/>
 /// - 変換は文字単位のペアテーブル置換に基づく<br/>
 /// - ユーザー定義置換は正規表現エラー時も無視（処理継続）</remarks>

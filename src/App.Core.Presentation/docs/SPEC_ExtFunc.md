@@ -1,20 +1,32 @@
-# ZenHanConverter.App.Core.Presentation 外部機能仕様書
+# App.Core.Presentation 外部機能仕様書
 
 本ドキュメントは `src/App.Core.Presentation`（UI フレームワーク非依存のプレゼンテーション層）の公開 API 仕様を記載します。
 メソッド内部のコードは記載しません。外部利用者に関係する情報のみを扱います。
 
-## 共有コア
+## 目次 <!-- omit from toc -->
+
+- [1. 共有コア](#1-共有コア)
+- [2. 公開型一覧](#2-公開型一覧)
+  - [2.1 ViewModels（`EsUtil.ZenHanConverter.App.Core.Presentation.ViewModels`）](#21-viewmodelsesutilzenhanconverterappcorepresentationviewmodels)
+    - [2.1.1 `SettingsViewModel : ObservableObject`](#211-settingsviewmodel--observableobject)
+    - [2.1.2 `ZenHanConvertItem : ObservableObject, IDisposable`](#212-zenhanconvertitem--observableobject-idisposable)
+    - [2.1.3 `SegmentOption : ObservableObject`](#213-segmentoption--observableobject)
+    - [2.1.4 `ReplacePairItem : ObservableObject`](#214-replacepairitem--observableobject)
+    - [2.1.5 `PresetEditDialogViewModel : ObservableObject`](#215-preseteditdialogviewmodel--observableobject)
+    - [2.1.6 `HomeDisplayText`（静的クラス）](#216-homedisplaytext静的クラス)
+
+## 1. 共有コア
 
 モデル・変換ロジック・Win32 API・アイコンデータ・変換カテゴリ定義は `src/App.Core`（UI 非依存）が提供します。
-公開 API は `../core/SPEC_ExtFunc.md` を参照してください。
+公開 API は `../../App.Core/docs/SPEC_ExtFunc.md` を参照してください。
 
-## 公開型一覧
+## 2. 公開型一覧
 
-### ViewModels（`EsUtil.ZenHanConverter.App.Core.Presentation.ViewModels`）
+### 2.1 ViewModels（`EsUtil.ZenHanConverter.App.Core.Presentation.ViewModels`）
 
 4 つの UI（MewUI 版 / WinUI 3 版 / Avalonia UI 版 / WinForms 版）が共有します。
 
-#### `SettingsViewModel : ObservableObject`
+#### 2.1.1 `SettingsViewModel : ObservableObject`
 
 設定画面のデータ管理。
 
@@ -39,7 +51,7 @@
 置換ルールの編集は `ReplacePairItem` の変更通知を購読して自動で検証・反映するため、
 UI 側から `ValidateItemAndSync` を呼ぶ必要はありません（公開しているのは再同期を明示したい場合のためです）。
 
-#### `ZenHanConvertItem : ObservableObject, IDisposable`
+#### 2.1.2 `ZenHanConvertItem : ObservableObject, IDisposable`
 
 設定画面の変換項目（1 つの変換設定に対応）。
 
@@ -50,7 +62,7 @@ UI 側から `ValidateItemAndSync` を呼ぶ必要はありません（公開し
 - `string SelectedLabel` — 選択肢を 1 つのコントロールで表す UI 用の選択値（変更時は設定へ反映）
 - `void Dispose()` — イベント購読の解除（重複呼び出しは安全）
 
-#### `SegmentOption : ObservableObject`
+#### 2.1.3 `SegmentOption : ObservableObject`
 
 排他選択の選択肢 1 件。
 
@@ -59,7 +71,7 @@ UI 側から `ValidateItemAndSync` を呼ぶ必要はありません（公開し
 - `bool IsEnabled` — この選択肢が有効かどうか
 - `bool IsSelected` — 選択状態（`ZenHanConvertItem` が設定と同期する）
 
-#### `ReplacePairItem : ObservableObject`
+#### 2.1.4 `ReplacePairItem : ObservableObject`
 
 文字列置換ペアの編集項目。
 
@@ -70,7 +82,7 @@ UI 側から `ValidateItemAndSync` を呼ぶ必要はありません（公開し
 - `string? Validate()` — バリデーションの実行（正常時は null）
 - `ReplacePair ToPair()` — `ReplacePair` への変換（事前に `Validate` の呼び出しが必要）
 
-#### `PresetEditDialogViewModel : ObservableObject`
+#### 2.1.5 `PresetEditDialogViewModel : ObservableObject`
 
 プリセット編集ダイアログのデータと検証。
 
@@ -93,7 +105,7 @@ UI 側から `ValidateItemAndSync` を呼ぶ必要はありません（公開し
 | 既存ユーザープリセット | 既に存在します。 | 有効 | 有効 |
 | 新規の有効な名前 | なし | 有効 | 無効 |
 
-#### `HomeDisplayText`（静的クラス）
+#### 2.1.6 `HomeDisplayText`（静的クラス）
 
 ホーム画面が共有する表示文言の単一所有元。
 

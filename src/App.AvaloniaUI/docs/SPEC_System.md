@@ -1,16 +1,50 @@
-# ZenHanConverter.App.AvaloniaUI システム仕様書
+# App.AvaloniaUI システム仕様書
 
 本ドキュメントは `src/App.AvaloniaUI`（Avalonia UI アプリ）のシステム仕様（概要・技術スタック・アーキテクチャ・構成・動作仕様）を記載します。
 メソッド内部のコードは記載しません。
 
-## システム概要
+## 目次 <!-- omit from toc -->
+
+- [1. システム概要](#1-システム概要)
+- [2. 技術スタック](#2-技術スタック)
+- [3. 共有コア](#3-共有コア)
+- [4. ビルドと配置](#4-ビルドと配置)
+  - [4.1 通常ビルド](#41-通常ビルド)
+  - [4.2 配布用ビルド（Native AOT）](#42-配布用ビルドnative-aot)
+  - [4.3 単一 exe にできない理由](#43-単一-exe-にできない理由)
+  - [4.4 描画バックエンド](#44-描画バックエンド)
+- [5. アーキテクチャ](#5-アーキテクチャ)
+- [6. コンポーネント構成](#6-コンポーネント構成)
+- [7. シーケンス（クリップボード変換）](#7-シーケンスクリップボード変換)
+- [8. ナビゲーション](#8-ナビゲーション)
+- [9. カスタムタイトルバー](#9-カスタムタイトルバー)
+- [10. ホーム画面（上下 2 分割）](#10-ホーム画面上下-2-分割)
+- [11. 設定画面](#11-設定画面)
+  - [11.1 セグメント選択](#111-セグメント選択)
+  - [11.2 カテゴリセクション](#112-カテゴリセクション)
+  - [11.3 文字列の置換](#113-文字列の置換)
+  - [11.4 設定の管理](#114-設定の管理)
+- [12. アイコンアセット](#12-アイコンアセット)
+- [13. 設定の保存と復元](#13-設定の保存と復元)
+- [14. ウィンドウ位置・サイズの復元と保存](#14-ウィンドウ位置サイズの復元と保存)
+  - [14.1 実装上の注意（Avalonia 固有）](#141-実装上の注意avalonia-固有)
+- [15. クリップボード変換](#15-クリップボード変換)
+- [16. プリセットの一致検出](#16-プリセットの一致検出)
+- [17. プリセット編集ダイアログのバリデーション](#17-プリセット編集ダイアログのバリデーション)
+- [18. テストプロジェクト](#18-テストプロジェクト)
+  - [18.1 フォルダ構成](#181-フォルダ構成)
+- [19. 依存関係](#19-依存関係)
+- [20. 例外処理ポリシー](#20-例外処理ポリシー)
+- [21. 他 UI（MewUI 版・WinUI 3 版）との差異](#21-他-uimewui-版winui-3-版との差異)
+
+## 1. システム概要
 
 クリップボードのテキストを監視し、設定に基づいて全角/半角変換を実行してクリップボードへ書き戻す Windows デスクトップアプリです。
 UI フレームワークとして Avalonia UI（クロスプラットフォームの XAML フレームワーク）を使用します。
 
 全角/半角変換は常に有効です（オン/オフの切り替えはありません）。切り替えできるのはクリップボード連携（コピーの検知と変換結果の書き戻し）のみで、`AppSetting.IsClipboardConvertEnabled` が保持します。
 
-## 技術スタック
+## 2. 技術スタック
 
 - .NET 11
 - Avalonia UI 12.*（`Avalonia` / `Avalonia.Desktop` / `Avalonia.Themes.Fluent` / `Avalonia.Fonts.Inter`）
@@ -19,10 +53,10 @@ UI フレームワークとして Avalonia UI（クロスプラットフォー�
 - Microsoft.Extensions.Hosting 10.*（DI）
 - EsUtil.Feature.ZenHan.Core（変換ペア。`src/App.Core` のパッケージ参照経由）
 
-## 共有コア
+## 3. 共有コア
 
 `src/App.Core` は UI に依存しない共有ライブラリです。モデル・変換ロジック・Win32 API・アイコンデータ・変換カテゴリ定義を提供し、
-仕様は `../core/SPEC_ExtFunc.md` と `../core/SPEC_System.md` を参照してください。
+仕様は `../../App.Core/docs/SPEC_ExtFunc.md` と `../../App.Core/docs/SPEC_System.md` を参照してください。
 
 Avalonia アプリは `src/App.Core` と `src/App.Core.Presentation` のみを参照し、`src/App.MewUI` / `src/App.WinUI3` / `src/App.WinForms` とは相互依存しません。
 3 つのアプリは同一の設定ファイル（`%LOCALAPPDATA%\ZenHanConverter`）を共有します。
@@ -36,19 +70,19 @@ flowchart LR
     AppAvalonia -->|PackageReference| Avalonia[Avalonia UI]
 ```
 
-## ビルドと配置
+## 4. ビルドと配置
 
-### 通常ビルド
+### 4.1 通常ビルド
 
 ```powershell
 dotnet build src/App.AvaloniaUI/App.AvaloniaUI.csproj
 dotnet run --project src/App.AvaloniaUI/App.AvaloniaUI.csproj
 ```
 
-### 配布用ビルド（Native AOT）
+### 4.2 配布用ビルド（Native AOT）
 
 `buildScript/` の `publish_AvaloniaUI.bat`（ビルド）と `publish_AvaloniaUI.bat`（ビルドして起動）で、Native AOT の配布用フォルダーを
-`publish\avaloniaui-<RID>-aot\` に出力します（既定 RID は `win-x64`、exe 1 個 + DLL 3 個 約 43.8 MB）。
+`publish\avaloniaui-<RID>-aot\` に出力します（既定 RID は `win-x64`、exe 1 個 + DLL 3 個）。
 スクリプトはリポジトリルートを基準に動作します。
 
 必要なプロパティは次のとおりです。
@@ -67,20 +101,20 @@ dotnet run --project src/App.AvaloniaUI/App.AvaloniaUI.csproj
 リポジトリ内へ直接発行するとフレームワーク配置のファイルが出力先へ混在します。さらに、プロジェクトディレクトリ配下に
 `publish` が存在するとその内容がアプリのコンテンツとして取り込まれ、出力が肥大化します。
 
-### 単一 exe にできない理由
+### 4.3 単一 exe にできない理由
 
 Avalonia の描画は SkiaSharp のネイティブライブラリに依存します。Native AOT はマネージアセンブリを exe へ静的リンクしますが、
 ネイティブライブラリは同梱できないため、`libSkiaSharp.dll` / `av_libglesv2.dll` / `libHarfBuzzSharp.dll` を exe の隣に配置する必要があります
 （`IncludeNativeLibrariesForSelfExtract=true` を併用しても同梱されません。exe 単体で起動すると `DllNotFoundException: libSkiaSharp` で失敗します）。
 本アプリは実行速度と初回起動時間を優先し、AOT を採用しています（MewUI 版と同じ方式です）。
 
-### 描画バックエンド
+### 4.4 描画バックエンド
 
 Avalonia の Windows 既定の `Win32PlatformOptions.RenderingMode` は `AngleEgl`（GPU）→ `Software`（CPU）の順で試行します。
-`av_libglesv2.dll`（ANGLE）を出力から削除すると約 5.4 MB 減りますが、描画はソフトウェアレンダリングへ切り替わります。
+`av_libglesv2.dll`（ANGLE）を出力から削除すると小さくなりますが、描画はソフトウェアレンダリングへ切り替わります。
 本アプリは GPU 描画を優先するため、`av_libglesv2.dll` を配布対象に含めています。
 
-## アーキテクチャ
+## 5. アーキテクチャ
 
 ```text
 src/App.AvaloniaUI
@@ -118,7 +152,7 @@ src/App.AvaloniaUI
 └── (変換カテゴリ定義は src/App.Core/Models/SegmentDefinitions、ウィンドウ位置補正は src/App.Core/Helpers/WindowPlacement が所有)
 ```
 
-## コンポーネント構成
+## 6. コンポーネント構成
 
 | コンポーネント | 責務 |
 | --- | --- |
@@ -133,7 +167,7 @@ src/App.AvaloniaUI
 | `MainWindow` | カスタムタイトルバー・ナビゲーションペイン・ウィンドウ位置とサイズの復元/保存 |
 | `FluentIcons` | Core のパスデータから Avalonia のアイコン形状を生成（初回のみ） |
 
-## シーケンス（クリップボード変換）
+## 7. シーケンス（クリップボード変換）
 
 ```mermaid
 sequenceDiagram
@@ -156,7 +190,7 @@ sequenceDiagram
     end
 ```
 
-## ナビゲーション
+## 8. ナビゲーション
 
 `MainWindow` は左ペイン（`ListBox`）とコンテンツ領域（`ContentControl`）を `Grid` で並べ、選択項目のタグから
 `MainWindowViewModel` → `INavigationService.ResolveView` 経由でビュー（`HomeView` / `SettingsView`）を解決します。ビューはキャッシュされ再利用されます。
@@ -173,7 +207,7 @@ sequenceDiagram
 > 幅のしきい値でペインをオーバーレイ表示へ切り替える（＝狭い幅でペインが内容へ重なる）ため、
 > 重なり表示を避けて `ListBox` + `ContentControl` の 2 ペイン構成を採用しています。
 
-## カスタムタイトルバー
+## 9. カスタムタイトルバー
 
 `WindowDecorations="None"` + `ExtendClientAreaToDecorationsHint="True"` としてアプリが装飾を描画します。
 
@@ -192,16 +226,16 @@ sequenceDiagram
   ラベル側に負の余白（-10 DIP）を指定して打ち消します。
 - プリセット選択の幅は指定せず、項目（プリセット名）の文字幅に合わせて自動で決めます（`MinWidth` を指定しない）。
 
-## ホーム画面（上下 2 分割）
+## 10. ホーム画面（上下 2 分割）
 
 - 上下のペインは `Grid` の行の重み（`*`）で保持し、間に `Auto` 行の分割バーを置きます。
 - 比率を重みで保持するため、**ウィンドウの高さが変化しても上下の比率が維持されます**。
 - 分割バーは `Thumb` の `DragDelta` でドラッグ量を受け取り、Core の `SplitLayout.RatioFromDrag` で比率へ換算して上下限（0.1〜0.9）で補正します。
 - 分割バーは 1px の区切り線を中央に描き、残りの領域をドラッグの当たり判定に使用します（背景を `Transparent` にしてヒットテスト可能にします）。
 
-## 設定画面
+## 11. 設定画面
 
-### セグメント選択
+### 11.1 セグメント選択
 
 `ZenHanConvertItem.Options`（`SegmentOption`）を `RadioButton` へ双方向バインドします。
 
@@ -209,7 +243,7 @@ sequenceDiagram
 - 排他選択のグループは `SegmentOption.GroupName`（項目ごとに一意な連番）を `GroupName` へ指定して確立します。親要素の推定に依存しないため、行をまたいだ干渉がありません。
 - 選択状態は `IsSelected` → `ZenHanConvertItem.SelectedLabel` → `ConvertConfig` の順に反映され、逆方向（設定変更・プリセット読み込み・インポート）は `ConvertConfig.PropertyChanged` から再同期します。相互更新はフラグで保護します。
 
-### カテゴリセクション
+### 11.2 カテゴリセクション
 
 `CategorySection` が見出し・説明・項目一覧・補足を表示し、8 カテゴリで共有します。
 項目一覧は `WrapPanel` で折り返すため、項目数・幅に応じて自然に複数列となります。
@@ -218,7 +252,7 @@ sequenceDiagram
 > Avalonia 版は `WrapPanel` による折り返しのみとし、行内の整列（名称部の幅揃え）は行いません。
 > 選択肢・設定項目・変換結果は他 UI と同一です。
 
-### 文字列の置換
+### 11.3 文字列の置換
 
 置換行は `ItemsControl` で 1 行ずつ表示し、検索文字列・置換文字列（`TextBox`）・正規表現（`CheckBox`）・削除ボタンを持ちます。
 編集内容は変更の都度検証され、有効な行のみが `ConvertConfig.ReplacePairs` へ反映されます。
@@ -226,7 +260,7 @@ sequenceDiagram
 
 > MewUI 版は行の再構築、WinUI 3 版は `DataGrid` と編集ダイアログを使用します。Avalonia 版は行内で直接編集します。
 
-### 設定の管理
+### 11.4 設定の管理
 
 ヘッダー直下に固定し、スクロールしません。
 
@@ -235,7 +269,7 @@ sequenceDiagram
 
 ファイルの選択は Avalonia の `TopLevel.StorageProvider` を使用し、パスの解決のみを View が担います。
 
-## アイコンアセット
+## 12. アイコンアセット
 
 使用するアイコンの形状は SVG ファイル（Fluent Icons 24px regular）を唯一の定義元とし、パスデータの二重管理を排除します。
 SVG は `src/App.Core/Icons` が埋め込みリソースとして所有し、`EsUtil.ZenHanConverter.App.Core.Icons.FluentIconData` が初回アクセス時に
@@ -243,7 +277,7 @@ SVG は `src/App.Core/Icons` が埋め込みリソースとして所有し、`Es
 Avalonia 側の `FluentIcons` がそのパスデータを `Geometry.Parse` でベクター形状へ変換して保持します。
 アイコンデータを Core に置くことで 3 つの UI で同じアイコン形状を利用できます。
 
-## 設定の保存と復元
+## 13. 設定の保存と復元
 
 永続化される設定は 3 種類です。いずれも `%LOCALAPPDATA%\ZenHanConverter` 配下へ JSON で保存します。
 
@@ -257,7 +291,7 @@ Avalonia 側の `FluentIcons` がそのパスデータを `Geometry.Parse` で�
 通常の変更はデバウンス（300ms）付きの自動保存で書き込まれます。
 終了時（`Closed`）はデバウンスを待たず、`AppSetting` と `ConvertConfig` を同期で保存します（直前の変更が失われるのを防ぐため）。
 
-## ウィンドウ位置・サイズの復元と保存
+## 14. ウィンドウ位置・サイズの復元と保存
 
 起動時は `AppSetting.WindowWidth` / `WindowHeight`（DIP）を `Window.Width` / `Height` へ復元します。
 ウィンドウ位置（`AppSetting.WindowX` / `WindowY`、DIP）は表示直後（`Opened`）に、DPI スケールを掛けて物理ピクセルへ換算して適用します。
@@ -271,13 +305,13 @@ Avalonia 側の `FluentIcons` がそのパスデータを `Geometry.Parse` で�
 表示領域は仮想画面（全モニタの外接矩形）を `EsUtil.Platform.Core` の `WinVirtualScreen` が物理ピクセルで取得し、DPI スケールで DIP へ換算したものです。
 このためマルチモニタ構成でも、いずれかのモニタが見えていればその位置を維持します。
 
-### 実装上の注意（Avalonia 固有）
+### 14.1 実装上の注意（Avalonia 固有）
 
 - **位置の情報源**: `Window.Position` プロパティはドラッグ等の外部起点の移動を反映しないため、`PositionChanged` で追跡した値を保存に使用します（`Position` プロパティは値を設定した直後の読み戻しにのみ使用）。
 - **DPI スケール**: `Closed` の時点では `RenderScaling` を取得できない（1.0 になる）ため、`ScalingChanged` と起動時に保持した値を保存に使用します。
 - **通常状態の値**: 最大化/最小化中に終了した場合は、通常状態での最後の位置とサイズを保存します（最大化状態を次回起動へ引き継がないため）。
 
-## クリップボード変換
+## 15. クリップボード変換
 
 `AppSetting.IsClipboardConvertEnabled` が false の場合、`HomeViewModel` はクリップボードの読み取り・書き戻しを一切行いません。
 全角/半角変換は常に有効で、ホーム画面の「変更前」テキストボックスへの手動入力に対しても適用されます（クリップボード変換の有効/無効に依存しません）。
@@ -291,12 +325,12 @@ Avalonia 側の `FluentIcons` がそのパスデータを `Geometry.Parse` で�
 5. 変換結果が元と異なる場合のみクリップボードへ書き戻し
 6. `_isUpdatingClipboard` フラグで書き戻し中の再帰イベントを防止
 
-## プリセットの一致検出
+## 16. プリセットの一致検出
 
 `ConvertConfig.PropertyChanged` を監視し、`FindMatchingPreset()` で現在の設定に一致するプリセット名を自動設定します。
 タイトルバーと設定画面のプリセット選択は `SettingsViewModel.SelectedPresetName` を共有し、常に同期します。
 
-## プリセット編集ダイアログのバリデーション
+## 17. プリセット編集ダイアログのバリデーション
 
 | 条件 | メッセージ | 保存ボタン | 削除ボタン |
 | --- | --- | --- | --- |
@@ -309,9 +343,9 @@ Avalonia 側の `FluentIcons` がそのパスデータを `Geometry.Parse` で�
 
 バリデーションは名前の変更時にリアルタイム実行します。
 
-## テストプロジェクト
+## 18. テストプロジェクト
 
-### フォルダ構成
+### 18.1 フォルダ構成
 
 ```text
 test/App.AvaloniaUI/
@@ -329,7 +363,7 @@ test/App.AvaloniaUI/
 - ファイルを書き込むテストは `AutoSaveFileName` と `ConvertConfig.PresetDirectory` を一時ディレクトリへ差し替え、実ユーザーの `%LOCALAPPDATA%` 配下を汚しません。
 - `ConvertConfig.PresetDirectory` はプロセス全体で共有される静的状態のため、このアセンブリでは並列実行を無効にしています。
 
-## 依存関係
+## 19. 依存関係
 
 本プロジェクトが直接参照するプロジェクトとパッケージです（版は `Directory.Packages.props` が単一所有します）。
 
@@ -345,13 +379,13 @@ test/App.AvaloniaUI/
 
 - 依存の版は `Directory.Packages.props` が単一所有し、復元は `packages.lock.json` で固定します（`.github/CONTRIBUTING.md`）。
 
-## 例外処理ポリシー
+## 20. 例外処理ポリシー
 
 - クリップボードアクセス拒否（`UnauthorizedAccessException` / `COMException`）は握り潰してアプリ動作を継続。
 - バックグラウンド/非同期タスクの未処理例外は `Program.SubscribeExceptionHandlers`、UI スレッドの未処理例外は `App` が購読し、
   集約ログを出力したうえで `Handled = true` としてクラッシュを防止します。
 
-## 他 UI（MewUI 版・WinUI 3 版）との差異
+## 21. 他 UI（MewUI 版・WinUI 3 版）との差異
 
 | 項目 | 差異 |
 | --- | --- |

@@ -1,18 +1,36 @@
-# ZenHanConverter.App.MewUI 外部機能仕様書
+# App.MewUI 外部機能仕様書
 
 本ドキュメントは `src/App.MewUI`（MewUI アプリ）の公開 API 仕様（外部機能仕様）を記載します。
 メソッド内部のコードは記載しません。外部利用者に関係する情報のみを扱います。
 
-## 公開型一覧
+## 目次 <!-- omit from toc -->
 
-### ViewModels
+- [1. 公開型一覧](#1-公開型一覧)
+  - [1.1 ViewModels](#11-viewmodels)
+    - [1.1.1 `HomeViewModel : IDisposable`](#111-homeviewmodel--idisposable)
+  - [1.2 Views（`EsUtil.ZenHanConverter.App.MewUI.Views`）](#12-viewsesutilzenhanconverterappmewuiviews)
+    - [1.2.1 `MainWindow : Window`](#121-mainwindow--window)
+  - [1.3 Helpers（`EsUtil.ZenHanConverter.App.MewUI.Helpers`）](#13-helpersesutilzenhanconverterappmewuihelpers)
+    - [1.3.1 `FluentIcons`](#131-fluenticons)
+    - [1.3.2 `HomeView : UserControl`](#132-homeview--usercontrol)
+    - [1.3.3 `SettingsView : UserControl`](#133-settingsview--usercontrol)
+    - [1.3.4 `MultiColumnPanel : Panel`（`EsUtil.ZenHanConverter.App.MewUI.Views`）](#134-multicolumnpanel--panelesutilzenhanconverterappmewuiviews)
+  - [1.4 Services（`EsUtil.ZenHanConverter.App.MewUI.Services`）](#14-servicesesutilzenhanconverterappmewuiservices)
+    - [1.4.1 `ClipboardService : IClipboardService`](#141-clipboardservice--iclipboardservice)
+    - [1.4.2 `INavigationService`](#142-inavigationservice)
+    - [1.4.3 `NavigationService : INavigationService`](#143-navigationservice--inavigationservice)
+- [2. エントリポイント](#2-エントリポイント)
+
+## 1. 公開型一覧
+
+### 1.1 ViewModels
 
 設定画面の ViewModel は **共有プレゼンテーション層（`src/App.Core.Presentation`）** が提供します。
-公開 API は `../App.Core.Presentation/SPEC_ExtFunc.md` を参照してください。
+公開 API は `../../App.Core.Presentation/docs/SPEC_ExtFunc.md` を参照してください。
 
 本アプリ固有の ViewModel は `HomeViewModel`（ホーム画面）です。
 
-#### `HomeViewModel : IDisposable`
+#### 1.1.1 `HomeViewModel : IDisposable`
 
 ホーム画面のデータ管理、クリップボード監視と文字変換実行。
 
@@ -20,9 +38,9 @@
 - `string ConvertedText` — 変換後テキスト
 - 全角/半角変換は常に有効（オン/オフの切り替えはありません）。クリップボード変換（コピー検知・書き戻し）の有効/無効は `AppSetting.IsClipboardConvertEnabled` に従います。
 
-### Views（`EsUtil.ZenHanConverter.App.MewUI.Views`）
+### 1.2 Views（`EsUtil.ZenHanConverter.App.MewUI.Views`）
 
-#### `MainWindow : Window`
+#### 1.2.1 `MainWindow : Window`
 
 メインウィンドウ。カスタムタイトルバー（アプリ名・クリップボード変換スイッチ・プリセット選択・ウィンドウ操作ボタン）、ウィンドウサイズの復元/保存、NavigationView によるペイン式ナビゲーションとコンテンツ表示。
 
@@ -37,29 +55,29 @@
 - NavigationView のペイン配置は `Inline` 固定です（MewUI 既定の `Auto` は利用可能幅 1000 DIP 未満でペインを内容へ重ねる形へ切り替わり、狭めるとペインが見えなくなるため）。
 - プロパティは公開しておらず、NavigationView がナビゲーション状態とコンテンツ領域を所有します。
 
-### Helpers（`EsUtil.ZenHanConverter.App.MewUI.Helpers`）
+### 1.3 Helpers（`EsUtil.ZenHanConverter.App.MewUI.Helpers`）
 
-#### `FluentIcons`
+#### 1.3.1 `FluentIcons`
 
 アプリで使用する Fluent Icons のアイコン形状を提供します。パスデータは Core の `FluentIconData`（SVG の埋め込みリソース）が単一所有し、MewUI の形状への変換のみを担います。初回アクセス時に一度だけ生成します。
 
 - `PathGeometry ConvertRange` — ホーム項目用の「Convert Range」アイコン形状
 - `PathGeometry Settings` — 設定項目用の「Settings」アイコン形状
 
-#### `HomeView : UserControl`
+#### 1.3.2 `HomeView : UserControl`
 
 ホーム画面。変換前/後表示、変換前テキストへの手動入力。プリセット選択はタイトルバーが提供します。
 
 全角/半角変換は常に有効で、ホーム画面に有効/無効の切り替えはありません。
 
-#### `SettingsView : UserControl`
+#### 1.3.3 `SettingsView : UserControl`
 
 設定画面。変換カテゴリ（セグメント）、文字列の置換、プリセット管理、エクスポート/インポート。
 項目数が多い「記号の変換」はマルチカラム（`MultiColumnPanel`。 型は `EsUtil.ZenHanConverter.App.MewUI.Views.MultiColumnPanel`）で表示します。
 変換項目行のラベルは「名称　記号」形式を名称部と記号部に分けて表示し、記号部とセグメントコントロールが縦に揃うように配置します。
 セグメントの表示は設定値の変更を購読するため、プリセット読み込み・インポートで設定が変わると表示も追従します。
 
-#### `MultiColumnPanel : Panel`（`EsUtil.ZenHanConverter.App.MewUI.Views`）
+#### 1.3.4 `MultiColumnPanel : Panel`（`EsUtil.ZenHanConverter.App.MewUI.Views`）
 
 子要素を縦方向の複数列へ配置するパネル。列ごとに子要素を積み、最大列高さを最小化します（計算は `EsUtil.Feature.ColumnPacking.Core` の `ColumnPacker` へ委譲）。
 列幅はエンジンが列ごとに算出します（列幅 = その列の最大アイテム幅）。子要素の幅が揃っていれば各列の幅も揃います。
@@ -70,9 +88,9 @@
 - `const double DefaultRowSpace` / `const double DefaultColumnSpace` / `const int DefaultColumnLimit` — 各プロパティの既定値
 - 実際の列数は幅に応じて上限以下へ減ります。幅が確定できない場合は単列として扱います。
 
-### Services（`EsUtil.ZenHanConverter.App.MewUI.Services`）
+### 1.4 Services（`EsUtil.ZenHanConverter.App.MewUI.Services`）
 
-#### `ClipboardService : IClipboardService`
+#### 1.4.1 `ClipboardService : IClipboardService`
 
 クリップボードの読み書きと変更監視。Win32 の `GetClipboardSequenceNumber` ポーリングで変更を検出します。
 Win32 API の呼び出しは `EsUtil.Platform.Core` の `WinClipboard`、変更検出は `EsUtil.ZenHanConverter.App.Core.Logic.ClipboardChangeDetector` へ委譲します。
@@ -80,18 +98,18 @@ Win32 API の呼び出しは `EsUtil.Platform.Core` の `WinClipboard`、変更�
 
 - `event EventHandler<object>? ContentChanged`
 
-#### `INavigationService`
+#### 1.4.2 `INavigationService`
 
 ナビゲーションの抽象。NavigationView のコンテンツ解決（タグからビュー生成・キャッシュ）を担います。
 
 - `Element ResolveView(string tag)` — タグに対応するビューを生成（キャッシュ）して返す
 
-#### `NavigationService : INavigationService`
+#### 1.4.3 `NavigationService : INavigationService`
 
 NavigationView.ContentSelector からのビュー解決を実装し、HomeView / SettingsView をキャッシュします。
 
 - `Element ResolveView(string tag)` — タグからビューを解決
 
-## エントリポイント
+## 2. エントリポイント
 
 `Program.Main` で DI コンテナを構築し、MewUI の `ApplicationBuilder` でメインウィンドウを表示します。

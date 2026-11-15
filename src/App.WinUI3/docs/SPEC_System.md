@@ -1,14 +1,79 @@
-# ZenHanConverter.App.WinUI3 システム仕様書
+# App.WinUI3 システム仕様書
 
 本ドキュメントは `src/App.WinUI3`（WinUI 3 アプリ）のシステム仕様（概要・技術スタック・アーキテクチャ・構成・動作仕様）を記載します。
 メソッド内部のコードは記載しません。
 
-## システム概要
+## 目次 <!-- omit from toc -->
+
+- [1. システム概要](#1-システム概要)
+- [2. 技術スタック](#2-技術スタック)
+- [3. 共有コア](#3-共有コア)
+- [4. ビルドと配置](#4-ビルドと配置)
+  - [4.1 通常ビルド](#41-通常ビルド)
+  - [4.2 Native AOT の exe](#42-native-aot-の-exe)
+  - [4.3 Windows App SDK 未使用ペイロードの除外](#43-windows-app-sdk-未使用ペイロードの除外)
+  - [4.4 Native AOT の可否](#44-native-aot-の可否)
+- [5. src/App.WinUI3 プロジェクト](#5-srcappwinui3-プロジェクト)
+  - [5.1 src/App.WinUI3/Program.cs](#51-srcappwinui3programcs)
+    - [5.1.1 `Program` static class](#511-program-static-class)
+  - [5.2 src/App.WinUI3/App.xaml.cs](#52-srcappwinui3appxamlcs)
+    - [5.2.1 `App` partial class](#521-app-partial-class)
+  - [5.3 src/App.WinUI3/Services/INavigationService.cs](#53-srcappwinui3servicesinavigationservicecs)
+    - [5.3.1 `INavigationService` interface](#531-inavigationservice-interface)
+  - [5.4 src/App.WinUI3/Services/NavigationService.cs](#54-srcappwinui3servicesnavigationservicecs)
+    - [5.4.1 `NavigationService` class](#541-navigationservice-class)
+  - [5.5 src/App.WinUI3/Services/ClipboardService.cs](#55-srcappwinui3servicesclipboardservicecs)
+    - [5.5.1 `ClipboardService` partial class](#551-clipboardservice-partial-class)
+  - [5.6 src/App.WinUI3/Services/DependencyInjectionExtensions.cs](#56-srcappwinui3servicesdependencyinjectionextensionscs)
+    - [5.6.1 `DependencyInjectionExtensions` static class](#561-dependencyinjectionextensions-static-class)
+  - [5.7 src/App.WinUI3/ViewModels/MainWindowViewModel.cs](#57-srcappwinui3viewmodelsmainwindowviewmodelcs)
+    - [5.7.1 `MainWindowViewModel` partial class](#571-mainwindowviewmodel-partial-class)
+  - [5.8 src/App.WinUI3/ViewModels/HomeViewModel.cs](#58-srcappwinui3viewmodelshomeviewmodelcs)
+    - [5.8.1 `HomeViewModel` partial class](#581-homeviewmodel-partial-class)
+  - [5.9 src/App.Core.Presentation/ViewModels/SettingsViewModel.cs](#59-srcappcorepresentationviewmodelssettingsviewmodelcs)
+    - [5.9.1 `SettingsViewModel` partial class](#591-settingsviewmodel-partial-class)
+  - [5.10 src/App.Core.Presentation/ViewModels/ZenHanConvertItem.cs](#510-srcappcorepresentationviewmodelszenhanconvertitemcs)
+    - [5.10.1 `ZenHanConvertItem` partial class](#5101-zenhanconvertitem-partial-class)
+  - [5.11 src/App.Core.Presentation/ViewModels/ReplacePairItem.cs](#511-srcappcorepresentationviewmodelsreplacepairitemcs)
+    - [5.11.1 `ReplacePairItem` partial class](#5111-replacepairitem-partial-class)
+  - [5.12 src/App.WinUI3/Views/MainWindow.xaml / MainWindow.xaml.cs](#512-srcappwinui3viewsmainwindowxaml--mainwindowxamlcs)
+    - [5.12.1 `MainWindow` sealed partial class](#5121-mainwindow-sealed-partial-class)
+  - [5.13 src/App.WinUI3/Views/HomePage.xaml / HomePage.xaml.cs](#513-srcappwinui3viewshomepagexaml--homepagexamlcs)
+    - [5.13.1 `HomePage` sealed partial class](#5131-homepage-sealed-partial-class)
+  - [5.14 src/App.WinUI3/Views/SettingsPage.xaml / SettingsPage.xaml.cs](#514-srcappwinui3viewssettingspagexaml--settingspagexamlcs)
+    - [5.14.1 `SettingsPage` sealed partial class](#5141-settingspage-sealed-partial-class)
+  - [5.15 マルチカラム配置パネル（`EsUtil.Ui.WinUI3.ColumnPacking.ColumnPackingPanel`）](#515-マルチカラム配置パネルesutiluiwinui3columnpackingcolumnpackingpanel)
+  - [5.16 src/App.WinUI3/Helpers/FluentIcons.cs](#516-srcappwinui3helpersfluenticonscs)
+    - [5.16.1 `FluentIcons` class](#5161-fluenticons-class)
+  - [5.17 src/App.WinUI3/Helpers/EnableStyleSelector.cs](#517-srcappwinui3helpersenablestyleselectorcs)
+    - [5.17.1 `EnableStyleSelector` class](#5171-enablestyleselector-class)
+  - [5.18 共有コアに移動した要素](#518-共有コアに移動した要素)
+  - [5.19 src/App.WinUI3/Converters/](#519-srcappwinui3converters)
+    - [5.19.1 `BoolToCheckMarkConverter` sealed partial class](#5191-booltocheckmarkconverter-sealed-partial-class)
+    - [5.19.2 `StringNotEmptyToVisibilityConverter` sealed partial class](#5192-stringnotemptytovisibilityconverter-sealed-partial-class)
+- [6. ウィンドウ位置・サイズの復元と保存](#6-ウィンドウ位置サイズの復元と保存)
+- [7. クリップボード変換](#7-クリップボード変換)
+- [8. 変換前テキストの編集](#8-変換前テキストの編集)
+- [9. テストプロジェクト](#9-テストプロジェクト)
+  - [9.1 フォルダ構成](#91-フォルダ構成)
+- [10. 動作仕様](#10-動作仕様)
+  - [10.1 クリップボード監視](#101-クリップボード監視)
+  - [10.2 ページ遷移](#102-ページ遷移)
+  - [10.3 設定の自動保存](#103-設定の自動保存)
+  - [10.4 プリセットのマッチング](#104-プリセットのマッチング)
+  - [10.5 プリセット編集ダイアログのバリデーション](#105-プリセット編集ダイアログのバリデーション)
+- [11. パフォーマンス向上施策](#11-パフォーマンス向上施策)
+- [12. 依存関係](#12-依存関係)
+- [13. アーキテクチャ](#13-アーキテクチャ)
+- [14. コンポーネント](#14-コンポーネント)
+- [15. 例外処理ポリシー](#15-例外処理ポリシー)
+
+## 1. システム概要
 
 クリップボードのテキストを監視し、設定に基づいて全角/半角変換を実行してクリップボードへ書き戻す Windows デスクトップアプリです。
 UI フレームワークとして WinUI 3（Windows App SDK）を使用します。
 
-## 技術スタック
+## 2. 技術スタック
 
 - .NET 11
 - WinUI 3（`Microsoft.WindowsAppSDK` 2.*）
@@ -22,10 +87,10 @@ UI フレームワークとして WinUI 3（Windows App SDK）を使用します
 マルチカラム配置パネルは `EsUtil.Ui.WinUI3.ColumnPacking` の `ColumnPackingPanel` を使います（同梱ソースは持ちません）。
 配置計算は UI 非依存の `EsUtil.Feature.ColumnPacking.Core` が単一所有し、パネルはその結果を要素の配置へ写します。
 
-## 共有コア
+## 3. 共有コア
 
 `src/App.Core` は MewUI / WinUI3 に依存しない共有ライブラリです。モデル・変換ロジック・Win32 API・アイコンデータ・変換カテゴリ定義を提供し、
-仕様は `../core/SPEC_ExtFunc.md` と `../core/SPEC_System.md` を参照してください。
+仕様は `../../App.Core/docs/SPEC_ExtFunc.md` と `../../App.Core/docs/SPEC_System.md` を参照してください。
 
 WinUI アプリは `src/App.Core` と `src/App.Core.Presentation` のみを参照し、`src/App.MewUI`（MewUI 版）とは相互依存しません。
 両アプリは同一の設定ファイル（`%LOCALAPPDATA%\ZenHanConverter`）を共有します。
@@ -36,9 +101,9 @@ flowchart LR
     AppWinUI3[src/App.WinUI3] -->|参照| Core
 ```
 
-## ビルドと配置
+## 4. ビルドと配置
 
-### 通常ビルド
+### 4.1 通常ビルド
 
 ```powershell
 dotnet build src/App.WinUI3/App.WinUI3.csproj
@@ -53,7 +118,7 @@ dotnet run --project src/App.WinUI3/App.WinUI3.csproj
 `test/App.WinUI3` と `test/parity` は `WindowsAppSdkAutoInitialize=false` のため、ランタイムの無い環境でも
 導入ダイアログを出さずに終了します。
 
-### Native AOT の exe
+### 4.2 Native AOT の exe
 
 `buildScript/publish_WinUI3.bat` が `publish\winui3-<RID>-aot\ZenHanConverter.WinUI3.exe` を出力します
 （既定 RID は `win-x64`）。スクリプトはリポジトリルートを基準に動作します。
@@ -67,7 +132,7 @@ AOT 発行に必要なプロパティは次のとおりです。
 5. `EnableMsixTooling=true`（`resources.pri` の生成に必須。プロジェクトで設定済み。無いと起動時に `Microsoft.UI.Xaml.dll` で `0xc000027b` になる）
 6. `AllowUnsafeBlocks=true` と `CsWinRTAotOptimizerEnabled=true`（CsWinRT が生成するコードと AOT 最適化に必要。前者はプロジェクトで設定済み、後者は Windows App SDK 2.6 が要求する）
 
-### Windows App SDK 未使用ペイロードの除外
+### 4.3 Windows App SDK 未使用ペイロードの除外
 
 配布する AOT 版は Windows App Runtime を同梱しないため、AI / ML / Search / Widgets / WebView2 の
 ペイロードは出力へ複製されません。「自己完結の発行（`-p:WindowsAppSDKSelfContained=true`）へ切り替えた場合」に
@@ -82,7 +147,7 @@ AOT 発行に必要なプロパティは次のとおりです。
 リポジトリ内へ直接発行するとフレームワーク配置のファイルが出力先へ混在し、プロジェクト ディレクトリ配下の
 `publish` がアプリのコンテンツ（`App.xaml` / `resources.pri` 等）として取り込まれて肥大化します。
 
-### Native AOT の可否
+### 4.4 Native AOT の可否
 
 Windows App SDK **2.6 では Native AOT で発行できます**（実測 2026-11-07）。成立する条件は
 「Windows App Runtime を同梱しない（`WindowsAppSDKSelfContained=false`）」「`EnableMsixTooling=true` で
@@ -92,17 +157,17 @@ Windows App SDK **2.6 では Native AOT で発行できます**（実測 2026-11
 
 `CommunityToolkit.WinUI.UI.Controls.DataGrid`（第三者）は AOT / トリム解析で `IL2104` を報告するため、
 `App.WinUI3.csproj` の `NoWarn` で抑止しています（理由は
-[`.github/ビルド設定規約.md`](../../.github/ビルド設定規約.md) の付録 A）。
+[`.github/ビルド設定規約.md`](../../../.github/ビルド設定規約.md) の付録 A）。
 
 置換一覧の `DataGrid` はセル テンプレートを `x:Bind`（`x:DataType` 付き）で書き、プロパティ名の実行時解決に
 頼りません。設定画面の `ctk:Segmented` も、`SelectedValue` + `SelectedValuePath`（プロパティ名の実行時解決）を
 使わず、`SelectedItem` を `ZenHanConvertItem.SelectedOption` へ双方向バインドします。
 
-## src/App.WinUI3 プロジェクト
+## 5. src/App.WinUI3 プロジェクト
 
-### src/App.WinUI3/Program.cs
+### 5.1 src/App.WinUI3/Program.cs
 
-#### `Program` static class
+#### 5.1.1 `Program` static class
 
 アプリケーションのエントリ ポイント（XAML の自動生成 Main は `DISABLE_XAML_GENERATED_MAIN` で無効）。
 
@@ -111,9 +176,9 @@ Windows App SDK **2.6 では Native AOT で発行できます**（実測 2026-11
 - `Main()` — `WindowsAppRuntimeBootstrap.TryEnsureAvailable` でランタイムを用意し、`Application.Start` で
   `App` を生成する。終了時に `WindowsAppRuntimeBootstrap.Shutdown` を呼ぶ
 
-### src/App.WinUI3/App.xaml.cs
+### 5.2 src/App.WinUI3/App.xaml.cs
 
-#### `App` partial class
+#### 5.2.1 `App` partial class
 
 アプリケーションのエントリポイント。
 
@@ -137,9 +202,9 @@ Windows App SDK **2.6 では Native AOT で発行できます**（実測 2026-11
 
 ---
 
-### src/App.WinUI3/Services/INavigationService.cs
+### 5.3 src/App.WinUI3/Services/INavigationService.cs
 
-#### `INavigationService` interface
+#### 5.3.1 `INavigationService` interface
 
 アプリケーション内のページ遷移を管理する抽象（DIP）。
 
@@ -153,9 +218,9 @@ Windows App SDK **2.6 では Native AOT で発行できます**（実測 2026-11
 
 ---
 
-### src/App.WinUI3/Services/NavigationService.cs
+### 5.4 src/App.WinUI3/Services/NavigationService.cs
 
-#### `NavigationService` class
+#### 5.4.1 `NavigationService` class
 
 アプリケーション内のページ遷移を管理するサービス。
 
@@ -180,9 +245,9 @@ Windows App SDK **2.6 では Native AOT で発行できます**（実測 2026-11
 
 ---
 
-### src/App.WinUI3/Services/ClipboardService.cs
+### 5.5 src/App.WinUI3/Services/ClipboardService.cs
 
-#### `ClipboardService` partial class
+#### 5.5.1 `ClipboardService` partial class
 
 システムクリップボードの読み書きと内容変更監視を提供するサービス。
 
@@ -208,9 +273,9 @@ Windows App SDK **2.6 では Native AOT で発行できます**（実測 2026-11
 
 ---
 
-### src/App.WinUI3/Services/DependencyInjectionExtensions.cs
+### 5.6 src/App.WinUI3/Services/DependencyInjectionExtensions.cs
 
-#### `DependencyInjectionExtensions` static class
+#### 5.6.1 `DependencyInjectionExtensions` static class
 
 DI コンテナへのサービス登録拡張メソッド。
 
@@ -224,9 +289,9 @@ DI コンテナへのサービス登録拡張メソッド。
 
 ---
 
-### src/App.WinUI3/ViewModels/MainWindowViewModel.cs
+### 5.7 src/App.WinUI3/ViewModels/MainWindowViewModel.cs
 
-#### `MainWindowViewModel` partial class
+#### 5.7.1 `MainWindowViewModel` partial class
 
 メインウィンドウのデータ管理とページ遷移制御。
 
@@ -238,9 +303,9 @@ DI コンテナへのサービス登録拡張メソッド。
 
 ---
 
-### src/App.WinUI3/ViewModels/HomeViewModel.cs
+### 5.8 src/App.WinUI3/ViewModels/HomeViewModel.cs
 
-#### `HomeViewModel` partial class
+#### 5.8.1 `HomeViewModel` partial class
 
 ホーム画面のデータ管理、クリップボード監視と文字変換実行。
 
@@ -275,9 +340,9 @@ DI コンテナへのサービス登録拡張メソッド。
 
 ---
 
-### src/App.Core.Presentation/ViewModels/SettingsViewModel.cs
+### 5.9 src/App.Core.Presentation/ViewModels/SettingsViewModel.cs
 
-#### `SettingsViewModel` partial class
+#### 5.9.1 `SettingsViewModel` partial class
 
 設定画面のデータ管理。
 
@@ -314,9 +379,9 @@ DI コンテナへのサービス登録拡張メソッド。
 
 ---
 
-### src/App.Core.Presentation/ViewModels/ZenHanConvertItem.cs
+### 5.10 src/App.Core.Presentation/ViewModels/ZenHanConvertItem.cs
 
-#### `ZenHanConvertItem` partial class
+#### 5.10.1 `ZenHanConvertItem` partial class
 
 設定画面の変換項目を表す ViewModel。
 
@@ -337,9 +402,9 @@ DI コンテナへのサービス登録拡張メソッド。
 
 ---
 
-### src/App.Core.Presentation/ViewModels/ReplacePairItem.cs
+### 5.11 src/App.Core.Presentation/ViewModels/ReplacePairItem.cs
 
-#### `ReplacePairItem` partial class
+#### 5.11.1 `ReplacePairItem` partial class
 
 置換ルール1行分の ViewModel。
 
@@ -357,9 +422,9 @@ DI コンテナへのサービス登録拡張メソッド。
 
 ---
 
-### src/App.WinUI3/Views/MainWindow.xaml / MainWindow.xaml.cs
+### 5.12 src/App.WinUI3/Views/MainWindow.xaml / MainWindow.xaml.cs
 
-#### `MainWindow` sealed partial class
+#### 5.12.1 `MainWindow` sealed partial class
 
 アプリケーションのメインウィンドウ。
 
@@ -395,9 +460,9 @@ DI コンテナへのサービス登録拡張メソッド。
 
 ---
 
-### src/App.WinUI3/Views/HomePage.xaml / HomePage.xaml.cs
+### 5.13 src/App.WinUI3/Views/HomePage.xaml / HomePage.xaml.cs
 
-#### `HomePage` sealed partial class
+#### 5.13.1 `HomePage` sealed partial class
 
 ホーム画面を表示するページ。
 
@@ -419,9 +484,9 @@ DI コンテナへのサービス登録拡張メソッド。
 
 ---
 
-### src/App.WinUI3/Views/SettingsPage.xaml / SettingsPage.xaml.cs
+### 5.14 src/App.WinUI3/Views/SettingsPage.xaml / SettingsPage.xaml.cs
 
-#### `SettingsPage` sealed partial class
+#### 5.14.1 `SettingsPage` sealed partial class
 
 設定画面を表示するページ。
 
@@ -451,7 +516,7 @@ DI コンテナへのサービス登録拡張メソッド。
 
 ---
 
-### マルチカラム配置パネル（`EsUtil.Ui.WinUI3.ColumnPacking.ColumnPackingPanel`）
+### 5.15 マルチカラム配置パネル（`EsUtil.Ui.WinUI3.ColumnPacking.ColumnPackingPanel`）
 
 子要素を縦方向の複数列へ配置し、配置に必要なサイズを算出するパネル。`ItemsControl` の `ItemsPanel` を置き換えられます。
 **同梱ソースは持たず**、EsUtil のパネルをパッケージ参照で使います（配置計算は `EsUtil.Feature.ColumnPacking.Core` が単一所有）。
@@ -471,9 +536,9 @@ DI コンテナへのサービス登録拡張メソッド。
 
 ---
 
-### src/App.WinUI3/Helpers/FluentIcons.cs
+### 5.16 src/App.WinUI3/Helpers/FluentIcons.cs
 
-#### `FluentIcons` class
+#### 5.16.1 `FluentIcons` class
 
 Core の SVG パスデータ（`FluentIconData`）から WinUI のアイコン形状（`Geometry`）を生成します。
 
@@ -489,17 +554,17 @@ Core の SVG パスデータ（`FluentIconData`）から WinUI のアイコン�
 
 ---
 
-### src/App.WinUI3/Helpers/EnableStyleSelector.cs
+### 5.17 src/App.WinUI3/Helpers/EnableStyleSelector.cs
 
-#### `EnableStyleSelector` class
+#### 5.17.1 `EnableStyleSelector` class
 
 SegmentedItem の有効/無効状態に応じたスタイルセレクター。
 
 ---
 
-### 共有コアに移動した要素
+### 5.18 共有コアに移動した要素
 
-次の要素は `src/App.WinUI3` ではなく `src/App.Core` に配置されています（MewUI 版と共有するため）。詳細は `../core/SPEC_System.md` を参照してください。
+次の要素は `src/App.WinUI3` ではなく `src/App.Core` に配置されています（MewUI 版と共有するため）。詳細は `../../App.Core/docs/SPEC_System.md` を参照してください。
 
 - `SegmentDefinitions` — 変換カテゴリのセグメント定義（`Core.Models`）
 - `INavigationService` を除くコア抽象（`Core.Interfaces` の `IClipboardService` / `ITextConverter`）
@@ -507,16 +572,16 @@ SegmentedItem の有効/無効状態に応じたスタイルセレクター。
 
 ---
 
-### src/App.WinUI3/Converters/
+### 5.19 src/App.WinUI3/Converters/
 
-#### `BoolToCheckMarkConverter` sealed partial class
+#### 5.19.1 `BoolToCheckMarkConverter` sealed partial class
 
 bool 値をチェックマーク文字列に変換（IValueConverter）。
 
 - `Convert`: true → "✅", false/null → "□"
 - `ConvertBack`: 未サポート（NotSupportedException）
 
-#### `StringNotEmptyToVisibilityConverter` sealed partial class
+#### 5.19.2 `StringNotEmptyToVisibilityConverter` sealed partial class
 
 空文字列でない場合に Visible にするコンバーター（IValueConverter）。
 
@@ -525,7 +590,7 @@ bool 値をチェックマーク文字列に変換（IValueConverter）。
 
 ---
 
-## ウィンドウ位置・サイズの復元と保存
+## 6. ウィンドウ位置・サイズの復元と保存
 
 起動時（`Activated`）は `AppSetting.WindowWidth` / `WindowHeight`（DIP）を初期サイズとして復元し、`WindowX` / `WindowY`（DIP）があれば位置も復元します。
 終了時（`Closed`）は現在のサイズと位置を DIP へ換算して `AppSetting` へ書き戻し、同期で JSON 保存します（デバウンス待ちではプロセス終了に間に合わないため）。
@@ -538,19 +603,19 @@ bool 値をチェックマーク文字列に変換（IValueConverter）。
 表示領域は仮想画面（全モニタの外接矩形）を `EsUtil.Platform.Core` の `WinVirtualScreen` が物理ピクセルで取得し、ウィンドウの DPI スケールで DIP へ換算したものです。
 WinUI の `AppWindow.Position` / `Size` は物理ピクセルを扱うため、保存・復元の両方向で `GetDpiForWindow` による換算を行います。
 
-## クリップボード変換
+## 7. クリップボード変換
 
 `AppSetting.IsClipboardConvertEnabled` が false の場合、`HomeViewModel` はクリップボードの読み取り・書き戻しを一切行いません。
 全角/半角変換は常に有効で、ホーム画面の「変更前」テキストボックスへの手動入力に対しても適用されます（クリップボード変換の有効/無効に依存しません）。
 
-## 変換前テキストの編集
+## 8. 変換前テキストの編集
 
 ホーム画面の「変更前」テキストボックスは編集可能です。変更すると `HomeViewModel.BeforeText` のセッター経由で自動変換され、「変更後」に反映されます（クリップボードへの書き戻しは行いません）。  
 `LineNumberTextBox.IsReadOnly` の依存関係プロパティの既定値は `true` のため、編集可能にするには `IsReadOnly="False"` を明示する必要があります。
 
-## テストプロジェクト
+## 9. テストプロジェクト
 
-### フォルダ構成
+### 9.1 フォルダ構成
 
 テストは UI ごとのプロジェクト（`test/App.WinUI3`）に置き、共有部分（`TestHelper.cs`）は `test/TestHelper.cs` が持ちます。
 
@@ -563,13 +628,13 @@ WinUI の `AppWindow.Position` / `Size` は物理ピクセルを扱うため、�
 | `test/App.WinUI3/Views/SettingsPagePresetValidationTests.cs` | 設定画面のプリセット検証 |
 
 - パネルは `EsUtil.Ui.WinUI3.ColumnPacking` を使うため、同梱のテストは持ちません。
-- 共有コアのテストは `test/App.Core`（内容は `src/App.Core/SPEC_System.md` を参照）、共有プレゼンテーション層のテストは `test/App.Core.Presentation` にあります。
+- 共有コアのテストは `test/App.Core`（内容は `src/App.Core/docs/SPEC_System.md` を参照）、共有プレゼンテーション層のテストは `test/App.Core.Presentation` にあります。
 
 ---
 
-## 動作仕様
+## 10. 動作仕様
 
-### クリップボード監視
+### 10.1 クリップボード監視
 
 1. アプリ起動後、システムクリップボードの変更イベントを購読
 2. 変更を検出すると `SemaphoreSlim` で排他制御
@@ -577,27 +642,27 @@ WinUI の `AppWindow.Position` / `Size` は物理ピクセルを扱うため、�
 4. 変換結果が元のテキストと異なる場合のみクリップボードに書き戻し
 5. 書き戻し中の再帰イベントは `_isUpdatingClipboard` フラグで防止
 
-### ページ遷移
+### 10.2 ページ遷移
 
 1. `NavigationView.SelectedItem` の変更 → MainWindowViewModel.SelectedPage → NavigationService.NavigateTo
 2. 設定画面への遷移は `NavigationView` の設定項目（歯車アイコン）から行う
 3. ページインスタンスは DI コンテナ経由で生成され、キャッシュされる
 4. 前ページは Visibility.Collapsed で非表示化
 
-### 設定の自動保存
+### 10.3 設定の自動保存
 
 1. `ConvertConfig` または `AppSetting` のプロパティ変更を検出
 2. 300ms のデバウンス後、JSON ファイルに非同期保存
 3. デバウンス中にさらに変更があった場合はタイマーがリセット
 
-### プリセットのマッチング
+### 10.4 プリセットのマッチング
 
 1. `GetPresetNames()` と同じ順序（組込み→保存、各グループ内で名前昇順）で先頭から一致確認
 2. 最初に見つかった一致するプリセット名を `SelectedPresetName` に設定
 3. 設定内容の変更は `ConvertConfig.PropertyChanged` イベントで検出
 4. `LoadPreset` 実行時は `_isUpdatingSelection` フラグで再帰を防止
 
-### プリセット編集ダイアログのバリデーション
+### 10.5 プリセット編集ダイアログのバリデーション
 
 | 条件 | メッセージ | 保存ボタン | 削除ボタン |
 | --- | --- | --- | --- |
@@ -612,7 +677,7 @@ WinUI の `AppWindow.Position` / `Size` は物理ピクセルを扱うため、�
 
 ---
 
-## パフォーマンス向上施策
+## 11. パフォーマンス向上施策
 
 - **変換ペアのキャッシュ**: `CharConverter._cachedPairs` により Config 変更時のみ再計算
 - **メタデータ駆動の DRY 設計**: `ConvertConfig.Mode.All` 配列からコピー/比較/全角設定のアクション配列を動生成
@@ -622,7 +687,7 @@ WinUI の `AppWindow.Position` / `Size` は物理ピクセルを扱うため、�
 - **GeneratedRegex**: 連続スペース検出の正規表現をコンパイル時生成
 - **SettingsPage の事前生成**: NavigationService.Initialize で DispatcherQueue.Low 優先度で非同期にページインスタンスを事前生成
 
-## 依存関係
+## 12. 依存関係
 
 本プロジェクトが直接参照するプロジェクトとパッケージです（版は `Directory.Packages.props` が単一所有します）。
 
@@ -638,7 +703,7 @@ WinUI の `AppWindow.Position` / `Size` は物理ピクセルを扱うため、�
 
 - 依存の版は `Directory.Packages.props` が単一所有し、復元は `packages.lock.json` で固定します（`.github/CONTRIBUTING.md`）。
 
-## アーキテクチャ
+## 13. アーキテクチャ
 
 WinUI 3 版は、UI 非依存の 2 層（`ZenHanConverter.App.Core` / `ZenHanConverter.App.Core.Presentation`）の上に、WinUI 3 のページとコードビハインドを重ねます。
 DI（`Microsoft.Extensions.Hosting`）が ViewModel・サービス・ページを解決し、ページは ViewModel だけを参照します。
@@ -651,7 +716,7 @@ flowchart TD
     E["EsUtil.Ui.WinUI3.*（パッケージ）"] --> V
 ```
 
-## コンポーネント
+## 14. コンポーネント
 
 | コンポーネント | 役割 |
 | --- | --- |
@@ -662,7 +727,7 @@ flowchart TD
 | `NavigationService` | ページ遷移（ページ型の解決は `s_pageMap` が単一所有） |
 | `DispatcherQueueUiDispatcher` | UI スレッドへの委譲 |
 
-## 例外処理ポリシー
+## 15. 例外処理ポリシー
 
 - 集約ハンドラー（`App.UnhandledException`・`AppDomain.UnhandledException`・`TaskScheduler.UnobservedTaskException`）で未処理例外を受け止め、ログへ記録してダイアログで通知します。
 - 想定内の失敗（クリップボードが使用中・権限が無い）は捕捉し、理由をコメントで残して処理を継続します。

@@ -14,10 +14,7 @@ namespace EsUtil.ZenHanConverter.App.Core.Models;
 /// プロパティ変更から300msのデバウンスで自動保存します。<br/>
 /// デバウンス中にさらに変更があった場合は、タイマーがリセットされます。<br/>
 /// 保存は CancellationTokenSource によるキャンセル制御付きの非同期パターンで行われます。<br/><br/>
-/// 最適化施策: <br/>
-/// - CancellationTokenSource によるデバウンス（不要なファイル書き込みを抑制）<br/>
-/// - await Task.Delay による非同期待機（UIスレッドをブロックしない）<br/>
-/// - GC.SuppressFinalize によるファイナライズ抑制</remarks>
+/// 書き込みは <see cref="CancellationTokenSource"/> でデバウンスし、待機は非同期で行う（UI スレッドをブロックしない）。</remarks>
 /// <typeparam name="T">永続化対象の具象型。</typeparam>
 public abstract partial class SettingsPersistenceBase<T> : ObservableObject, IDisposable where T : class
 {
