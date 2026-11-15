@@ -13,9 +13,7 @@ namespace EsUtil.ZenHanConverter.App.WinUI3.Services;
 /// <summary>アプリケーション内のページ遷移を管理します。</summary>
 /// <remarks>ページの事前生成とキャッシュにより、遷移時の生成コストを削減します。<br/>
 /// INavigationService インターフェースを実装し、DIP による依存性注入に対応します。<br/>
-/// 最適化手法: <br/>
-/// - s_pageMap を FrozenDictionary で静的初期化(読み取り専用の高速ルックアップ)<br/>
-/// - _pageCache でページインスタンスをキャッシュ(再生成コスト削減)</remarks>
+/// ページ名と型の対応は静的初期化した <c>FrozenDictionary</c> が持ち、ページ インスタンスは <c>_pageCache</c> が保持する。</remarks>
 public class NavigationService(IServiceProvider services) : INavigationService
 {
     /// <summary>ページ名と型のマッピング。FrozenDictionary による高速・不変なルックアップ。</summary>

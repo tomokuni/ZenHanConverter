@@ -34,23 +34,23 @@
 │   └── BannedSymbols.txt           # 使用を禁止する API の一覧（アナライザーが読む）
 ├── src/
 │   ├── App.MewUI/           # MewUI アプリ本体（MewUI 依存）
-│   │   ├── README.md / SPEC_ExtFunc.md / SPEC_System.md
+│   │   ├── README.md / docs/SPEC_ExtFunc.md / docs/SPEC_System.md
 │   ├── App.WinUI3/          # WinUI 3 アプリ本体（WinUI 3 依存）
-│   │   ├── README.md / SPEC_ExtFunc.md / SPEC_System.md
+│   │   ├── README.md / docs/SPEC_ExtFunc.md / docs/SPEC_System.md
 │   ├── App.AvaloniaUI/      # Avalonia UI アプリ本体（Avalonia UI 依存）
-│   │   ├── README.md / SPEC_ExtFunc.md / SPEC_System.md
+│   │   ├── README.md / docs/SPEC_ExtFunc.md / docs/SPEC_System.md
 │   ├── App.WinForms/        # WinForms アプリ本体（Windows Forms 依存）
-│   │   ├── README.md / SPEC_ExtFunc.md / SPEC_System.md
-│   ├── core/                # 共有コア（モデル・変換ロジック・カテゴリ定義・Win32 API・アイコン。UI 非依存）
-│   │   ├── README.md / SPEC_ExtFunc.md / SPEC_System.md
+│   │   ├── README.md / docs/SPEC_ExtFunc.md / docs/SPEC_System.md
+│   ├── App.Core/            # 共有コア（モデル・変換ロジック・カテゴリ定義・Win32 API・アイコン。UI 非依存）
+│   │   ├── README.md / docs/SPEC_ExtFunc.md / docs/SPEC_System.md
 │   └── App.Core.Presentation/   # 共有プレゼンテーション層（設定画面の ViewModel。UI 非依存）
-│       ├── README.md / SPEC_ExtFunc.md / SPEC_System.md
+│       ├── README.md / docs/SPEC_ExtFunc.md / docs/SPEC_System.md
 └── test/                    # 単体テスト（xUnit v3）
     ├── App.MewUI/           # App.MewUI のテスト
     ├── App.WinUI3/          # App.WinUI3 のテスト
     ├── App.AvaloniaUI/      # App.AvaloniaUI のテスト
     ├── App.WinForms/        # App.WinForms のテスト
-    ├── core/                # core のテスト（UI フレームワーク非依存）
+    ├── App.Core/            # App.Core のテスト（UI フレームワーク非依存）
     ├── App.Core.Presentation/   # App.Core.Presentation のテスト（UI フレームワーク非依存）
     └── parity/              # アプリ固有 ViewModel の挙動一致を検証（README.md に差異一覧）
 ```
@@ -87,17 +87,11 @@ dotnet build ZenHanConverter.slnx
 
 ### 依存パッケージ
 
-`PackageReference` には**メジャーバージョンのみ**を指定します（例: `Version="8.*"`）。
-0.x のパッケージはメジャーが 0 で互換性が保証されないため、**マイナーまで**を指定します（例: `Version="0.1.*"`）。
-同一範囲内の最新版が復元時に選ばれるため、常に最新の状態でビルドできます。
+**版は [`Directory.Packages.props`](../Directory.Packages.props) が単一所有し、固定の版で指定します**（範囲・浮動版は書きません。 `packages.lock.json` で復元結果を固定します）。 規則の所有者は [`ビルド設定規約.md`](ビルド設定規約.md) §1「パッケージの版と復元」です。
 
-- EsUtil のパッケージ（`EsUtil.Feature.ZenHan.Core` / `EsUtil.Platform.Core` / `EsUtil.Feature.ColumnPacking.Core` / `EsUtil.Ui.WinUI3.ColumnPacking`）は nuget.org の公開版を参照します。
-  **未公開の版を参照すると CI は復元に失敗します。** ローカルでは `Directory.Build.props` が隣の EsUtil リポジトリの
-  ローカル フィード（`..\EsUtil\.nupkg`）を追加のソースにするため、公開前の版でも復元できます。
-
-- メジャーが上がる変更（破壊的変更を含む）は自動では取り込まれません。手動で更新します。
-- **浮動指定（`12.*` など）は復元時に同一メジャーの最新版を解決します。** そのため更新が必要になるのはメジャーが上がったときだけです。
-  更新の有無は `dotnet list ZenHanConverter.slnx package --outdated` で確認できます（プレリリースも見る場合は `--include-prerelease`）。
+- EsUtil のパッケージ（`EsUtil.Feature.ZenHan.Core` / `EsUtil.Platform.Core` / `EsUtil.Feature.ColumnPacking.Core` / `EsUtil.Ui.WinUI3.ColumnPacking`）は nuget.org の公開版を参照します（版は `Directory.Build.props` の `EsUtilVersion`）。
+  **未公開の版を参照すると CI は復元に失敗します。** 未公開の版を試すときは、その環境でだけ取得元を足します（[`NuGet.config`](../NuGet.config) は `nuget.org` だけを指定します）。
+- 版を上げるときは `Directory.Packages.props` を直し、`dotnet restore` で `packages.lock.json` を更新して一緒にコミットします。 更新の有無は `dotnet list ZenHanConverter.slnx package --outdated` で確認できます（プレリリースも見る場合は `--include-prerelease`）。
 - **推移依存（`SkiaSharp` など）は親パッケージが指定する範囲の最小版が選ばれます。** 直接参照で強制すると
   （例: Avalonia 12 に対する `SkiaSharp` 4 系・`HarfBuzzSharp` 14 系）描画や Native AOT が壊れる恐れがあるため、更新しません。
 - テストは **xunit.v3 4 系**（Microsoft.Testing.Platform）を使用します。VSTest 専用の `Microsoft.NET.Test.Sdk` / `xunit.runner.visualstudio` / `coverlet.collector` は参照しません。
@@ -181,10 +175,10 @@ dotnet run --project src/App.WinForms/App.WinForms.csproj
 
 - 第 1 引数に RID を渡すと対象を変更できます（既定: `win-x64`）。
 - MewUI 版は Native AOT のため完全な単一バイナリです。
-- WinUI 3 版は発行時に Windows App SDK の未使用ペイロード（AI / ML / Search / Widgets / WebView2）を自動除外します（約 55 MB 削減。詳細は `src/App.WinUI3/SPEC_System.md`）。
-- WinUI 3 版は Native AOT で発行します（Windows App Runtime は同梱しないため、exe 単体ではなくフォルダー単位で配布します。詳細は `src/App.WinUI3/SPEC_System.md`）。
-- Avalonia UI 版は Native AOT ですが、描画に使う SkiaSharp のネイティブ DLL を exe へ同梱できないため、**exe 単体ではなくフォルダー単位で配布**します（`libSkiaSharp.dll` / `av_libglesv2.dll` / `libHarfBuzzSharp.dll` を同じフォルダーに置きます。詳細は `src/App.AvaloniaUI/SPEC_System.md`）。
-- WinForms 版は Native AOT に対応せず、トリミングもサポートされないため（`NETSDK1175`）、単一ファイル化のみを行います（詳細は `src/App.WinForms/SPEC_System.md`）。
+- WinUI 3 版は発行時に Windows App SDK の未使用ペイロード（AI / ML / Search / Widgets / WebView2）を自動除外します（削減量は `.github/verify/verifyPublish.ps1` が実測して表示します。詳細は `src/App.WinUI3/docs/SPEC_System.md`）。
+- WinUI 3 版は Native AOT で発行します（Windows App Runtime は同梱しないため、exe 単体ではなくフォルダー単位で配布します。詳細は `src/App.WinUI3/docs/SPEC_System.md`）。
+- Avalonia UI 版は Native AOT ですが、描画に使う SkiaSharp のネイティブ DLL を exe へ同梱できないため、**exe 単体ではなくフォルダー単位で配布**します（`libSkiaSharp.dll` / `av_libglesv2.dll` / `libHarfBuzzSharp.dll` を同じフォルダーに置きます。詳細は `src/App.AvaloniaUI/docs/SPEC_System.md`）。
+- WinForms 版は Native AOT に対応せず、トリミングもサポートされないため（`NETSDK1175`）、単一ファイル化のみを行います（詳細は `src/App.WinForms/docs/SPEC_System.md`）。
 - WinUI 3 版の exe 名は `ZenHanConverter.WinUI3.exe`、WinForms 版は `ZenHanConverter.WinForms.exe` です（アセンブリ名は `<製品名>.<UI名>` で、プロジェクト名 `App.WinUI3` とは一致しません。 名前空間は `EsUtil.ZenHanConverter.App.WinUI3` のままです）。
 - ここでの出力は展開済みの状態です。**Release に添付する配布物はすべて zip**（`release-config.json` の `uis[].zip`。`release.yml` が publish 後に zip 化）です。
 
@@ -195,7 +189,7 @@ dotnet run --project src/App.WinForms/App.WinForms.csproj
 | スクリプト（`buildScript/` 配下） | 対象 | 出力先 |
 | --- | --- | --- |
 | `publish_MewUI.bat` | MewUI 版 | `src\App.MewUI\bin\Release\net11.0-windows10.0.17763.0\` |
-| `publish_WinUI3.bat` | WinUI 3 版 | `src\App.WinUI3\bin\Release\net11.0-windows10.0.17763.0\win-x64\` |
+| `publish_WinUI3.bat` | WinUI 3 版 | `src\App.WinUI3\bin\Release\net11.0-windows10.0.19041.0\win-x64\` |
 | `publish_AvaloniaUI.bat` | Avalonia UI 版 | `src\App.AvaloniaUI\bin\Release\net11.0-windows10.0.17763.0\` |
 | `publish_WinForms.bat` | WinForms 版 | `src\App.WinForms\bin\Release\net11.0-windows10.0.17763.0\` |
 

@@ -1,20 +1,35 @@
-# ZenHanConverter.App.Core.Presentation システム仕様書
+# App.Core.Presentation システム仕様書
 
 本ドキュメントは `src/App.Core.Presentation`（UI フレームワーク非依存のプレゼンテーション層）の内部設計を記載します。
 メソッド内部のコードは記載しません。
 
-## システム概要
+## 目次 <!-- omit from toc -->
+
+- [1. システム概要](#1-システム概要)
+- [2. 技術スタック](#2-技術スタック)
+- [3. 位置づけ](#3-位置づけ)
+- [4. アーキテクチャ](#4-アーキテクチャ)
+- [5. コンポーネント構成](#5-コンポーネント構成)
+- [6. 排他選択の同期](#6-排他選択の同期)
+- [7. 置換ルールの即時反映](#7-置換ルールの即時反映)
+- [8. プリセット選択を所有する型](#8-プリセット選択を所有する型)
+- [9. テストプロジェクト](#9-テストプロジェクト)
+- [10. 依存関係](#10-依存関係)
+- [11. 例外処理ポリシー](#11-例外処理ポリシー)
+- [12. 各 UI との関係](#12-各-ui-との関係)
+
+## 1. システム概要
 
 設定画面の ViewModel を 4 つの UI 実装（MewUI 版 / WinUI 3 版 / Avalonia UI 版 / WinForms 版）で共有するためのライブラリです。
 UI フレームワークの型を一切参照せず、`src/App.Core` と `CommunityToolkit.Mvvm` のみに依存します。
 
-## 技術スタック
+## 2. 技術スタック
 
 - .NET 11
 - CommunityToolkit.Mvvm 8.*（`ObservableObject` / `[ObservableProperty]` / `[RelayCommand]`）
 - `src/App.Core`（モデル・変換ロジック・カテゴリ定義）
 
-## 位置づけ
+## 3. 位置づけ
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
@@ -42,7 +57,7 @@ UI フレームワークの型を一切参照せず、`src/App.Core` と `Commun
 逆方向の依存はありません。Presentation 層は UI の型（`Control` / `Window` / `Dispatcher` 等）を参照しないため、
 ヘッドレスで単体テストできます。
 
-## アーキテクチャ
+## 4. アーキテクチャ
 
 ```mermaid
 classDiagram
@@ -100,7 +115,7 @@ classDiagram
     ReplacePairItem ..> ReplacePair : 検証を委譲
 ```
 
-## コンポーネント構成
+## 5. コンポーネント構成
 
 | コンポーネント | 責務 |
 | --- | --- |
@@ -111,7 +126,7 @@ classDiagram
 | `PresetEditDialogViewModel` | プリセット名の検証と保存・削除の可否を判断する |
 | `HomeDisplayText` | ホーム画面が共有する表示文言の単一所有元 |
 
-## 排他選択の同期
+## 6. 排他選択の同期
 
 排他選択は、UI フレームワークによって表現方法が異なります。本プロジェクトは 2 つの窓口を提供し、
 どちらからでも同じ設定値へ到達できるようにしています。
@@ -143,7 +158,7 @@ sequenceDiagram
 
 循環更新は `_isSyncing` フラグで防止します。
 
-## 置換ルールの即時反映
+## 7. 置換ルールの即時反映
 
 `SettingsViewModel` は `ReplacePairItem` の変更通知を購読し、編集内容を検証して設定へ反映します。
 
@@ -165,9 +180,9 @@ sequenceDiagram
 `ReloadReplaceItemsFromConfig` で一覧を作り直す場合は、作り直す前に必ず全行の購読を解除します
 （解除しないと古い行が購読され続けます）。
 
-## プリセット選択の単一所有
+## 8. プリセット選択を所有する型
 
-`SelectedPresetName` は本プロジェクトが単一所有し、タイトルバーと設定画面の双方が同じ値をバインドします。
+`SelectedPresetName` は本プロジェクトの `SettingsViewModel` が保持し、タイトルバーと設定画面の双方が同じ値をバインドします。
 再帰的な読み込みは `_isUpdatingSelection` フラグで防止します。
 
 | 変更の発生源 | 動作 |
@@ -179,7 +194,7 @@ sequenceDiagram
 - **設定が変わるたびに照合が走ります**（置換行の 1 文字入力でも `ConvertConfig` の変更通知から呼ばれます）。 そのため照合の側で「組み込みプリセットの適用結果」と「ユーザー プリセットの読み込み結果」を覚えます（`ConvertConfig.FindMatchingPreset`）。 ユーザー プリセットはファイルの最終更新日時と長さを鍵にするため、保存・削除・外部からの編集のいずれでも読み直します。
 - **プリセット一覧（`RefreshPresets`）は差分が無ければ何もしません**。 1 件ずつ足すと一覧の再読み込みのたびに UI が件数分だけ作り直しを要求されます（MewUI は通知ごとに全件を複製し、WinForms は毎回配列へ写して比較します）。
 
-## テストプロジェクト
+## 9. テストプロジェクト
 
 `test/App.Core.Presentation` が本プロジェクトの単体テストを持ちます。
 
@@ -197,7 +212,7 @@ test/App.Core.Presentation
 ファイルを書き込むテストは、実ユーザーの設定を汚さないよう
 `SettingsPersistenceBase.AutoSaveFileName` と `ConvertConfig.PresetDirectory` を一時ディレクトリへ差し替えます。
 
-## 依存関係
+## 10. 依存関係
 
 本プロジェクトが直接参照するプロジェクトとパッケージです（版は `Directory.Packages.props` が単一所有します）。
 
@@ -213,12 +228,12 @@ test/App.Core.Presentation
 
 - 依存の版は `Directory.Packages.props` が単一所有し、復元は `packages.lock.json` で固定します（`.github/CONTRIBUTING.md`）。
 
-## 例外処理ポリシー
+## 11. 例外処理ポリシー
 
 - 設定ファイルの読み書きは Core の `SettingsPersistenceBase` が握り潰します（自動保存はベストエフォート）。
 - 本プロジェクトが独自に例外を送出するのは、置換ルールの検証結果を返す場合のみです（戻り値で表現し、例外は投げません）。
 
-## 各 UI との関係
+## 12. 各 UI との関係
 
 | 項目 | 内容 |
 | --- | --- |

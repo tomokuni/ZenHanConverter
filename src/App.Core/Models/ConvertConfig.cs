@@ -23,10 +23,7 @@ namespace EsUtil.ZenHanConverter.App.Core.Models;
 /// - FrozenDictionary による組み込みプリセットの高速ルックアップ<br/>
 /// - CommunityToolkit.Mvvm の ObservableProperty 生成による変更通知<br/>
 /// - System.Text.Json ソースジェネレーター対応（AppJsonContext）<br/><br/>
-/// 最適化手法: <br/>
-/// - _modeProps から動生成された _copyActions/_compareActions/_toZenSymbolSetters 配列<br/>
-/// - ループによる一括適用で個別プロパティの列挙コストを削減<br/>
-/// - プリセット比較は PropertiesEqual で全プロパティ一致を検証</remarks>
+/// プロパティの一括操作は <c>_modeProps</c> から作る配列（<c>_copyActions</c> / <c>_compareActions</c> / <c>_toZenSymbolSetters</c>）で行い、プリセット比較は <c>PropertiesEqual</c> が全プロパティの一致を検証する。</remarks>
 public partial class ConvertConfig : SettingsPersistenceBase<ConvertConfig>
 {
     /// <summary>シリアライズに使用する JsonSerializerContext と型を取得します。</summary>

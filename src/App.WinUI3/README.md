@@ -2,7 +2,7 @@
 
 ![Release](https://github.com/tomokuni/ZenHanConverter/actions/workflows/release.yml/badge.svg)
 ![Build](https://github.com/tomokuni/ZenHanConverter/actions/workflows/build.yml/badge.svg?branch=main)
-![Platform](https://img.shields.io/badge/Platform-Windows%2010%20(1809%2C%2017763)%2B-0078D6)
+![Platform](https://img.shields.io/badge/Platform-Windows%2010%20(2004%2C%2019041)%2B-0078D6)
 ![.NET](https://img.shields.io/badge/.NET-11.0-512BD4)
 ![WinUI3](https://img.shields.io/badge/UI-WinUI%203-0078D4)
 ![License](https://img.shields.io/badge/License-MIT-3DA639)
@@ -72,7 +72,7 @@
 ## 3. システム要件
 
 - .NET 11 SDK（ビルド時）
-- Windows 10 バージョン 1809（ビルド 17763）以降（対象フレームワーク `net11.0-windows10.0.17763.0`）
+- Windows 10 バージョン 2004（ビルド 19041）以降（対象フレームワーク `net11.0-windows10.0.19041.0`。 第三者パッケージの制約）
 - x64
 - Windows App Runtime **2.6.5 以降（x64）** が必要です（版は [`Directory.Packages.props`](../../Directory.Packages.props) の `Microsoft.WindowsAppSDK` が単一所有します）。 AOT 版は同梱せず、起動時に有無を確認して無ければ `EsUtil.Ui.WinUI3.Interop` の `WindowsAppRuntimeBootstrap` が導入します（.NET ランタイムは自己完結）。 同梱した Single 版は導入不要です
 
@@ -288,8 +288,8 @@ Windows App SDK 2.6 では Native AOT で発行できます。次の 3 点が条
 | ドキュメント | 内容 |
 | --- | --- |
 | [README.md](README.md) | 本ドキュメント（機能・画面・使い方） |
-| [SPEC_ExtFunc.md](SPEC_ExtFunc.md) | 外部機能仕様書（公開 API） |
-| [SPEC_System.md](SPEC_System.md) | システム仕様書（構成・動作仕様） |
+| [SPEC_ExtFunc.md](docs/SPEC_ExtFunc.md) | 外部機能仕様書（公開 API） |
+| [SPEC_System.md](docs/SPEC_System.md) | システム仕様書（構成・動作仕様） |
 | [.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md) | 開発者向け（ビルド・テスト・CI） |
 | [.github/RELEASE.md](../../.github/RELEASE.md) | リリース手順 |
 

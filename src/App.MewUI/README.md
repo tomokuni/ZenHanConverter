@@ -88,7 +88,7 @@ dotnet test --project test/App.MewUI/App.MewUI.Tests.csproj
 .\buildScript\publish_MewUI.bat win-arm64   # RID を指定する場合
 ```
 
-- 出力: `publish/mewui-win-x64-aot`（`ZenHanConverter.App.MewUI.exe` の 1 ファイル。 約 13 MB）
+- 出力: `publish/mewui-win-x64-aot`（`ZenHanConverter.App.MewUI.exe` の 1 ファイル）
 - スクリプトはリポジトリ ルートを基準に動作するため、どこから実行しても同じ結果になります。
 
 - マネージド コードはすべて 1 つの exe へネイティブ コンパイルされます。 .NET ランタイムのインストールは不要です（自己完結）。
@@ -189,8 +189,8 @@ dotnet test --project test/App.MewUI/App.MewUI.Tests.csproj
 | ドキュメント | 内容 |
 | --- | --- |
 | [README.md](README.md) | 本ドキュメント（機能・画面・使い方） |
-| [SPEC_ExtFunc.md](SPEC_ExtFunc.md) | 外部機能仕様書（公開 API） |
-| [SPEC_System.md](SPEC_System.md) | システム仕様書（構成・動作仕様） |
+| [SPEC_ExtFunc.md](docs/SPEC_ExtFunc.md) | 外部機能仕様書（公開 API） |
+| [SPEC_System.md](docs/SPEC_System.md) | システム仕様書（構成・動作仕様） |
 | [.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md) | 開発者向け（ビルド・テスト・CI） |
 | [.github/RELEASE.md](../../.github/RELEASE.md) | リリース手順 |
 

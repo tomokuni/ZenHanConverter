@@ -1,14 +1,26 @@
-# ZenHanConverter.App.Core システム仕様書
+# App.Core システム仕様書
 
 本ドキュメントは `src/App.Core` プロジェクトのシステム仕様（概要・アーキテクチャ・構成・変換フロー）を記載します。
 メソッド内部のコードは記載しません。
 
-## システム概要
+## 目次 <!-- omit from toc -->
+
+- [1. システム概要](#1-システム概要)
+- [2. 技術スタック](#2-技術スタック)
+- [3. アーキテクチャ](#3-アーキテクチャ)
+- [4. クラス図](#4-クラス図)
+- [5. 変換フロー](#5-変換フロー)
+- [6. 設定の自動保存](#6-設定の自動保存)
+- [7. テスト](#7-テスト)
+- [8. 依存関係](#8-依存関係)
+- [9. 例外処理ポリシー](#9-例外処理ポリシー)
+
+## 1. システム概要
 
 `src/App.Core` はクリップボードの全角/半角自動変換のコアロジック・データモデル・ウィンドウ復元の補正を提供するライブラリです。
 **MewUI にも WinUI3 にも依存しない**ため、WinUI 3 版・MewUI 版の双方で共有できます。
 
-## 技術スタック
+## 2. 技術スタック
 
 - .NET 11
 - CommunityToolkit.Mvvm 8.*
@@ -17,7 +29,7 @@
 - Win32 API（P/Invoke は EsUtil.Platform.Core が単一所有。UI フレームワーク非依存）
 - Fluent Icons の SVG アセット（埋め込みリソース。パスデータは UI フレームワーク非依存の文字列として提供）
 
-## アーキテクチャ
+## 3. アーキテクチャ
 
 ```text
 src/App.Core
@@ -33,7 +45,7 @@ src/App.Core
 依存方向は単一方向（Helpers → Enums/Models/EsUtil.Platform.Core、Logic → Enums/Models/Helpers/Interfaces、Native → EsUtil.Platform.Core、Icons → なし）です。
 UI（`src/App.MewUI`）は `Interfaces` と `Logic`・`Models`・`Helpers`・`Native`・`Icons` を参照します（`INavigationService` は UI 要素を返すため App 層に配置）。
 
-## クラス図
+## 4. クラス図
 
 ```mermaid
 classDiagram
@@ -120,7 +132,7 @@ classDiagram
     SegmentDefine ..> SegmentItem
 ```
 
-## 変換フロー
+## 5. 変換フロー
 
 ```mermaid
 flowchart TD
@@ -141,12 +153,12 @@ flowchart TD
 
 変換を実行するか否かは呼び出し側（画面側）のポリシーです。`ConvertConfig.IsEnabledZenHan` は現在の両アプリ（MewUI 版・WinUI 3 版）とも参照せず、変換エンジンも参照しません。
 
-## 設定の自動保存
+## 6. 設定の自動保存
 
 `SettingsPersistenceBase<T>` がプロパティ変更を監視し、300ms のデバウンス後に JSON ファイルへ保存します。
 保存先は `%LOCALAPPDATA%\ZenHanConverter\` 配下（`Settings.json` / `AppSetting.json`）。
 
-## テスト
+## 7. テスト
 
 `test/App.Core` 配下にソースファイル每の単体テストを置きます（xUnit v3）。
 ファイルを書き込むテストでは、実ユーザーの設定ファイルを汚さないよう `AutoSaveFileName` を一時ディレクトリへ差し替えます。
@@ -168,7 +180,7 @@ flowchart TD
 
 クリップボードと仮想画面の Win32 実装（`EsUtil.Platform.Core`）は、EsUtil 側の `WinClipboardTests` が検証します。
 
-## 依存関係
+## 8. 依存関係
 
 本プロジェクトが直接参照するプロジェクトとパッケージです（版は `Directory.Packages.props` が単一所有します）。
 
@@ -184,7 +196,7 @@ flowchart TD
 
 - 依存の版は `Directory.Packages.props` が単一所有し、復元は `packages.lock.json` で固定します（`.github/CONTRIBUTING.md`）。
 
-## 例外処理ポリシー
+## 9. 例外処理ポリシー
 
 - 設定ファイルの読み書き失敗（IOException / UnauthorizedAccessException / JsonException）は握り潰し、アプリ動作を継続。
 - ユーザー定義の正規表現が不正な場合は該当ルールをスキップして処理継続。

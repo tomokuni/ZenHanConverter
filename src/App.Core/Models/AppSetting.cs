@@ -5,9 +5,7 @@ namespace EsUtil.ZenHanConverter.App.Core.Models;
 /// <summary>アプリケーションのウィンドウ設定を管理します。</summary>
 /// <remarks>ウィンドウの位置・サイズ情報とクリップボード連携の有効/無効を JSON ファイルに自動保存・復元します。<br/>
 /// 保存先: %LOCALAPPDATA%\ZenHanConverter\AppSetting.json<br/>
-/// 最適化手法: <br/>
-/// - SettingsPersistenceBase によるデバウンス付き自動保存（300ms）<br/>
-/// - System.Text.Json ソースジェネレーターによる高速シリアライズ</remarks>
+/// 保存は <see cref="SettingsPersistenceBase{T}"/> がデバウンス付きで行い、シリアライズは System.Text.Json のソース生成を使う。</remarks>
 public partial class AppSetting : SettingsPersistenceBase<AppSetting>
 {
     /// <summary>ウィンドウの幅（DIP 非依存の論理ピクセル値）。</summary>

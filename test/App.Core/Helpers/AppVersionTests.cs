@@ -18,7 +18,7 @@ public sealed class AppVersionTests
     [Fact]
     internal void EsUtilVersion_は版だけを返しコミットを含めない()
     {
-        // 製品バージョンは `0.5.1+esutil.0.7.1`（SourceLink が有効な場合は末尾へコミット SHA が付く）。
+        // 製品バージョンは `<版>+esutil.<EsUtil の版>`（SourceLink が有効な場合は末尾へコミット SHA が付く）。
         // 版の桁だけを返す（`unknown` は製品バージョンに埋め込まれていない場合）
         Assert.False(string.Equals(AppVersion.Unknown, AppVersion.EsUtilVersion, StringComparison.Ordinal));
         Assert.Matches(@"^\d+\.\d+\.\d+", AppVersion.EsUtilVersion);

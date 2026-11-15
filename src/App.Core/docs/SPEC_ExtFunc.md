@@ -1,13 +1,46 @@
-# ZenHanConverter.App.Core 外部機能仕様書
+# App.Core 外部機能仕様書
 
 本ドキュメントは `src/App.Core` プロジェクトの公開 API 仕様（外部機能仕様）を記載します。
 メソッド内部のコードは記載しません。外部利用者に関係する情報のみを扱います。
 
-## 公開型一覧
+## 目次 <!-- omit from toc -->
 
-### 列挙型（`EsUtil.ZenHanConverter.App.Core.Enums`）
+- [1. 公開型一覧](#1-公開型一覧)
+  - [1.1 列挙型（`EsUtil.ZenHanConverter.App.Core.Enums`）](#11-列挙型esutilzenhanconverterappcoreenums)
+    - [1.1.1 `ZenHanMode`](#111-zenhanmode)
+    - [1.1.2 `ZenHanKanaMode`](#112-zenhankanamode)
+    - [1.1.3 `ZenHanEtcZenHanAsciiMode`](#113-zenhanetczenhanasciimode)
+    - [1.1.4 `ZenHanEtcYenMode`](#114-zenhanetcyenmode)
+    - [1.1.5 `ZenHanEtcSpecial`](#115-zenhanetcspecial)
+  - [1.2 データモデル（`EsUtil.ZenHanConverter.App.Core.Models`）](#12-データモデルesutilzenhanconverterappcoremodels)
+    - [1.2.1 `ConvertConfig`](#121-convertconfig)
+    - [1.2.2 組み込みプリセットの内容](#122-組み込みプリセットの内容)
+    - [1.2.3 `ModePropDef`](#123-modepropdef)
+    - [1.2.4 `ReplacePair`](#124-replacepair)
+    - [1.2.5 `SegmentItem` / `SegmentDefine`](#125-segmentitem--segmentdefine)
+    - [1.2.6 `SegmentDefinitions`](#126-segmentdefinitions)
+    - [1.2.7 `AppSetting`](#127-appsetting)
+    - [1.2.8 `SettingsPersistenceBase<TSettings>`](#128-settingspersistencebasetsettings)
+  - [1.3 インターフェース（`EsUtil.ZenHanConverter.App.Core.Interfaces`）](#13-インターフェースesutilzenhanconverterappcoreinterfaces)
+    - [1.3.1 `IClipboardService : IDisposable`](#131-iclipboardservice--idisposable)
+    - [1.3.2 `ITextConverter`](#132-itextconverter)
+  - [1.4 変換ロジック（`EsUtil.ZenHanConverter.App.Core.Logic`）](#14-変換ロジックesutilzenhanconverterappcorelogic)
+    - [1.4.1 `CharConverter : ITextConverter, IDisposable`](#141-charconverter--itextconverter-idisposable)
+  - [1.5 ウィンドウ位置補正（`EsUtil.ZenHanConverter.App.Core.Helpers`）](#15-ウィンドウ位置補正esutilzenhanconverterappcorehelpers)
+    - [1.5.1 `WindowPlacement`](#151-windowplacement)
+    - [1.5.2 `SplitLayout`](#152-splitlayout)
+  - [1.6 変更検出（`EsUtil.ZenHanConverter.App.Core.Logic`）](#16-変更検出esutilzenhanconverterappcorelogic)
+    - [1.6.1 `ClipboardChangeDetector`](#161-clipboardchangedetector)
+  - [1.7 ウィンドウの復元（`EsUtil.ZenHanConverter.App.Core.Native`）](#17-ウィンドウの復元esutilzenhanconverterappcorenative)
+    - [1.7.1 `ScreenVisibleArea`](#171-screenvisiblearea)
+  - [1.8 アイコンデータ（`EsUtil.ZenHanConverter.App.Core.Icons`）](#18-アイコンデータesutilzenhanconverterappcoreicons)
+    - [1.8.1 `FluentIconData`](#181-fluenticondata)
 
-#### `ZenHanMode`
+## 1. 公開型一覧
+
+### 1.1 列挙型（`EsUtil.ZenHanConverter.App.Core.Enums`）
+
+#### 1.1.1 `ZenHanMode`
 
 全角/半角変換の基本方向。
 
@@ -17,7 +50,7 @@
 | 1 | ToHan | 全角文字を半角に変換 |
 | 2 | ToZen | 半角文字を全角に変換 |
 
-#### `ZenHanKanaMode`
+#### 1.1.2 `ZenHanKanaMode`
 
 かな文字（半角カナ/全角カタカナ/全角ひらがな）の変換方向。
 
@@ -28,7 +61,7 @@
 | 2 | ToZenKata | 半角カナ/全角ひらがなを全角カタカナへ |
 | 3 | ToZenHira | 半角カナ/全角カタカナを全角ひらがなへ |
 
-#### `ZenHanEtcZenHanAsciiMode`
+#### 1.1.3 `ZenHanEtcZenHanAsciiMode`
 
 かな約物（長音/読点/句点）の変換モード。
 
@@ -39,7 +72,7 @@
 | 2 | ToZen | 半角を全角へ |
 | 3 | ToAscii | 対応する ASCII 文字へ（例: ー → -） |
 
-#### `ZenHanEtcYenMode`
+#### 1.1.4 `ZenHanEtcYenMode`
 
 円記号/バックスラッシュの変換モード。
 
@@ -51,7 +84,7 @@
 | 3 | ToHanYen | 半角円記号（¥）へ |
 | 4 | ToZenYen | 全角円記号（￥）へ |
 
-#### `ZenHanEtcSpecial`
+#### 1.1.5 `ZenHanEtcSpecial`
 
 特殊文字（タブ/改行/連続スペース）の変換モード。
 
@@ -62,9 +95,9 @@
 | 2 | ToHanSpace | 半角スペース |
 | 3 | ToZenSpace | 全角スペース |
 
-### データモデル（`EsUtil.ZenHanConverter.App.Core.Models`）
+### 1.2 データモデル（`EsUtil.ZenHanConverter.App.Core.Models`）
 
-#### `ConvertConfig`
+#### 1.2.1 `ConvertConfig`
 
 全角/半角変換の全設定を管理します。`SettingsPersistenceBase<ConvertConfig>` を継承し、JSON への自動保存に対応します。
 
@@ -82,7 +115,7 @@
 - 組み込みプリセット名の定数 `BuiltInPresetAccountingPower` / `BuiltInPresetAlphanumericHanKanaZen`
 - `static class Mode` — 全モードプロパティの型安全なアクセサ定義（`ModePropDef`）を公開。UI は文字列名ではなく `ModePropDef` を直接参照する（NativeAOT 対応）
 
-#### 組み込みプリセットの内容
+#### 1.2.2 組み込みプリセットの内容
 
 | プリセット名 | 数値・英字 | 記号 | かな | その他 |
 | --- | --- | --- | --- | --- |
@@ -91,7 +124,7 @@
 
 いずれも適用時に `ReplacePairs` を空にし、`IsEnabledZenHan` を `true` にします。
 
-#### `ModePropDef`
+#### 1.2.3 `ModePropDef`
 
 `ConvertConfig` のモードプロパティへ型安全にアクセスする `record`。
 
@@ -101,7 +134,7 @@
 | Set | `Action<ConvertConfig, object>` | 値を設定するデリゲート |
 | ToZenValue | `object?` | 「全力会計」プリセットで全角にする値（null は全角設定の対象外） |
 
-#### `ReplacePair`
+#### 1.2.4 `ReplacePair`
 
 ユーザー定義の文字列置換ペア（`record`）。
 
@@ -113,14 +146,14 @@
 
 - `static bool TryValidate(string search, string replace, bool isRegex, out string? errorMessage)` — 検証
 
-#### `SegmentItem` / `SegmentDefine`
+#### 1.2.5 `SegmentItem` / `SegmentDefine`
 
 UI セグメントコントロールの定義レコード。
 
 - `SegmentItem(string Content, object Value, bool IsEnabled = true)` — 個別セグメント（表示テキスト / 値 / 有効状態）
 - `SegmentDefine(string Label, ModePropDef Mode, double Height = NaN, SegmentItem[]? Segments = null, bool? ForceEnableState = null)` — 1 変換項目の定義。`Mode` でバインド先モードを型安全に参照
 
-#### `SegmentDefinitions`
+#### 1.2.6 `SegmentDefinitions`
 
 設定画面の変換カテゴリ定義を提供する静的クラス。UI フレームワークに依存しないため Core に配置しています。
 
@@ -136,7 +169,7 @@ UI セグメントコントロールの定義レコード。
 
 各項目はバインド先を `ConvertConfig.Mode`（`ModePropDef`）で参照するため、実行時のプロパティ名解決を行いません。
 
-#### `AppSetting`
+#### 1.2.7 `AppSetting`
 
 アプリケーションのウィンドウ設定とクリップボード連携設定。`SettingsPersistenceBase<AppSetting>` を継承。
 
@@ -144,7 +177,7 @@ UI セグメントコントロールの定義レコード。
 - `double? WindowX` / `double? WindowY` — ウィンドウ左上の位置（画面座標・DIP、null は未保存）
 - `bool IsClipboardConvertEnabled` — クリップボード変換（コピーの検知・変換結果の書き戻し）の有効/無効。false の場合はクリップボードを読み書きしません
 
-#### `SettingsPersistenceBase<TSettings>`
+#### 1.2.8 `SettingsPersistenceBase<TSettings>`
 
 設定の JSON ファイルへの自動永続化を提供する基底クラス（`AppSetting` / `ConvertConfig` が継承）。
 
@@ -161,22 +194,22 @@ UI セグメントコントロールの定義レコード。
 `SaveNow` はアプリの終了時など、デバウンス（300ms）の完了を待てない場面で使用します。
 終了直前はプロセスが停止するため、非同期保存では書き込みが完了しません。
 
-### インターフェース（`EsUtil.ZenHanConverter.App.Core.Interfaces`）
+### 1.3 インターフェース（`EsUtil.ZenHanConverter.App.Core.Interfaces`）
 
-#### `IClipboardService : IDisposable`
+#### 1.3.1 `IClipboardService : IDisposable`
 
 - `event EventHandler<object>? ContentChanged` — クリップボード変更イベント
 - `Task<string?> GetTextAsync()` — テキスト取得
 - `void SetText(string text)` — テキスト設定
 - `void Flush()` — フラッシュ（永続化）
 
-#### `ITextConverter`
+#### 1.3.2 `ITextConverter`
 
 - `string Convert(string text)` — テキスト変換
 
-### 変換ロジック（`EsUtil.ZenHanConverter.App.Core.Logic`）
+### 1.4 変換ロジック（`EsUtil.ZenHanConverter.App.Core.Logic`）
 
-#### `CharConverter : ITextConverter, IDisposable`
+#### 1.4.1 `CharConverter : ITextConverter, IDisposable`
 
 - `ConvertConfig Config { get; }`
 - `string Convert(string text)` — 設定に基づく全角/半角変換とユーザー定義置換
@@ -184,12 +217,12 @@ UI セグメントコントロールの定義レコード。
 
 変換の実行可否（`ConvertConfig.IsEnabledZenHan`）は**参照しません**。変換をスキップするか否かは呼び出し側（画面側）のポリシーです。現在の両アプリ（MewUI 版・WinUI 3 版）は全角/半角変換を常に有効として扱います。
 
-### ウィンドウ位置補正（`EsUtil.ZenHanConverter.App.Core.Helpers`）
+### 1.5 ウィンドウ位置補正（`EsUtil.ZenHanConverter.App.Core.Helpers`）
 
 UI フレームワークに依存しないため Core に配置しています。座標は DIP の幾何型で扱います
 （型は `EsUtil.Platform.Core.Geometry` の `EsPoint` / `EsSize` / `EsRect` を使います）。
 
-#### `WindowPlacement`
+#### 1.5.1 `WindowPlacement`
 
 | メンバー | 型 | 説明 |
 | --- | --- | --- |
@@ -201,7 +234,7 @@ UI フレームワークに依存しないため Core に配置しています�
 - 完全に表示領域外: 原点（プライマリモニタの左上）へ移動
 - ウィンドウが表示領域より大きい: その軸の表示領域先頭へ寄せる
 
-#### `SplitLayout`
+#### 1.5.2 `SplitLayout`
 
 上下 2 分割レイアウトの分割比率を扱う純粋ロジック。MewUI 版を除く各 UI のホーム画面が共有します
 （MewUI 版はフレームワーク標準の `SplitPanel` が分割を担うため参照しません）。
@@ -219,9 +252,9 @@ UI フレームワークに依存しないため Core に配置しています�
 
 `trackHeight` は上下 2 ペインの合計高さとし、分割バーの太さは含めません。
 
-### 変更検出（`EsUtil.ZenHanConverter.App.Core.Logic`）
+### 1.6 変更検出（`EsUtil.ZenHanConverter.App.Core.Logic`）
 
-#### `ClipboardChangeDetector`
+#### 1.6.1 `ClipboardChangeDetector`
 
 クリップボードのシーケンス番号を監視し、内容の変更を検出します。UI フレームワーク・タイマーに依存しないため、ポーリング間隔は呼び出し側が決めます。
 
@@ -231,11 +264,11 @@ UI フレームワークに依存しないため Core に配置しています�
 | `HasChanged()` | `bool` | 前回の確認から変化していれば true を返し、内部状態を更新する |
 | `RecommendedPollIntervalMs` | `int`（const） | 推奨するポーリング間隔（250 ミリ秒）。各 UI のクリップボード監視タイマーが共有する単一所有元 |
 
-### ウィンドウの復元（`EsUtil.ZenHanConverter.App.Core.Native`）
+### 1.7 ウィンドウの復元（`EsUtil.ZenHanConverter.App.Core.Native`）
 
 UI フレームワークに依存しないため Core に配置しています。Win32 の P/Invoke は `EsUtil.Platform.Core` が単一所有します。
 
-#### `ScreenVisibleArea`
+#### 1.7.1 `ScreenVisibleArea`
 
 仮想画面（全モニタの外接矩形）に基づくウィンドウ位置の補正を提供します。
 `EsUtil.Platform.Core` の `WinVirtualScreen`（物理ピクセルの取得）と `WindowPlacement`（補正ロジック）を
@@ -249,11 +282,11 @@ UI フレームワークに依存しないため Core に配置しています�
 | `ToPhysical(double dip, double scale)` | `int` | DIP を物理ピクセルへ換算（四捨五入）。丸め規則を一元管理する |
 | `ToDip(int physical, double scale)` | `double` | 物理ピクセルを DIP へ換算 |
 
-### アイコンデータ（`EsUtil.ZenHanConverter.App.Core.Icons`）
+### 1.8 アイコンデータ（`EsUtil.ZenHanConverter.App.Core.Icons`）
 
 UI フレームワークに依存しないため Core に配置しています。SVG ファイルをアイコン形状の唯一の定義元とし、`Icons` フォルダの SVG を埋め込みリソースとして登録します。
 
-#### `FluentIconData`
+#### 1.8.1 `FluentIconData`
 
 Fluent Icons の SVG から抽出したパスデータ（`<path>` の `d` 属性の値）を提供します。形状の生成は各 UI フレームワーク側で行います（MewUI は `PathGeometry.Parse`、WinUI3 は `Geometry.Parse` など）。
 

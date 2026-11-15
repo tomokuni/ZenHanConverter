@@ -56,15 +56,15 @@ dotnet build src/App.Core.Presentation/App.Core.Presentation.csproj
 dotnet test --project test/App.Core.Presentation/App.Core.Presentation.Tests.csproj
 ```
 
-詳細な設計は `SPEC_System.md`、公開 API は `SPEC_ExtFunc.md` を参照してください。
+詳細な設計は `docs/SPEC_System.md`、公開 API は `docs/SPEC_ExtFunc.md` を参照してください。
 
 ## 7. ドキュメント
 
 | ドキュメント | 内容 |
 | --- | --- |
 | [README.md](README.md) | 本ドキュメント（機能・画面・使い方） |
-| [SPEC_ExtFunc.md](SPEC_ExtFunc.md) | 外部機能仕様書（公開 API） |
-| [SPEC_System.md](SPEC_System.md) | システム仕様書（構成・動作仕様） |
+| [SPEC_ExtFunc.md](docs/SPEC_ExtFunc.md) | 外部機能仕様書（公開 API） |
+| [SPEC_System.md](docs/SPEC_System.md) | システム仕様書（構成・動作仕様） |
 | [.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md) | 開発者向け（ビルド・テスト・CI） |
 | [.github/RELEASE.md](../../.github/RELEASE.md) | リリース手順 |
 

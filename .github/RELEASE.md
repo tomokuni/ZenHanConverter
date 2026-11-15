@@ -256,7 +256,7 @@ publish は `buildScript/` の `publish_<UI>.bat` をそのまま実行するた
 
 - **Windows App Runtime を同梱します**（`-p:ZenHanConverterSelfContained=true` + `PublishSingleFile=true` +
   `IncludeNativeLibrariesForSelfExtract=true`）。 .NET は常に同梱しています（`SelfContained=true`）。
-  そのため、ランタイムが 1 つも入っていない環境でもそのまま起動します（実測 2026-11-10: 70.7 MB）。
+  そのため、ランタイムが 1 つも入っていない環境でもそのまま起動します（実測で起動を確認済み）。
 - **AOT 版はフレームワーク依存のままです**（小さい・起動が速い・コード ページを共有できる）。
   どちらを配布するかは利用者が選べます（zip 名の `Single` で判別できます）。
 - **`-p:WindowsAppSDKSelfContained=true` をコマンド ラインへ直接渡さないでください**（参照プロジェクトへ伝播します）。

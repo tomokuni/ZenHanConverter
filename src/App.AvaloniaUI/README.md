@@ -89,15 +89,15 @@ dotnet test --project test/App.AvaloniaUI/App.AvaloniaUI.Tests.csproj
 .\buildScript\publish_AvaloniaUI.bat win-arm64   # RID を指定する場合
 ```
 
-- 出力: `publish/avaloniaui-win-x64-aot`（`ZenHanConverter.App.AvaloniaUI.exe` + ネイティブ DLL 3 個。 約 42 MB）
+- 出力: `publish/avaloniaui-win-x64-aot`（`ZenHanConverter.App.AvaloniaUI.exe` + ネイティブ DLL 3 個）
 - スクリプトはリポジトリ ルートを基準に動作するため、どこから実行しても同じ結果になります。
 
 | ファイル | 説明 |
 | --- | --- |
-| `ZenHanConverter.App.AvaloniaUI.exe` | 本体（Native AOT で事前コンパイル済み。 約 24 MB） |
-| `libSkiaSharp.dll` | SkiaSharp のネイティブ ライブラリ（描画。 約 11 MB） |
-| `av_libglesv2.dll` | ANGLE（OpenGL ES バックエンド。 GPU 描画。 約 5 MB） |
-| `libHarfBuzzSharp.dll` | テキスト シェーピング（約 2 MB） |
+| `ZenHanConverter.App.AvaloniaUI.exe` | 本体（Native AOT で事前コンパイル済み） |
+| `libSkiaSharp.dll` | SkiaSharp のネイティブ ライブラリ（描画） |
+| `av_libglesv2.dll` | ANGLE（OpenGL ES バックエンド。 GPU 描画） |
+| `libHarfBuzzSharp.dll` | テキスト シェーピング |
 
 - **フォルダー単位で配布してください。** exe 単体では起動しません。
 - .NET ランタイムのインストールは不要です（自己完結）。 初回起動時の展開もないため起動が速いです。
@@ -109,7 +109,7 @@ Avalonia の描画は SkiaSharp のネイティブ ライブラリに依存し�
 
 #### 4.1.2 描画バックエンド
 
-Avalonia の Windows 既定は `AngleEgl`（GPU）→ `Software`（CPU）の順で試行します。 `av_libglesv2.dll`（ANGLE）を削除すると約 5 MB 減りますが、描画はソフトウェア レンダリングへ切り替わります（起動は可能です）。
+Avalonia の Windows 既定は `AngleEgl`（GPU）→ `Software`（CPU）の順で試行します。 `av_libglesv2.dll`（ANGLE）を削除すると小さくなりますが、描画はソフトウェア レンダリングへ切り替わります（起動は可能です）。
 
 ## 5. クイックスタート
 
@@ -209,8 +209,8 @@ Avalonia の Windows 既定は `AngleEgl`（GPU）→ `Software`（CPU）の順�
 | ドキュメント | 内容 |
 | --- | --- |
 | [README.md](README.md) | 本ドキュメント（機能・画面・使い方） |
-| [SPEC_ExtFunc.md](SPEC_ExtFunc.md) | 外部機能仕様書（公開 API） |
-| [SPEC_System.md](SPEC_System.md) | システム仕様書（構成・動作仕様） |
+| [SPEC_ExtFunc.md](docs/SPEC_ExtFunc.md) | 外部機能仕様書（公開 API） |
+| [SPEC_System.md](docs/SPEC_System.md) | システム仕様書（構成・動作仕様） |
 | [.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md) | 開発者向け（ビルド・テスト・CI） |
 | [.github/RELEASE.md](../../.github/RELEASE.md) | リリース手順 |
 
