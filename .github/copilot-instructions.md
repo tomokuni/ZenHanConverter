@@ -60,7 +60,7 @@ ZenHanConverter は Windows デスクトップの全角/半角変換アプリで
 ### 3.2 このリポジトリ固有の事実
 
 - **リポジトリは 2 つで、ワークスペースへ両方を載せる**（[`../ZenHanConverter.code-workspace`](../ZenHanConverter.code-workspace) が `../EsUtil` を含む）。 ライブラリ側の規約は [EsUtil の作業指示](../../EsUtil/.github/copilot-instructions.md) が所有する。
-- **実行ファイルの名前は `<製品名>.<UI名>` とする**（`App.MewUI` → `ZenHanConverter.MewUI.exe`。 `<AssemblyName>` で指定する。 配布物の zip も同名の `ZenHanConverter.MewUI.zip` にし、exe と揃える）。 ライブラリはプロジェクト名と一致させる（`App.Core` → `ZenHanConverter.App.Core`）。
+- **実行ファイルの名前は `<製品名>.<UI名>` とする**（`App.MewUI` → `ZenHanConverter.MewUI.exe`。 `<AssemblyName>` で指定する）。 配布物の zip は **`<製品名>.<UI名>.<版>.zip`**（例: `ZenHanConverter.MewUI.0.7.1.zip`。 `release-config.json` の `asset` が `{version}` を持つ）にし、exe の stem と揃える。 ライブラリはプロジェクト名と一致させる（`App.Core` → `ZenHanConverter.App.Core`）。
 - **文字コードは UTF-8（BOM なし）**で統一する（[`.editorconfig`](../.editorconfig) の `charset = utf-8`）。
 - **作業ツリーの改行コードは CRLF**（[`.editorconfig`](../.editorconfig) の `end_of_line = crlf`）。
 - **設定の保存先は `%LOCALAPPDATA%\ZenHanConverter`** である（`App.Core` の `AppPaths` が単一所有する。 旧名のフォルダーからは初回起動時に移行する）。
